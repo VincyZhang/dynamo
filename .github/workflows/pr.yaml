@@ -59,7 +59,7 @@ jobs:
 
   backend-status-check:
     runs-on: ubuntu-latest
-    needs: [changed-files, vllm-pipeline, sglang-pipeline, trtllm-pipeline, operator]  # THIS list determines blocking jobs
+    needs: [changed-files, vllm-pipeline, sglang-pipeline, trtllm-pipeline, xpu-test, operator]  # THIS list determines blocking jobs
     if: always()
     steps:
       - name: "Check all dependent jobs"
@@ -242,6 +242,77 @@ jobs:
       single_gpu_test_markers: 'pre_merge and trtllm and gpu_1'
       run_multi_gpu_tests: false  # TODO: Dmitry is working on fixing markers for multi-GPU tests, can enable after that is resolved
     secrets: inherit
+
+  # ============================================================================
+  # XPU TEST
+  # Based on PR #7146 additions under examples/backends/vllm and tests/serve/test_vllm_xpu.py
+  # ============================================================================
+  xpu-test:
+    needs: [changed-files]
+    if: |
+      (needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true')
+    name: xpu-test
+    runs-on: prod-tester-xpu-v1
+    timeout-minutes: 60
+    env:
+      XPU_TEST_IMAGE: ${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:main-vllm-xpu-amd64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
+
+      - name: Docker Login
+        uses: ./.github/actions/docker-login
+        with:
+          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+      - name: Pull XPU test image
+        shell: bash
+        run: |
+          docker pull "${XPU_TEST_IMAGE}"
+
+      - name: Validate XPU launch scripts syntax (PR #7146)
+        shell: bash
+        run: |
+          shopt -s nullglob
+          xpu_scripts=(examples/backends/vllm/launch/*xpu*.sh examples/backends/vllm/launch/lora/*xpu*.sh)
+          if [ ${#xpu_scripts[@]} -eq 0 ]; then
+            echo "No XPU launch scripts found. Skipping syntax validation."
+            exit 0
+          fi
+          for script in "${xpu_scripts[@]}"; do
+            echo "Checking ${script}"
+            bash -n "${script}"
+          done
+
+      - name: Run vLLM XPU pytest markers
+        shell: bash
+        run: |
+          mkdir -p test-results
+          if [ ! -f tests/serve/test_vllm_xpu.py ]; then
+            echo "tests/serve/test_vllm_xpu.py not found. Skipping XPU tests."
+            exit 0
+          fi
+
+          docker run --rm \
+            --device /dev/dri \
+            --network host \
+            -w /workspace \
+            -v "$(pwd)/test-results:/workspace/test-results" \
+            "${XPU_TEST_IMAGE}" \
+            bash -lc 'pytest --continue-on-collection-errors -v --tb=short --junitxml=/workspace/test-results/pytest_test_report_vllm_xpu.xml -m "pre_merge and vllm and xpu" tests/serve/test_vllm_xpu.py'
+
+      - name: Upload XPU test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-vllm-xpu-${{ github.run_id }}-${{ job.check_run_id }}
+          path: test-results/pytest_test_report_vllm_xpu.xml
+          if-no-files-found: ignore
+          retention-days: 7
 
 
    # ============================================================================
