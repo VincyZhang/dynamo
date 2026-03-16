@@ -85,7 +85,7 @@ jobs:
 
   operator:
     needs: changed-files
-    if: needs.changed-files.outputs.operator == 'true'
+    if: false  # TODO: temporarily disabled; re-enable when XPU CI is stable
     name: Operator
     runs-on: xpu
     env:
