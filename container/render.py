@@ -10,20 +10,22 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 _VALID_ARCHS = {"amd64", "arm64"}
+_ARCH_ALIASES = {"x86_64": "amd64"}
 
 
 def parse_platform(platform_str: str) -> str:
     """Normalize a --platform value to the template variable used by Jinja2.
 
     Accepts Docker-style values (linux/amd64, linux/arm64) or short form (amd64,
-    arm64), and comma-separated lists for multi-arch (linux/amd64,linux/arm64).
+    arm64, x86_64), and comma-separated lists for multi-arch
+    (linux/amd64,linux/arm64).
 
     Returns one of: 'amd64', 'arm64', or 'multi'.
 
     Raises ValueError for unrecognized architecture values.
     """
     parts = [p.strip() for p in platform_str.split(",")]
-    archs = [p.split("/")[-1] for p in parts]
+    archs = [_ARCH_ALIASES.get(p.split("/")[-1], p.split("/")[-1]) for p in parts]
     for arch in archs:
         if arch not in _VALID_ARCHS:
             raise ValueError(
@@ -81,7 +83,9 @@ def parse_args():
         choices=["12.9", "13.0", "13.1"],
         help="CUDA version to use. [12.9 or 13.0 for vllm and sglang, 13.1 for trtllm]",
     )
-    parser.add_argument("--make-efa", action="store_true", help="Enable AWS EFA")
+    parser.add_argument(
+        "--make-efa", action="store_true", help="Enable AWS EFA"
+    )
     parser.add_argument(
         "--output-short-filename",
         action="store_true",

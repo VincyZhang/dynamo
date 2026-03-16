@@ -10,6 +10,11 @@ on:
         description: 'Framework name (vllm, sglang, trtllm)'
         required: true
         type: string
+      device:
+        description: 'Build device (cuda, xpu, cpu)'
+        required: false
+        type: string
+        default: 'cuda'
       target:
         description: 'Target stage for Docker rendering'
         required: true
@@ -20,8 +25,9 @@ on:
         type: string
       cuda_versions:
         description: 'CUDA versions to build (JSON array, e.g., ["12.9", "13.0"])'
-        required: true
+        required: false
         type: string
+        default: '["12.9"]'
       build_timeout_minutes:
         description: 'Timeout in minutes for the build step'
         required: false
@@ -145,20 +151,22 @@ on:
 
 jobs:
   pipeline:
+    if: ${{ inputs.device == 'xpu' }}
     strategy:
       fail-fast: false
       matrix:
         platform: ${{ fromJson(inputs.platforms) }}
-        cuda_version: ${{ fromJson(inputs.cuda_versions) }}
+        version_selector: ${{ fromJson(inputs.device == 'xpu' && '[""]' || inputs.cuda_versions) }}
     # This name weirdly shows in the checks overview, but not once you dive into
     # a specific workflow. Keeping it as a short placeholder
     name: matrix
     uses: ./.github/workflows/build-test-distribute-flavor.yml
     with:
       framework: ${{ inputs.framework }}
+      device: ${{ inputs.device }}
       platform: ${{ matrix.platform }}
       target: ${{ inputs.target }}
-      cuda_version: ${{ matrix.cuda_version }}
+      cuda_version: ${{ matrix.version_selector }}
       extra_tags: ${{ inputs.extra_tags }}
       no_cache: ${{ inputs.no_cache }}
       builder_name: ${{ inputs.builder_name }}
