@@ -217,7 +217,7 @@ jobs:
       framework: vllm
       device: xpu
       target: runtime
-      platforms: '["x86_64"]'
+      platforms: '["amd64"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
       copy_timeout_minutes: 10

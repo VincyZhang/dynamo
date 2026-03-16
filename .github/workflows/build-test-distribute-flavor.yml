@@ -210,7 +210,7 @@ jobs:
         uses: ./.github/actions/init-dynamo-builder
         with:
           builder_name: ${{ inputs.builder_name }}
-          flavor: ${{ inputs.framework }}
+          flavor: ${{ inputs.device == 'cuda' && inputs.framework || 'general' }}
           arch: ${{ inputs.platform }}
           cuda_version: ${{ inputs.cuda_version }}
       - name: Calculate extra tags with platform suffix # will get redundant upon multi arch builds support
