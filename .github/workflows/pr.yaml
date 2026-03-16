@@ -84,7 +84,7 @@ jobs:
     needs: changed-files
     if: needs.changed-files.outputs.operator == 'true'
     name: Operator
-    runs-on: prod-default-v2
+    runs-on: xpu
     env:
       IMAGE_REGISTRY: ai-dynamo
       IMAGE_REPOSITORY: dynamo
@@ -387,7 +387,7 @@ jobs:
    # ============================================================================
 
   deploy-operator:
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     # Run when any deploy test will run: if any framework or deploy files changed
     if: |
       !cancelled() &&
@@ -445,7 +445,7 @@ jobs:
       !cancelled() && !failure() &&
       (needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true') &&
       (needs.vllm-pipeline.result == 'success')
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     needs: [changed-files, deploy-operator, vllm-pipeline]
     timeout-minutes: 25
     permissions:
@@ -585,7 +585,7 @@ jobs:
 
   cleanup:
     name: Cleanup AKS resources
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     if: always()
     needs: [deploy-operator, deploy-test-trtllm, deploy-test-sglang, deploy-test-vllm]
     steps:
