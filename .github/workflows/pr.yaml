@@ -303,7 +303,7 @@ jobs:
             -w /workspace \
             -v "$(pwd)/test-results:/workspace/test-results" \
             "${XPU_TEST_IMAGE}" \
-            bash -lc 'pytest --continue-on-collection-errors -v --tb=short --junitxml=/workspace/test-results/pytest_test_report_vllm_xpu.xml -m "pre_merge and vllm and xpu" tests/serve/test_vllm_xpu.py'
+            bash -lc 'pytest --continue-on-collection-errors -v --tb=short --junitxml=/workspace/test-results/pytest_test_report_vllm_xpu.xml -m "pre_merge and vllm and xpu_1" tests/serve/test_vllm_xpu.py'
 
       - name: Upload XPU test results
         if: always()
