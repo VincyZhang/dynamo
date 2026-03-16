@@ -262,7 +262,7 @@ jobs:
     if: |
       (needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true')
     name: xpu-test
-    runs-on: prod-tester-xpu-v1
+    runs-on: xpu
     timeout-minutes: 60
     env:
       XPU_TEST_IMAGE: ${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:main-vllm-xpu-amd64
@@ -483,7 +483,7 @@ jobs:
           platform_arch: amd64
 
   deploy-test-sglang:
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     if: |
       !cancelled() && !failure() &&
       (needs.changed-files.outputs.sglang == 'true' || needs.changed-files.outputs.deploy == 'true') &&
@@ -520,7 +520,7 @@ jobs:
           platform_arch: amd64
 
   deploy-test-trtllm:
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     if: |
       !cancelled() && !failure() &&
       (needs.changed-files.outputs.trtllm == 'true' || needs.changed-files.outputs.deploy == 'true') &&
@@ -567,7 +567,7 @@ jobs:
 
   clean-k8s-builder:
     name: Clean K8s builder if exists
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     if: always()
     needs: [vllm-pipeline, sglang-pipeline, trtllm-pipeline, operator, changed-files]
     steps:
