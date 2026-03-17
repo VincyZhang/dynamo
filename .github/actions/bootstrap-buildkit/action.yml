@@ -267,7 +267,7 @@ runs:
             local tolerations_escaped="${{ inputs.tolerations }}"
             tolerations_escaped="${tolerations_escaped//,/\\,}"
 
-            local cmd=(docker buildx create)
+            local cmd=()
             if [[ "$mode" == "append" ]]; then
               cmd+=(--append)
             fi
@@ -327,7 +327,7 @@ runs:
             echo "::notice::Primary node selector failed for ${arch}. Retrying without role selector."
             selector="kubernetes.io/arch=${arch}"
             selector_escaped="${selector//,/\\,}"
-            cmd=(docker buildx create)
+            cmd=()
             if [[ "$mode" == "append" ]]; then
               cmd+=(--append)
             fi
