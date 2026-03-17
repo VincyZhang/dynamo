@@ -361,6 +361,31 @@ runs:
               fi
             fi
 
+            if ! $retry_ok && echo "$retry_output" | grep -q "invalid driver option operator for driver kubernetes"; then
+              echo "::notice::Buildx rejected tolerations driver-opt. Retrying fallback selector without tolerations."
+              local -a cmd_no_tolerations=()
+              for arg in "${cmd[@]}"; do
+                if [[ "$arg" == --driver-opt=tolerations=* ]]; then
+                  continue
+                fi
+                cmd_no_tolerations+=("$arg")
+              done
+
+              if $SUPPORTS_NAME; then
+                if retry_output=$(run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
+                  retry_ok=true
+                fi
+              elif [[ "$mode" == "append" ]]; then
+                if retry_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
+                  retry_ok=true
+                fi
+              else
+                if retry_output=$(run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
+                  retry_ok=true
+                fi
+              fi
+            fi
+
             if ! $retry_ok; then
               echo "::error::Fallback node selector also failed for ${arch}."
               if [ -n "$retry_output" ]; then
