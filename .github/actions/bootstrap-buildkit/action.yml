@@ -35,6 +35,10 @@ inputs:
     description: 'Kubernetes namespace for buildkit pods'
     required: false
     default: 'buildkit'
+  arch:
+    description: 'Target architecture for fallback kubernetes builder (amd64, arm64, all)'
+    required: false
+    default: 'all'
   replicas:
     description: 'Number of buildkit replicas'
     required: false
@@ -79,36 +83,96 @@ runs:
           fi
         done
 
-    - name: Create Kubernetes builder for both platforms
+    - name: Create Kubernetes builder
       if: inputs.buildkit_worker_addresses == ''
       shell: bash
       run: |
+        NAMESPACE="${{ inputs.namespace }}"
+        TARGET_ARCH="${{ inputs.arch }}"
+
+        case "$TARGET_ARCH" in
+          amd64|arm64|all) ;;
+          *)
+            echo "::error::Invalid arch '$TARGET_ARCH'. Must be amd64, arm64, or all."
+            exit 1
+            ;;
+        esac
+
+        if command -v kubectl > /dev/null 2>&1; then
+          if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
+            echo "::warning::Namespace '$NAMESPACE' not found. Attempting to create it."
+            if kubectl create namespace "$NAMESPACE" > /dev/null 2>&1; then
+              echo "✅ Created namespace '$NAMESPACE'."
+            else
+              echo "::warning::Failed to create namespace '$NAMESPACE'. Falling back to namespace 'default'."
+              NAMESPACE="default"
+            fi
+          fi
+        else
+          echo "::warning::kubectl not found; proceeding with namespace '$NAMESPACE'."
+        fi
+
         if docker buildx inspect ${{ inputs.builder_name }} > /dev/null 2>&1; then
             # If exit code is 0 (success), print the message
             echo "✅ Builder '${{ inputs.builder_name }}' already exists. Skipping creation."
         else
-          echo "K8s Builder '${{ inputs.builder_name }}' does not exist. Creating it."
-          docker buildx create --use --name ${{ inputs.builder_name }} --driver kubernetes --platform=linux/amd64 \
-          '--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}' \
-          '--driver-opt=namespace=${{ inputs.namespace }}' \
-          '--driver-opt=loadbalance=sticky' \
-          '--driver-opt=replicas=${{ inputs.replicas }}' \
-          '--driver-opt=requests.cpu=${{ inputs.requests_cpu }}' \
-          '--driver-opt=requests.memory=${{ inputs.requests_memory }}' \
-          '--driver-opt=limits.memory=${{ inputs.limits_memory }}' \
-          '--driver-opt="nodeselector=kubernetes.io/arch=amd64,role=dynamo-builder-fallback"' \
-          '--driver-opt="tolerations=${{ inputs.tolerations }}"'
+          echo "K8s Builder '${{ inputs.builder_name }}' does not exist. Creating it for arch=$TARGET_ARCH."
 
-          docker buildx create --append --name ${{ inputs.builder_name }} --driver kubernetes --platform=linux/arm64 \
-          '--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}' \
-          '--driver-opt=namespace=${{ inputs.namespace }}' \
-          '--driver-opt=loadbalance=sticky' \
-          '--driver-opt=replicas=${{ inputs.replicas }}' \
-          '--driver-opt=requests.cpu=${{ inputs.requests_cpu }}' \
-          '--driver-opt=requests.memory=${{ inputs.requests_memory }}' \
-          '--driver-opt=limits.memory=${{ inputs.limits_memory }}' \
-          '--driver-opt="nodeselector=kubernetes.io/arch=arm64,role=dynamo-builder-fallback"' \
-          '--driver-opt="tolerations=${{ inputs.tolerations }}"'
+          create_node() {
+            local mode="$1"      # use|append
+            local arch="$2"      # amd64|arm64
+            local selector="kubernetes.io/arch=${arch},role=dynamo-builder-fallback"
+
+            local cmd=(docker buildx create)
+            if [[ "$mode" == "append" ]]; then
+              cmd+=(--append)
+            else
+              cmd+=(--use)
+            fi
+
+            cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
+            cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
+            cmd+=("--driver-opt=namespace=${NAMESPACE}")
+            cmd+=("--driver-opt=loadbalance=sticky")
+            cmd+=("--driver-opt=replicas=${{ inputs.replicas }}")
+            cmd+=("--driver-opt=requests.cpu=${{ inputs.requests_cpu }}")
+            cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
+            cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
+            cmd+=("--driver-opt=nodeselector=${selector}")
+            cmd+=("--driver-opt=tolerations=${{ inputs.tolerations }}")
+
+            if "${cmd[@]}"; then
+              return 0
+            fi
+
+            echo "::warning::Primary node selector failed for ${arch}. Retrying without role selector."
+            selector="kubernetes.io/arch=${arch}"
+            cmd=(docker buildx create)
+            if [[ "$mode" == "append" ]]; then
+              cmd+=(--append)
+            else
+              cmd+=(--use)
+            fi
+            cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
+            cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
+            cmd+=("--driver-opt=namespace=${NAMESPACE}")
+            cmd+=("--driver-opt=loadbalance=sticky")
+            cmd+=("--driver-opt=replicas=${{ inputs.replicas }}")
+            cmd+=("--driver-opt=requests.cpu=${{ inputs.requests_cpu }}")
+            cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
+            cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
+            cmd+=("--driver-opt=nodeselector=${selector}")
+            "${cmd[@]}"
+          }
+
+          if [[ "$TARGET_ARCH" == "amd64" ]]; then
+            create_node use amd64
+          elif [[ "$TARGET_ARCH" == "arm64" ]]; then
+            create_node use arm64
+          else
+            create_node use amd64
+            create_node append arm64
+          fi
         fi
         sleep 3 # Give the builders some time to be ready
 

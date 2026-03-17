@@ -136,6 +136,7 @@ runs:
         buildkit_worker_addresses: ${{ steps.prepare.outputs.worker_addresses }}
         ephemeral_storage: ${{ inputs.ephemeral_storage }}
         namespace: ${{ inputs.namespace }}
+        arch: ${{ inputs.all_arch == 'true' && 'all' || inputs.arch }}
         replicas: ${{ inputs.replicas }}
         requests_cpu: ${{ inputs.requests_cpu }}
         requests_memory: ${{ inputs.requests_memory }}
