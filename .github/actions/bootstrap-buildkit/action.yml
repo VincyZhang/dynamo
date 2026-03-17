@@ -87,7 +87,6 @@ runs:
       if: inputs.buildkit_worker_addresses == ''
       shell: bash
       run: |
-        NAMESPACE="${{ inputs.namespace }}"
         TARGET_ARCH="${{ inputs.arch }}"
 
         case "$TARGET_ARCH" in
@@ -97,20 +96,6 @@ runs:
             exit 1
             ;;
         esac
-
-        if command -v kubectl > /dev/null 2>&1; then
-          if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
-            echo "::warning::Namespace '$NAMESPACE' not found. Attempting to create it."
-            if kubectl create namespace "$NAMESPACE" > /dev/null 2>&1; then
-              echo "✅ Created namespace '$NAMESPACE'."
-            else
-              echo "::warning::Failed to create namespace '$NAMESPACE'. Falling back to namespace 'default'."
-              NAMESPACE="default"
-            fi
-          fi
-        else
-          echo "::warning::kubectl not found; proceeding with namespace '$NAMESPACE'."
-        fi
 
         if docker buildx inspect ${{ inputs.builder_name }} > /dev/null 2>&1; then
             # If exit code is 0 (success), print the message
@@ -122,6 +107,9 @@ runs:
             local mode="$1"      # use|append
             local arch="$2"      # amd64|arm64
             local selector="kubernetes.io/arch=${arch},role=dynamo-builder-fallback"
+            local selector_escaped="${selector//,/\\,}"
+            local tolerations_escaped="${{ inputs.tolerations }}"
+            tolerations_escaped="${tolerations_escaped//,/\\,}"
 
             local cmd=(docker buildx create)
             if [[ "$mode" == "append" ]]; then
@@ -132,14 +120,14 @@ runs:
 
             cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
             cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
-            cmd+=("--driver-opt=namespace=${NAMESPACE}")
+            cmd+=("--driver-opt=namespace=${{ inputs.namespace }}")
             cmd+=("--driver-opt=loadbalance=sticky")
             cmd+=("--driver-opt=replicas=${{ inputs.replicas }}")
             cmd+=("--driver-opt=requests.cpu=${{ inputs.requests_cpu }}")
             cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
-            cmd+=("--driver-opt=nodeselector=${selector}")
-            cmd+=("--driver-opt=tolerations=${{ inputs.tolerations }}")
+            cmd+=("--driver-opt=nodeselector=${selector_escaped}")
+            cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
 
             if "${cmd[@]}"; then
               return 0
@@ -147,6 +135,7 @@ runs:
 
             echo "::warning::Primary node selector failed for ${arch}. Retrying without role selector."
             selector="kubernetes.io/arch=${arch}"
+            selector_escaped="${selector//,/\\,}"
             cmd=(docker buildx create)
             if [[ "$mode" == "append" ]]; then
               cmd+=(--append)
@@ -155,13 +144,13 @@ runs:
             fi
             cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
             cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
-            cmd+=("--driver-opt=namespace=${NAMESPACE}")
+            cmd+=("--driver-opt=namespace=${{ inputs.namespace }}")
             cmd+=("--driver-opt=loadbalance=sticky")
             cmd+=("--driver-opt=replicas=${{ inputs.replicas }}")
             cmd+=("--driver-opt=requests.cpu=${{ inputs.requests_cpu }}")
             cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
-            cmd+=("--driver-opt=nodeselector=${selector}")
+            cmd+=("--driver-opt=nodeselector=${selector_escaped}")
             "${cmd[@]}"
           }
 
