@@ -5,7 +5,7 @@ name: PR
 
 on:
   push:
-  branches:
+    branches:
       - "pull-request/[0-9]+"
       # Note: release/* branches are handled by release.yml workflow
   pull_request:
