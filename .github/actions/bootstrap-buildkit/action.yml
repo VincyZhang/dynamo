@@ -321,7 +321,10 @@ runs:
               return 0
             fi
 
-            echo "::warning::Primary node selector failed for ${arch}. Retrying without role selector."
+            if [ -n "$create_output" ]; then
+              echo "$create_output" >&2
+            fi
+            echo "::notice::Primary node selector failed for ${arch}. Retrying without role selector."
             selector="kubernetes.io/arch=${arch}"
             selector_escaped="${selector//,/\\,}"
             cmd=(docker buildx create)
@@ -340,20 +343,41 @@ runs:
             cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
+            cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
 
+            local retry_output=""
+            local retry_ok=false
             if $SUPPORTS_NAME; then
-              run_buildx_create "${cmd[@]}"
+              if retry_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
+                retry_ok=true
+              fi
             elif [[ "$mode" == "append" ]]; then
-              BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd[@]}"
+              if retry_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd[@]}" 2>&1); then
+                retry_ok=true
+              fi
             else
-              local retry_output=""
-              retry_output=$(run_buildx_create "${cmd[@]}")
+              if retry_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
+                retry_ok=true
+              fi
+            fi
+
+            if ! $retry_ok; then
+              echo "::error::Fallback node selector also failed for ${arch}."
+              if [ -n "$retry_output" ]; then
+                echo "$retry_output" >&2
+              fi
+              return 1
+            fi
+
+            if ! $SUPPORTS_NAME && [[ "$mode" != "append" ]]; then
               local retry_created_name=""
               retry_created_name=$(echo "$retry_output" | tr -d '\r' | tail -n 1)
               if [ -n "$retry_created_name" ]; then
                 RESOLVED_BUILDER="$retry_created_name"
               fi
             fi
+
+            echo "✅ Fallback node selector succeeded for ${arch}."
           }
 
           if [[ "$TARGET_ARCH" == "amd64" ]]; then
