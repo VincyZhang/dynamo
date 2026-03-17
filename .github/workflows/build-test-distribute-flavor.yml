@@ -268,12 +268,16 @@ jobs:
           if [ "${{ inputs.make_efa }}" == "true" ]; then
             MAKE_EFA_FLAG="--make-efa"
           fi
+          CUDA_VERSION_ARG=""
+          if [ -n "${{ inputs.cuda_version }}" ]; then
+            CUDA_VERSION_ARG="--cuda-version=${{ inputs.cuda_version }}"
+          fi
           python ./container/render.py \
               --target=${{ inputs.target }} \
               --framework=${{ inputs.framework }} \
               --device=${{ inputs.device }} \
               --platform=${{ inputs.platform }} \
-              --cuda-version=${{ inputs.cuda_version }} \
+              ${CUDA_VERSION_ARG} \
               ${MAKE_EFA_FLAG} \
               --show-result \
               --output-short-filename
