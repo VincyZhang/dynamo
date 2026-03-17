@@ -76,7 +76,8 @@ runs:
         FIRST=true
         for addr in "${ADDR_LIST[@]}"; do
           if $FIRST; then
-            docker buildx create --use --name ${{ inputs.builder_name }} --driver remote "$addr"
+            docker buildx create --name ${{ inputs.builder_name }} --driver remote "$addr"
+            docker buildx use ${{ inputs.builder_name }}
             FIRST=false
           else
             docker buildx create --append --name ${{ inputs.builder_name }} --driver remote "$addr"
@@ -100,6 +101,7 @@ runs:
         if docker buildx inspect ${{ inputs.builder_name }} > /dev/null 2>&1; then
             # If exit code is 0 (success), print the message
             echo "✅ Builder '${{ inputs.builder_name }}' already exists. Skipping creation."
+            docker buildx use ${{ inputs.builder_name }}
         else
           echo "K8s Builder '${{ inputs.builder_name }}' does not exist. Creating it for arch=$TARGET_ARCH."
 
@@ -114,8 +116,6 @@ runs:
             local cmd=(docker buildx create)
             if [[ "$mode" == "append" ]]; then
               cmd+=(--append)
-            else
-              cmd+=(--use)
             fi
 
             cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
@@ -139,8 +139,6 @@ runs:
             cmd=(docker buildx create)
             if [[ "$mode" == "append" ]]; then
               cmd+=(--append)
-            else
-              cmd+=(--use)
             fi
             cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
             cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
@@ -162,6 +160,8 @@ runs:
             create_node use amd64
             create_node append arm64
           fi
+
+          docker buildx use ${{ inputs.builder_name }}
         fi
         sleep 3 # Give the builders some time to be ready
 

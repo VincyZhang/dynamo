@@ -15,13 +15,27 @@ runs:
     - name: Setup Kubeconfig
       shell: bash
       run: |
+        if [ -z "${{ inputs.kubeconfig_base64 }}" ]; then
+          echo "::error::kubeconfig_base64 input is empty. Cluster access secret is missing for this run."
+          exit 1
+        fi
+
         echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig
         chmod 600 ${{ github.workspace }}/.kubeconfig
         echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig" >> $GITHUB_ENV
 
+        if [ ! -s ${{ github.workspace }}/.kubeconfig ]; then
+          echo "::error::Decoded kubeconfig is empty. Check AZURE_AKS_CI_KUBECONFIG_B64."
+          exit 1
+        fi
+
+        export KUBECONFIG=${{ github.workspace }}/.kubeconfig
+        kubectl config current-context >/dev/null
+
     - name: Debug - List resources
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         echo "::group::List resources in namespace $NAMESPACE"
@@ -32,6 +46,7 @@ runs:
     - name: Delete stale DynamoGraphDeployments
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         echo "::group::Delete stale DynamoGraphDeployments"
@@ -41,6 +56,7 @@ runs:
     - name: Uninstall Helm chart
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         echo "::group::Uninstall Helm chart"
@@ -54,6 +70,7 @@ runs:
     - name: Delete namespace
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         echo "::group::Delete namespace $NAMESPACE"

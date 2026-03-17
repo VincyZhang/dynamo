@@ -82,11 +82,22 @@ runs:
       env:
         NAMESPACE: ${{ steps.ns-check.outputs.ns }}
       run: |
+        if [ -z "${{ inputs.kubeconfig_base64 }}" ]; then
+          echo "::error::kubeconfig_base64 input is empty. Cluster access secret is missing for this run."
+          exit 1
+        fi
+
         echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig
         chmod 600 ${{ github.workspace }}/.kubeconfig
         echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig" >> $GITHUB_ENV
 
+        if [ ! -s ${{ github.workspace }}/.kubeconfig ]; then
+          echo "::error::Decoded kubeconfig is empty. Check AZURE_AKS_CI_KUBECONFIG_B64."
+          exit 1
+        fi
+
         export KUBECONFIG=${{ github.workspace }}/.kubeconfig
+        kubectl config current-context >/dev/null
         kubectl config set-context --current --namespace=${NAMESPACE}
         kubectl config get-contexts
 
@@ -127,12 +138,12 @@ runs:
       if: always()
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ steps.ns-check.outputs.ns }}
         GRAPH_NAME: ${{ steps.deploy.outputs.graph_name }}
       run: |
         echo "::group::Cleanup Deployment"
         set -x
-        export KUBECONFIG=${{ github.workspace }}/.kubeconfig
 
         echo "=== PRE-CLEANUP STATUS ==="
         kubectl get dynamographdeployments -n $NAMESPACE || true

@@ -26,13 +26,27 @@ runs:
     - name: Setup Kubeconfig
       shell: bash
       run: |
+        if [ -z "${{ inputs.kubeconfig_base64 }}" ]; then
+          echo "::error::kubeconfig_base64 input is empty. Cluster access secret is missing for this run."
+          exit 1
+        fi
+
         echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig
         chmod 600 ${{ github.workspace }}/.kubeconfig
         echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig" >> $GITHUB_ENV
 
+        if [ ! -s ${{ github.workspace }}/.kubeconfig ]; then
+          echo "::error::Decoded kubeconfig is empty. Check AZURE_AKS_CI_KUBECONFIG_B64."
+          exit 1
+        fi
+
+        export KUBECONFIG=${{ github.workspace }}/.kubeconfig
+        kubectl config current-context >/dev/null
+
     - name: Create namespace
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         echo "::group::Create namespace $NAMESPACE"
@@ -60,6 +74,7 @@ runs:
       if: inputs.hf_token != ''
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
         HF_TOKEN: ${{ inputs.hf_token }}
       run: |
@@ -72,6 +87,7 @@ runs:
     - name: Install Dynamo platform via Helm
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
         REGISTRY: ${{ inputs.registry }}
         OPERATOR_TAG: ${{ inputs.operator_tag }}
@@ -107,6 +123,7 @@ runs:
     - name: Wait for operator rollout
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         echo "::group::Wait for operator rollout"
@@ -117,6 +134,7 @@ runs:
       if: failure()
       shell: bash
       env:
+        KUBECONFIG: ${{ github.workspace }}/.kubeconfig
         NAMESPACE: ${{ inputs.namespace }}
       run: |
         set +eo pipefail
