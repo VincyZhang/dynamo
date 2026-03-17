@@ -73,22 +73,48 @@ runs:
       run: |
         ADDRS="${{ inputs.buildkit_worker_addresses }}"
         IFS=',' read -ra ADDR_LIST <<< "$ADDRS"
+        SUPPORTS_NAME=false
+        if docker buildx create --help | grep -q -- '--name'; then
+          SUPPORTS_NAME=true
+        fi
+
         FIRST=true
+        RESOLVED_BUILDER="${{ inputs.builder_name }}"
         for addr in "${ADDR_LIST[@]}"; do
           if $FIRST; then
-            docker buildx create --name ${{ inputs.builder_name }} --driver remote "$addr"
-            docker buildx use ${{ inputs.builder_name }}
+            if $SUPPORTS_NAME; then
+              docker buildx create --name "${RESOLVED_BUILDER}" --driver remote "$addr"
+            else
+              # Legacy buildx without --name returns the created builder name on stdout.
+              RESOLVED_BUILDER=$(docker buildx create --driver remote "$addr" | tr -d '\r' | tail -n 1)
+              if [ -z "$RESOLVED_BUILDER" ]; then
+                echo "::error::Failed to resolve builder name from buildx create output"
+                exit 1
+              fi
+            fi
+            docker buildx use "${RESOLVED_BUILDER}"
             FIRST=false
           else
-            docker buildx create --append --name ${{ inputs.builder_name }} --driver remote "$addr"
+            if $SUPPORTS_NAME; then
+              docker buildx create --append --name "${RESOLVED_BUILDER}" --driver remote "$addr"
+            else
+              docker buildx use "${RESOLVED_BUILDER}"
+              BUILDX_BUILDER="${RESOLVED_BUILDER}" docker buildx create --append --driver remote "$addr"
+            fi
           fi
         done
+        echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
 
     - name: Create Kubernetes builder
       if: inputs.buildkit_worker_addresses == ''
       shell: bash
       run: |
         TARGET_ARCH="${{ inputs.arch }}"
+        SUPPORTS_NAME=false
+        if docker buildx create --help | grep -q -- '--name'; then
+          SUPPORTS_NAME=true
+        fi
+        RESOLVED_BUILDER="${{ inputs.builder_name }}"
 
         case "$TARGET_ARCH" in
           amd64|arm64|all) ;;
@@ -98,12 +124,12 @@ runs:
             ;;
         esac
 
-        if docker buildx inspect ${{ inputs.builder_name }} > /dev/null 2>&1; then
+        if $SUPPORTS_NAME && docker buildx inspect "${RESOLVED_BUILDER}" > /dev/null 2>&1; then
             # If exit code is 0 (success), print the message
-            echo "✅ Builder '${{ inputs.builder_name }}' already exists. Skipping creation."
-            docker buildx use ${{ inputs.builder_name }}
+            echo "✅ Builder '${RESOLVED_BUILDER}' already exists. Skipping creation."
+            docker buildx use "${RESOLVED_BUILDER}"
         else
-          echo "K8s Builder '${{ inputs.builder_name }}' does not exist. Creating it for arch=$TARGET_ARCH."
+          echo "K8s Builder '${RESOLVED_BUILDER}' does not exist. Creating it for arch=$TARGET_ARCH."
 
           create_node() {
             local mode="$1"      # use|append
@@ -118,7 +144,10 @@ runs:
               cmd+=(--append)
             fi
 
-            cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
+            if $SUPPORTS_NAME; then
+              cmd+=(--name "${RESOLVED_BUILDER}")
+            fi
+            cmd+=(--driver kubernetes --platform="linux/${arch}")
             cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
             cmd+=("--driver-opt=namespace=${{ inputs.namespace }}")
             cmd+=("--driver-opt=loadbalance=sticky")
@@ -129,7 +158,38 @@ runs:
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
             cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
 
-            if "${cmd[@]}"; then
+            local create_output=""
+            local create_ok=false
+            if $SUPPORTS_NAME; then
+              if create_output=$("${cmd[@]}" 2>&1); then
+                create_ok=true
+              else
+                create_output=""
+              fi
+            else
+              if [[ "$mode" == "append" ]]; then
+                if create_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" "${cmd[@]}" 2>&1); then
+                  create_ok=true
+                else
+                  create_output=""
+                fi
+              else
+                if create_output=$("${cmd[@]}" 2>&1); then
+                  create_ok=true
+                else
+                  create_output=""
+                fi
+              fi
+            fi
+
+            if $create_ok; then
+              if ! $SUPPORTS_NAME && [[ "$mode" != "append" ]]; then
+                local created_name=""
+                created_name=$(echo "$create_output" | tr -d '\r' | tail -n 1)
+                if [ -n "$created_name" ]; then
+                  RESOLVED_BUILDER="$created_name"
+                fi
+              fi
               return 0
             fi
 
@@ -140,7 +200,10 @@ runs:
             if [[ "$mode" == "append" ]]; then
               cmd+=(--append)
             fi
-            cmd+=(--name "${{ inputs.builder_name }}" --driver kubernetes --platform="linux/${arch}")
+            if $SUPPORTS_NAME; then
+              cmd+=(--name "${RESOLVED_BUILDER}")
+            fi
+            cmd+=(--driver kubernetes --platform="linux/${arch}")
             cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
             cmd+=("--driver-opt=namespace=${{ inputs.namespace }}")
             cmd+=("--driver-opt=loadbalance=sticky")
@@ -149,7 +212,20 @@ runs:
             cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
-            "${cmd[@]}"
+
+            if $SUPPORTS_NAME; then
+              "${cmd[@]}"
+            elif [[ "$mode" == "append" ]]; then
+              BUILDX_BUILDER="${RESOLVED_BUILDER}" "${cmd[@]}"
+            else
+              local retry_output=""
+              retry_output=$("${cmd[@]}")
+              local retry_created_name=""
+              retry_created_name=$(echo "$retry_output" | tr -d '\r' | tail -n 1)
+              if [ -n "$retry_created_name" ]; then
+                RESOLVED_BUILDER="$retry_created_name"
+              fi
+            fi
           }
 
           if [[ "$TARGET_ARCH" == "amd64" ]]; then
@@ -161,8 +237,9 @@ runs:
             create_node append arm64
           fi
 
-          docker buildx use ${{ inputs.builder_name }}
+          docker buildx use "${RESOLVED_BUILDER}"
         fi
+        echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
         sleep 3 # Give the builders some time to be ready
 
         if [[ "${{ inputs.skip_bootstrap }}" != "true" ]]; then
@@ -177,9 +254,10 @@ runs:
       if: inputs.skip_bootstrap != 'true'
       shell: bash
       run: |
+        BUILDER_NAME="${BUILDX_BUILDER_NAME:-${{ inputs.builder_name }}}"
         echo "Bootstrapping buildkit..."
         for i in 1 2 3; do
-          if docker buildx inspect ${{ inputs.builder_name }} --bootstrap; then
+          if docker buildx inspect "$BUILDER_NAME" --bootstrap; then
             echo "Bootstrap succeeded on attempt $i"
             break
           fi
