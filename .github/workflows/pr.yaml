@@ -35,8 +35,7 @@ jobs:
 
 
   changed-files:
-    runs-on:
-      group: arc-prod-blue
+    runs-on: xpu
     environment: ${{ github.event_name == 'workflow_dispatch' && 'protected-deploy' || '' }}
     outputs:
       core: ${{ steps.changes.outputs.core }}
