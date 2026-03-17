@@ -4,8 +4,9 @@ description: 'Deploy a DynamoGraphDeployment to Kubernetes, validate it serves r
 inputs:
   # Kubernetes Configuration
   kubeconfig_base64:
-    description: 'Base64-encoded kubeconfig for cluster access'
-    required: true
+    description: 'Base64-encoded kubeconfig for cluster access. Optional when runner has $HOME/.kube/config.'
+    required: false
+    default: ''
   namespace:
     description: 'Kubernetes namespace for deployment'
     required: true
@@ -48,9 +49,24 @@ runs:
         PROFILE: ${{ inputs.profile }}
       run: |
         echo "::group::Check if namespace exists"
-        echo "${KUBECONFIG_B64}" | base64 -d > ${{ github.workspace }}/.kubeconfig_check
-        chmod 600 ${{ github.workspace }}/.kubeconfig_check
-        if KUBECONFIG=${{ github.workspace }}/.kubeconfig_check kubectl get namespace $NAMESPACE --ignore-not-found | grep -q $NAMESPACE; then
+        KCFG_PATH="${{ github.workspace }}/.kubeconfig_check"
+        if [ -n "${KUBECONFIG_B64}" ]; then
+          echo "${KUBECONFIG_B64}" | base64 -d > "$KCFG_PATH"
+        elif [ -f "$HOME/.kube/config" ]; then
+          cp "$HOME/.kube/config" "$KCFG_PATH"
+          echo "Using runner kubeconfig from $HOME/.kube/config"
+        else
+          echo "::error::No kubeconfig available. Provide kubeconfig_base64 or preconfigure $HOME/.kube/config on the runner."
+          exit 1
+        fi
+
+        chmod 600 "$KCFG_PATH"
+        if [ ! -s "$KCFG_PATH" ]; then
+          echo "::error::Resolved kubeconfig is empty."
+          exit 1
+        fi
+
+        if KUBECONFIG="$KCFG_PATH" kubectl get namespace $NAMESPACE --ignore-not-found | grep -q $NAMESPACE; then
           echo "exists=true" >> $GITHUB_OUTPUT
           echo "ns=${NAMESPACE}" >> $GITHUB_OUTPUT
           echo "Namespace $NAMESPACE exists, will reuse it"
@@ -63,7 +79,7 @@ runs:
           echo "ns=${SELF_NS}" >> $GITHUB_OUTPUT
           echo "Namespace $NAMESPACE not found, will self-bootstrap as ${SELF_NS}"
         fi
-        rm -f ${{ github.workspace }}/.kubeconfig_check
+        rm -f "$KCFG_PATH"
         echo "::endgroup::"
 
     - name: Setup namespace (self-bootstrap on rerun)
@@ -82,17 +98,21 @@ runs:
       env:
         NAMESPACE: ${{ steps.ns-check.outputs.ns }}
       run: |
-        if [ -z "${{ inputs.kubeconfig_base64 }}" ]; then
-          echo "::error::kubeconfig_base64 input is empty. Cluster access secret is missing for this run."
+        if [ -n "${{ inputs.kubeconfig_base64 }}" ]; then
+          echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig
+        elif [ -f "$HOME/.kube/config" ]; then
+          cp "$HOME/.kube/config" ${{ github.workspace }}/.kubeconfig
+          echo "Using runner kubeconfig from $HOME/.kube/config"
+        else
+          echo "::error::No kubeconfig available. Provide kubeconfig_base64 or preconfigure $HOME/.kube/config on the runner."
           exit 1
         fi
 
-        echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig
         chmod 600 ${{ github.workspace }}/.kubeconfig
         echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig" >> $GITHUB_ENV
 
         if [ ! -s ${{ github.workspace }}/.kubeconfig ]; then
-          echo "::error::Decoded kubeconfig is empty. Check AZURE_AKS_CI_KUBECONFIG_B64."
+          echo "::error::Resolved kubeconfig is empty."
           exit 1
         fi
 
