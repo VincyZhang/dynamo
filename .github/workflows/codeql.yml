@@ -6,7 +6,7 @@ on:
 jobs:
   codeql:
     name: Analyze Codebase
-    runs-on: ubuntu-latest
+    runs-on: arc-prod-blue
     permissions:
       actions: read
       contents: read

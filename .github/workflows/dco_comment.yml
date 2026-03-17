@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   dco-comment:
-    runs-on: ubuntu-latest
+    runs-on: arc-prod-blue
     steps:
       - name: Get DCO status
         id: dco

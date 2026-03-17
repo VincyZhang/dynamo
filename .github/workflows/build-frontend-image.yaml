@@ -255,7 +255,7 @@ jobs:
           target: frontend
 
   frontend-status-check:
-    runs-on: ubuntu-latest
+    runs-on: arc-prod-blue
     needs: [changed-files, build-frontend-image, build-epp-image]
     if: always()
     steps:
