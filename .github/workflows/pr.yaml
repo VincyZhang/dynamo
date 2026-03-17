@@ -5,7 +5,6 @@ name: PR
 
 on:
   push:
-    branches:
       - "pull-request/[0-9]+"
       # Note: release/* branches are handled by release.yml workflow
   pull_request:
@@ -349,7 +348,6 @@ jobs:
     # Run when any deploy test will run: if any framework or deploy files changed
     if: |
       !cancelled() &&
-      (secrets.AZURE_AKS_CI_KUBECONFIG_B64 != '') &&
       (needs.changed-files.outputs.vllm == 'true' ||
        needs.changed-files.outputs.sglang == 'true' ||
        needs.changed-files.outputs.trtllm == 'true' ||
