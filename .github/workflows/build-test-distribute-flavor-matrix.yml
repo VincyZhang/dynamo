@@ -129,6 +129,11 @@ on:
         required: false
         type: string
         default: ''
+      image_base:
+        description: 'Override image registry+repo base. Defaults to ECR when empty.'
+        required: false
+        type: string
+        default: ''
     secrets:
       AWS_DEFAULT_REGION:
         required: false
@@ -188,4 +193,5 @@ jobs:
       show_summary: ${{ inputs.build_only || inputs.show_summary }}
       build_only: ${{ inputs.build_only }}
       sanitized_ref_name: ${{ inputs.sanitized_ref_name }}
+      image_base: ${{ inputs.image_base }}
     secrets: inherit

@@ -226,6 +226,7 @@ jobs:
       single_gpu_test_markers: 'pre_merge and vllm and xpu_1'
       run_multi_gpu_tests: false
       copy_to_acr: false
+      image_base: amr-registry.caas.intel.com/ai-dynamo-xpu/intel-vllm
     secrets: inherit
 
   # ============================================================================

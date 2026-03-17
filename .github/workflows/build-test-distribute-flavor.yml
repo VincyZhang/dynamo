@@ -133,6 +133,11 @@ on:
         required: false
         type: string
         default: ''
+      image_base:
+        description: 'Override image registry+repo base (e.g. amr-registry.caas.intel.com/ai-dynamo-xpu/intel-vllm). Defaults to ECR when empty.'
+        required: false
+        type: string
+        default: ''
     secrets:
       AWS_DEFAULT_REGION:
         required: false
@@ -199,8 +204,12 @@ jobs:
           fi
           TARGET_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}"
           TEST_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}-test"
-          DEFAULT_TARGET_IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TARGET_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
-          TEST_IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TEST_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
+          IMAGE_BASE="${{ inputs.image_base }}"
+          if [ -z "$IMAGE_BASE" ]; then
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+          fi
+          DEFAULT_TARGET_IMAGE_URI="${IMAGE_BASE}:${TARGET_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
+          TEST_IMAGE_URI="${IMAGE_BASE}:${TEST_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "default_target_image_uri=${DEFAULT_TARGET_IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "test_image_uri=${TEST_IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "target_tag_plain=${TARGET_TAG_PLAIN}" >> $GITHUB_OUTPUT
@@ -315,12 +324,15 @@ jobs:
             CACHE_TAG_SUFFIX="-cuda${CUDA_MAJOR}"
           fi
           CACHE_TAG="test-${{ inputs.framework }}${CACHE_TAG_SUFFIX}-${{ inputs.platform }}-cache"
-          CACHE_ARGS="--cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG}"
-          CACHE_ARGS+=" --cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:release-${CACHE_TAG}"
-          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
-            CACHE_ARGS+=" --cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG},mode=max"
-          elif [[ "$GITHUB_REF_NAME" =~ ^release ]]; then
-            CACHE_ARGS+=" --cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:release-${CACHE_TAG},mode=max"
+          CACHE_ARGS=""
+          if [ -z "${{ inputs.image_base }}" ]; then
+            CACHE_ARGS="--cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG}"
+            CACHE_ARGS+=" --cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:release-${CACHE_TAG}"
+            if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+              CACHE_ARGS+=" --cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG},mode=max"
+            elif [[ "$GITHUB_REF_NAME" =~ ^release ]]; then
+              CACHE_ARGS+=" --cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:release-${CACHE_TAG},mode=max"
+            fi
           fi
 
           PUSH_ARGS=""
@@ -395,9 +407,13 @@ jobs:
             TAG_SUFFIX="-cuda${CUDA_VERSION}"
           fi
           echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
-          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}
+          IMAGE_BASE="${{ inputs.image_base }}"
+          if [ -z "$IMAGE_BASE" ]; then
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+          fi
+          RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
-          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}
+          TEST_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       - name: Docker Login
         uses: ./.github/actions/docker-login
@@ -502,9 +518,13 @@ jobs:
             TAG_SUFFIX="-cuda${CUDA_VERSION}"
           fi
           echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
-          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}
+          IMAGE_BASE="${{ inputs.image_base }}"
+          if [ -z "$IMAGE_BASE" ]; then
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+          fi
+          RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
-          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}
+          TEST_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       - name: Docker Login
         uses: ./.github/actions/docker-login
@@ -571,7 +591,11 @@ jobs:
             TAG_SUFFIX="-cuda${CUDA_VERSION}"
           fi
           echo "cuda_major=${CUDA_VERSION}" >> $GITHUB_OUTPUT
-          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}
+          IMAGE_BASE="${{ inputs.image_base }}"
+          if [ -z "$IMAGE_BASE" ]; then
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+          fi
+          RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
       - name: Compliance scan
         uses: ./.github/actions/compliance-scan
