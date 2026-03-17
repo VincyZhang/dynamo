@@ -24,8 +24,8 @@ env:
 
 jobs:
   changed-files:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     outputs:
       core: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || steps.changes.outputs.core == 'true' }}
       planner: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || steps.changes.outputs.planner == 'true' }}
@@ -47,8 +47,8 @@ jobs:
           echo "builder_name=${{ env.BUILDER_NAME }}" >> $GITHUB_OUTPUT
 
   dynamo-status-check:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     needs: [changed-files, build, rust-checks, test-parallel, test-sequential]
     if: always()
     steps:

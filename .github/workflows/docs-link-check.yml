@@ -11,8 +11,8 @@ permissions:
 
 jobs:
   lychee:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     steps:
 
       - name: Check out repository
@@ -75,8 +75,8 @@ jobs:
 
   broken-links-check:
     name: Check for broken markdown links
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

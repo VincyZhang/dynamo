@@ -21,8 +21,8 @@ on:
 
 jobs:
   label:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     permissions:
       contents: read
       pull-requests: write

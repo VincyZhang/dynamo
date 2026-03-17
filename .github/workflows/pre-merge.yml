@@ -29,8 +29,8 @@ concurrency:
 
 jobs:
   changed-files:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     outputs:
       rust: ${{ steps.changes.outputs.rust }}
     steps:
@@ -45,8 +45,8 @@ jobs:
           gh_token: ${{ github.token }}
 
   pre-merge-status-check:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     needs: [changed-files, pre-commit, rust-tests, rust-clippy]
     if: always()
     steps:
@@ -55,8 +55,8 @@ jobs:
           echo '${{ toJson(needs) }}' | jq -e 'to_entries | map(.value.result) | all(. as $result | ["success", "skipped"] | any($result == .))'
 
   pre-commit:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     permissions:
       contents: read
     steps:

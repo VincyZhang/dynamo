@@ -446,8 +446,8 @@ jobs:
           platform_arch: amd64
 
   deploy-status-check:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
     if: always()
     steps:

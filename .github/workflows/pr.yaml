@@ -35,8 +35,8 @@ jobs:
 
 
   changed-files:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     environment: ${{ github.event_name == 'workflow_dispatch' && 'protected-deploy' || '' }}
     outputs:
       core: ${{ steps.changes.outputs.core }}
@@ -62,8 +62,8 @@ jobs:
           echo "builder_name=${{ env.BUILDER_NAME }}" >> $GITHUB_OUTPUT
 
   backend-status-check:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     needs: [changed-files, vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, operator]  # THIS list determines blocking jobs
     if: always()
     steps:
@@ -72,8 +72,8 @@ jobs:
           echo '${{ toJson(needs) }}' | jq -e 'to_entries | map(.value.result) | all(. as $result | ["success", "skipped"] | any($result == .))'
 
   deploy-status-check:
--on:
-  group: arc-prod-blue
+    runs-on:
+      group: arc-prod-blue
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
     if: always()
     steps:
