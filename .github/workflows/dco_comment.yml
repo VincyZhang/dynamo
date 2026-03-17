@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   dco-comment:
-    runs-on: arc-prod-blue
+-on:
+  group: arc-prod-blue
     steps:
       - name: Get DCO status
         id: dco

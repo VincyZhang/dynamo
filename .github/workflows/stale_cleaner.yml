@@ -23,7 +23,8 @@ permissions:
 
 jobs:
   stale:
-    runs-on: arc-prod-blue
+-on:
+  group: arc-prod-blue
     steps:
       - uses: actions/stale@v9
         with:
