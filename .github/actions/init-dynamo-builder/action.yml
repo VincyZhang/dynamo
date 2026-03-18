@@ -86,6 +86,18 @@ inputs:
     description: 'Tolerations for buildkit pods'
     required: false
     default: "key=buildkit-fallback-worker,value=true,operator=Equal,effect=NoSchedule"
+  http_proxy:
+    description: 'HTTP proxy for buildkit kubernetes pods'
+    required: false
+    default: ''
+  https_proxy:
+    description: 'HTTPS proxy for buildkit kubernetes pods'
+    required: false
+    default: ''
+  no_proxy:
+    description: 'NO_PROXY for buildkit kubernetes pods'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -110,4 +122,7 @@ runs:
         requests_memory: ${{ inputs.requests_memory }}
         limits_memory: ${{ inputs.limits_memory }}
         tolerations: ${{ inputs.tolerations }}
+        http_proxy: ${{ inputs.http_proxy }}
+        https_proxy: ${{ inputs.https_proxy }}
+        no_proxy: ${{ inputs.no_proxy }}
 

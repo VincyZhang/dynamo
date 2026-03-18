@@ -77,6 +77,9 @@ jobs:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
           arch: amd64
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
+          no_proxy: ${{ vars.NO_PROXY }}
       - name: Docker Login
         if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
         uses: ./.github/actions/docker-login

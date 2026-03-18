@@ -236,6 +236,9 @@ jobs:
           flavor: ${{ inputs.device == 'cuda' && inputs.framework || 'general' }}
           arch: ${{ inputs.platform }}
           cuda_version: ${{ inputs.cuda_version }}
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
+          no_proxy: ${{ vars.NO_PROXY }}
       - name: Calculate extra tags with platform suffix # will get redundant upon multi arch builds support
         id: extra-tags
         shell: bash

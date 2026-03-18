@@ -59,6 +59,18 @@ inputs:
     description: 'Tolerations for buildkit pods'
     required: false
     default: "key=buildkit-fallback-worker,value=true,operator=Equal,effect=NoSchedule"
+  http_proxy:
+    description: 'HTTP proxy for buildkit kubernetes pods; falls back to runner HTTP_PROXY if unset'
+    required: false
+    default: ''
+  https_proxy:
+    description: 'HTTPS proxy for buildkit kubernetes pods; falls back to runner HTTPS_PROXY if unset'
+    required: false
+    default: ''
+  no_proxy:
+    description: 'NO_PROXY for buildkit kubernetes pods; falls back to runner NO_PROXY if unset'
+    required: false
+    default: ''
   skip_bootstrap:
     description: 'Skip the bootstrap step (only create the builder)'
     required: false
@@ -290,6 +302,21 @@ runs:
             local selector_escaped="${selector//,/\\,}"
             local tolerations_escaped="${{ inputs.tolerations }}"
             tolerations_escaped="${tolerations_escaped//,/\\,}"
+            local effective_http_proxy="${{ inputs.http_proxy }}"
+            local effective_https_proxy="${{ inputs.https_proxy }}"
+            local effective_no_proxy="${{ inputs.no_proxy }}"
+            if [ -z "$effective_http_proxy" ] && [ -n "${HTTP_PROXY:-}" ]; then
+              effective_http_proxy="${HTTP_PROXY}"
+            fi
+            if [ -z "$effective_https_proxy" ] && [ -n "${HTTPS_PROXY:-}" ]; then
+              effective_https_proxy="${HTTPS_PROXY}"
+            fi
+            if [ -z "$effective_no_proxy" ] && [ -n "${NO_PROXY:-}" ]; then
+              effective_no_proxy="${NO_PROXY}"
+            fi
+            local effective_http_proxy_escaped="${effective_http_proxy//,/\\,}"
+            local effective_https_proxy_escaped="${effective_https_proxy//,/\\,}"
+            local effective_no_proxy_escaped="${effective_no_proxy//,/\\,}"
 
             local cmd=()
             if [[ "$mode" == "append" ]]; then
@@ -309,6 +336,18 @@ runs:
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
             cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
+            if [ -n "$effective_http_proxy" ]; then
+              cmd+=("--driver-opt=env.http_proxy=${effective_http_proxy_escaped}")
+              cmd+=("--driver-opt=env.HTTP_PROXY=${effective_http_proxy_escaped}")
+            fi
+            if [ -n "$effective_https_proxy" ]; then
+              cmd+=("--driver-opt=env.https_proxy=${effective_https_proxy_escaped}")
+              cmd+=("--driver-opt=env.HTTPS_PROXY=${effective_https_proxy_escaped}")
+            fi
+            if [ -n "$effective_no_proxy" ]; then
+              cmd+=("--driver-opt=env.no_proxy=${effective_no_proxy_escaped}")
+              cmd+=("--driver-opt=env.NO_PROXY=${effective_no_proxy_escaped}")
+            fi
 
             local create_output=""
             local create_ok=false
@@ -371,6 +410,18 @@ runs:
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
             cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
+            if [ -n "$effective_http_proxy" ]; then
+              cmd+=("--driver-opt=env.http_proxy=${effective_http_proxy_escaped}")
+              cmd+=("--driver-opt=env.HTTP_PROXY=${effective_http_proxy_escaped}")
+            fi
+            if [ -n "$effective_https_proxy" ]; then
+              cmd+=("--driver-opt=env.https_proxy=${effective_https_proxy_escaped}")
+              cmd+=("--driver-opt=env.HTTPS_PROXY=${effective_https_proxy_escaped}")
+            fi
+            if [ -n "$effective_no_proxy" ]; then
+              cmd+=("--driver-opt=env.no_proxy=${effective_no_proxy_escaped}")
+              cmd+=("--driver-opt=env.NO_PROXY=${effective_no_proxy_escaped}")
+            fi
 
             local retry_output=""
             local retry_ok=false
