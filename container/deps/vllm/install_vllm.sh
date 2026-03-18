@@ -143,8 +143,14 @@ echo "✓ vLLM repository cloned"
 
 if [ "$DEVICE" = "xpu" ]; then
     echo "\n=== Installing vLLM ==="
+    sed -i '/vllm_xpu_kernels/d' requirements/xpu.txt
     uv pip install -r requirements/xpu.txt --index-strategy unsafe-best-match
+    
+    echo "\n=== Installing vllm_xpu_kernels ==="
+    wget https://github.com/vllm-project/vllm-xpu-kernels/releases/download/v0.1.3/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl -O /tmp/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl
+    uv pip install /tmp/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl
     uv pip install --verbose --no-build-isolation .
+    echo "✓ vllm_xpu_kernels installed"
 fi
 
 if [ "$DEVICE" = "cuda" ]; then
