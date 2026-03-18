@@ -147,7 +147,6 @@ runs:
         fi
         EFFECTIVE_HTTP_PROXY="${HTTP_PROXY:-${http_proxy:-}}"
         EFFECTIVE_HTTPS_PROXY="${HTTPS_PROXY:-${https_proxy:-}}"
-        EFFECTIVE_NO_PROXY="${NO_PROXY:-${no_proxy:-}}"
         if [ -n "$EFFECTIVE_HTTP_PROXY" ]; then
           EXTRA_ARGS+=" --build-arg HTTP_PROXY=${EFFECTIVE_HTTP_PROXY}"
           EXTRA_ARGS+=" --build-arg http_proxy=${EFFECTIVE_HTTP_PROXY}"
@@ -155,10 +154,6 @@ runs:
         if [ -n "$EFFECTIVE_HTTPS_PROXY" ]; then
           EXTRA_ARGS+=" --build-arg HTTPS_PROXY=${EFFECTIVE_HTTPS_PROXY}"
           EXTRA_ARGS+=" --build-arg https_proxy=${EFFECTIVE_HTTPS_PROXY}"
-        fi
-        if [ -n "$EFFECTIVE_NO_PROXY" ]; then
-          EXTRA_ARGS+=" --build-arg NO_PROXY=${EFFECTIVE_NO_PROXY}"
-          EXTRA_ARGS+=" --build-arg no_proxy=${EFFECTIVE_NO_PROXY}"
         fi
         if [ "${{ inputs.push_image }}" == "true" ]; then
           EXTRA_ARGS+=" --push"
