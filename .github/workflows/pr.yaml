@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUILDER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}
+  BUILDER_NAME: b-23229662873-1
   LOCAL_REGISTRY_HOST: amr-registry.caas.intel.com
   LOCAL_IMAGE_BASE: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
 
@@ -542,7 +542,7 @@ jobs:
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |
-        docker buildx rm ${{ needs.changed-files.outputs.builder_name }} || true
+        echo "Skipping builder removal to keep persistent local builder: ${{ needs.changed-files.outputs.builder_name }}"
 
 
   cleanup:
