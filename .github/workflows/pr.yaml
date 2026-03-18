@@ -232,7 +232,7 @@ jobs:
       single_xpu_test_timeout_minutes: 35
       run_multi_gpu_tests: false
       copy_to_acr: false
-      image_base: ${{ env.LOCAL_IMAGE_BASE }}
+      image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
     secrets: inherit
 
   # ============================================================================
@@ -392,7 +392,7 @@ jobs:
       with:
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
         namespace: ${{ steps.namespace.outputs.namespace }}
-        registry: ${{ env.LOCAL_REGISTRY_HOST }}
+        registry: amr-registry.caas.intel.com
         operator_tag: ${{ steps.operator-tag.outputs.tag }}
         hf_token: ${{ secrets.HF_TOKEN }}
    # ============================================================================
@@ -433,12 +433,12 @@ jobs:
         with:
           kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
           namespace: ${{ needs.deploy-operator.outputs.NAMESPACE }}
-          registry: ${{ env.LOCAL_REGISTRY_HOST }}
+          registry: amr-registry.caas.intel.com
           operator_tag: ${{ needs.deploy-operator.outputs.OPERATOR_TAG }}
           hf_token: ${{ secrets.HF_TOKEN }}
           framework: ${{ env.FRAMEWORK }}
           profile: ${{ matrix.profile }}
-          image: ${{ env.LOCAL_IMAGE_BASE }}:${{ github.sha }}-vllm-runtime-xpu-amd64
+          image: amr-registry.caas.intel.com/aiops/catalog/intel-vllm:${{ github.sha }}-vllm-runtime-xpu-amd64
           platform_arch: amd64
 
   deploy-test-sglang:
