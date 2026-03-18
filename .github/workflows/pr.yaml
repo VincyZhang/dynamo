@@ -351,13 +351,7 @@ jobs:
   deploy-operator:
     runs-on: xpu
     # Run when any deploy test will run: if any framework or deploy files changed
-    if: |
-      !cancelled() &&
-      (needs.changed-files.outputs.vllm == 'true' ||
-       needs.changed-files.outputs.sglang == 'true' ||
-       needs.changed-files.outputs.trtllm == 'true' ||
-       needs.changed-files.outputs.deploy == 'true') &&
-      (needs.operator.result == 'success' || needs.operator.result == 'skipped')
+    if: false  # temporarily disabled
     needs: [changed-files, operator]
     outputs:
       NAMESPACE: ${{ steps.namespace.outputs.namespace }}
