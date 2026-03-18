@@ -133,6 +133,16 @@ runs:
           done
         }
 
+        log_buildx_create_cmd() {
+          local -a args=("$@")
+          local rendered="docker buildx create"
+          local token
+          for token in "${args[@]}"; do
+            rendered+=" $(printf '%q' "$token")"
+          done
+          echo "::notice::Executing: ${rendered}"
+        }
+
         ADDRS="${{ inputs.buildkit_worker_addresses }}"
         IFS=',' read -ra ADDR_LIST <<< "$ADDRS"
         SUPPORTS_NAME=false
@@ -146,9 +156,11 @@ runs:
           if $FIRST; then
             local_create_output=""
             if $SUPPORTS_NAME; then
+              log_buildx_create_cmd --name "${RESOLVED_BUILDER}" --driver remote "$addr"
               local_create_output=$(run_buildx_create --name "${RESOLVED_BUILDER}" --driver remote "$addr")
             else
               # Legacy buildx without --name returns the created builder name on stdout.
+              log_buildx_create_cmd --driver remote "$addr"
               local_create_output=$(run_buildx_create --driver remote "$addr")
               RESOLVED_BUILDER=$(echo "$local_create_output" | tr -d '\r' | tail -n 1)
               if [ -z "$RESOLVED_BUILDER" ]; then
@@ -168,9 +180,11 @@ runs:
             FIRST=false
           else
             if $SUPPORTS_NAME; then
+              log_buildx_create_cmd --append --name "${RESOLVED_BUILDER}" --driver remote "$addr"
               run_buildx_create --append --name "${RESOLVED_BUILDER}" --driver remote "$addr" >/dev/null
             else
               docker buildx use "${RESOLVED_BUILDER}"
+              log_buildx_create_cmd --append --driver remote "$addr"
               BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create --append --driver remote "$addr" >/dev/null
             fi
           fi
@@ -237,6 +251,16 @@ runs:
           done
         }
 
+        log_buildx_create_cmd() {
+          local -a args=("$@")
+          local rendered="docker buildx create"
+          local token
+          for token in "${args[@]}"; do
+            rendered+=" $(printf '%q' "$token")"
+          done
+          echo "::notice::Executing: ${rendered}"
+        }
+
         TARGET_ARCH="${{ inputs.arch }}"
         SUPPORTS_NAME=false
         if docker buildx create --help | grep -q -- '--name'; then
@@ -289,6 +313,7 @@ runs:
             local create_output=""
             local create_ok=false
             if $SUPPORTS_NAME; then
+              log_buildx_create_cmd "${cmd[@]}"
               if create_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
                 create_ok=true
               else
@@ -296,12 +321,14 @@ runs:
               fi
             else
               if [[ "$mode" == "append" ]]; then
+                log_buildx_create_cmd "${cmd[@]}"
                 if create_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd[@]}" 2>&1); then
                   create_ok=true
                 else
                   create_output=""
                 fi
               else
+                log_buildx_create_cmd "${cmd[@]}"
                 if create_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
                   create_ok=true
                 else
@@ -348,21 +375,24 @@ runs:
             local retry_output=""
             local retry_ok=false
             if $SUPPORTS_NAME; then
+              log_buildx_create_cmd "${cmd[@]}"
               if retry_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
                 retry_ok=true
               fi
             elif [[ "$mode" == "append" ]]; then
+              log_buildx_create_cmd "${cmd[@]}"
               if retry_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd[@]}" 2>&1); then
                 retry_ok=true
               fi
             else
+              log_buildx_create_cmd "${cmd[@]}"
               if retry_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
                 retry_ok=true
               fi
             fi
 
-            if ! $retry_ok && echo "$retry_output" | grep -q "invalid driver option operator for driver kubernetes"; then
-              echo "::notice::Buildx rejected tolerations driver-opt. Retrying fallback selector without tolerations."
+            if ! $retry_ok && echo "$retry_output" | grep -Eq "invalid driver option (key|value|operator|effect) for driver kubernetes"; then
+              echo "::notice::Buildx rejected tolerations driver-opt fields. Retrying fallback selector without tolerations."
               local -a cmd_no_tolerations=()
               for arg in "${cmd[@]}"; do
                 if [[ "$arg" == --driver-opt=tolerations=* ]]; then
@@ -372,14 +402,17 @@ runs:
               done
 
               if $SUPPORTS_NAME; then
+                log_buildx_create_cmd "${cmd_no_tolerations[@]}"
                 if retry_output=$(run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
                   retry_ok=true
                 fi
               elif [[ "$mode" == "append" ]]; then
+                log_buildx_create_cmd "${cmd_no_tolerations[@]}"
                 if retry_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
                   retry_ok=true
                 fi
               else
+                log_buildx_create_cmd "${cmd_no_tolerations[@]}"
                 if retry_output=$(run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
                   retry_ok=true
                 fi
