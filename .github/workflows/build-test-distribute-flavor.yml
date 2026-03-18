@@ -60,6 +60,20 @@ on:
         required: false
         type: number
         default: 30
+      run_single_xpu_tests:
+        description: 'Whether to run single XPU tests'
+        required: false
+        type: boolean
+        default: false
+      single_xpu_test_markers:
+        description: 'Single XPU pytest markers'
+        required: false
+        type: string
+      single_xpu_test_timeout_minutes:
+        description: 'Timeout in minutes for single XPU tests'
+        required: false
+        type: number
+        default: 30
       run_multi_gpu_tests:
         description: 'Whether to run multi-gpu tests'
         required: false
@@ -386,11 +400,11 @@ jobs:
   test:
     if: |
         !inputs.build_only &&
-        ( inputs.run_cpu_only_tests || inputs.run_single_gpu_tests ) &&
+        ( inputs.run_cpu_only_tests || inputs.run_single_gpu_tests || inputs.run_single_xpu_tests ) &&
         inputs.build_image
     needs: [build]
     name: Test ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}-${{ inputs.platform }}
-    runs-on: ${{ inputs.platform == 'amd64' && 'prod-tester-amd-gpu-v1' || 'xpu' }}
+    runs-on: ${{ inputs.device == 'xpu' && 'xpu' || (inputs.platform == 'amd64' && 'prod-tester-amd-gpu-v1' || 'xpu') }}
     env:
       FRAMEWORK: ${{ inputs.framework }}
     steps:
@@ -475,11 +489,27 @@ jobs:
       # These are e2e tests marked with gpu_1 that require GPU hardware
       - name: Run GPU tests (sequential)
         timeout-minutes: ${{ inputs.single_gpu_test_timeout_minutes }}
-        if: ( inputs.platform == 'amd64' && inputs.run_single_gpu_tests == true ) # We only run GPU tests on amd64
+        if: ( inputs.platform == 'amd64' && inputs.device == 'cuda' && inputs.run_single_gpu_tests == true ) # We only run GPU tests on amd64 CUDA runners
         uses: ./.github/actions/pytest
         with:
           image_tag: ${{ steps.calculate-target-tag.outputs.test_image }}
           pytest_marks: ${{ inputs.single_gpu_test_markers }}
+          framework: ${{ inputs.framework }}
+          test_type: "pre_merge_gpu"
+          platform_arch: ${{ inputs.platform }}
+          enable_mypy: 'false' # already covered by CPU tests
+          hf_token: ${{ secrets.HF_TOKEN }}
+          parallel_mode: 'none'
+          dind_as_sidecar: 'true'
+
+      # Run XPU tests sequentially on xpu runners
+      - name: Run XPU tests (sequential)
+        timeout-minutes: ${{ inputs.single_xpu_test_timeout_minutes }}
+        if: ( inputs.device == 'xpu' && inputs.run_single_xpu_tests == true )
+        uses: ./.github/actions/pytest
+        with:
+          image_tag: ${{ steps.calculate-target-tag.outputs.test_image }}
+          pytest_marks: ${{ inputs.single_xpu_test_markers }}
           framework: ${{ inputs.framework }}
           test_type: "pre_merge_gpu"
           platform_arch: ${{ inputs.platform }}

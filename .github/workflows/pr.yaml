@@ -26,6 +26,8 @@ concurrency:
 
 env:
   BUILDER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}
+  LOCAL_REGISTRY_HOST: amr-registry.caas.intel.com
+  LOCAL_IMAGE_BASE: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
 
 jobs:
 
@@ -187,7 +189,7 @@ jobs:
   vllm-pipeline:
     name: vllm
     needs: [changed-files]
-    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true'
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: vllm
@@ -224,11 +226,13 @@ jobs:
       build_timeout_minutes: 60
       copy_timeout_minutes: 10
       run_cpu_only_tests: false
-      run_single_gpu_tests: ${{ needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' }}
-      single_gpu_test_markers: 'pre_merge and vllm and xpu_1'
+      run_single_gpu_tests: false
+      run_single_xpu_tests: ${{ needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' }}
+      single_xpu_test_markers: 'pre_merge and vllm and xpu_1'
+      single_xpu_test_timeout_minutes: 35
       run_multi_gpu_tests: false
       copy_to_acr: false
-      image_base: amr-registry.caas.intel.com/ai-dynamo-xpu/intel-vllm
+      image_base: ${{ env.LOCAL_IMAGE_BASE }}
     secrets: inherit
 
   # ============================================================================
@@ -388,7 +392,7 @@ jobs:
       with:
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
         namespace: ${{ steps.namespace.outputs.namespace }}
-        registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+        registry: ${{ env.LOCAL_REGISTRY_HOST }}
         operator_tag: ${{ steps.operator-tag.outputs.tag }}
         hf_token: ${{ secrets.HF_TOKEN }}
    # ============================================================================
@@ -402,10 +406,9 @@ jobs:
     if: |
       !cancelled() && !failure() &&
       (needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true') &&
-      (needs.vllm-pipeline.result == 'success') &&
       (needs.vllm-xpu-pipeline.result == 'success')
     runs-on: xpu
-    needs: [changed-files, deploy-operator, vllm-pipeline, vllm-xpu-pipeline]
+    needs: [changed-files, deploy-operator, vllm-xpu-pipeline]
     timeout-minutes: 25
     permissions:
       contents: read
@@ -430,12 +433,12 @@ jobs:
         with:
           kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
           namespace: ${{ needs.deploy-operator.outputs.NAMESPACE }}
-          registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+          registry: ${{ env.LOCAL_REGISTRY_HOST }}
           operator_tag: ${{ needs.deploy-operator.outputs.OPERATOR_TAG }}
           hf_token: ${{ secrets.HF_TOKEN }}
           framework: ${{ env.FRAMEWORK }}
           profile: ${{ matrix.profile }}
-          image: ${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:${{ github.sha }}-vllm-runtime-cuda12-amd64
+          image: ${{ env.LOCAL_IMAGE_BASE }}:${{ github.sha }}-vllm-runtime-xpu-amd64
           platform_arch: amd64
 
   deploy-test-sglang:

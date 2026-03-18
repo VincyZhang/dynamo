@@ -90,44 +90,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Route buildkit workers
-      id: route-buildkit
-      continue-on-error: true
-      shell: bash
-      run: |
-        CUDA_ARG=""
-        if [[ -n "${{ inputs.cuda_version }}" ]]; then
-          CUDA_ARG="--cuda ${{ inputs.cuda_version }}"
-        fi
-        if [[ "${{ inputs.all_arch }}" == "true" ]]; then
-           echo "running with --arch all --flavor ${{ inputs.flavor }} $CUDA_ARG"
-          .github/scripts/route_buildkit.sh --arch all --flavor ${{ inputs.flavor }} $CUDA_ARG
-        else
-          echo "running with --arch ${{ inputs.arch }} --flavor ${{ inputs.flavor }} $CUDA_ARG"
-          .github/scripts/route_buildkit.sh --arch ${{ inputs.arch }} --flavor ${{ inputs.flavor }} $CUDA_ARG
-        fi
-
-    - name: Prepare worker addresses and platform
+    - name: Use local Kubernetes builder only
       id: prepare
       shell: bash
       run: |
-        if [[ "${{ inputs.all_arch }}" == "true" ]]; then
-          # Combine both architecture outputs for multi-arch builds
-          AMD64_ADDRS="${{ steps.route-buildkit.outputs[format('{0}_amd64', inputs.flavor)] }}"
-          ARM64_ADDRS="${{ steps.route-buildkit.outputs[format('{0}_arm64', inputs.flavor)] }}"
-          if [[ -n "$AMD64_ADDRS" && -n "$ARM64_ADDRS" ]]; then
-            echo "worker_addresses=${AMD64_ADDRS},${ARM64_ADDRS}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "$AMD64_ADDRS" ]]; then
-            echo "worker_addresses=${AMD64_ADDRS}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "$ARM64_ADDRS" ]]; then
-            echo "worker_addresses=${ARM64_ADDRS}" >> "$GITHUB_OUTPUT"
-          else
-            echo "worker_addresses=" >> "$GITHUB_OUTPUT"
-          fi
-        else
-          # Single architecture build
-          echo "worker_addresses=${{ steps.route-buildkit.outputs[format('{0}_{1}', inputs.flavor, inputs.arch)] }}" >> "$GITHUB_OUTPUT"
-        fi
+        echo "Skipping remote BuildKit discovery; forcing local Kubernetes builder fallback."
+        echo "worker_addresses=" >> "$GITHUB_OUTPUT"
 
     - name: Bootstrap buildkit
       uses: ./.github/actions/bootstrap-buildkit
