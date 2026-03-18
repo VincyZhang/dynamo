@@ -71,6 +71,10 @@ inputs:
     description: 'NO_PROXY for buildkit kubernetes pods; falls back to runner NO_PROXY if unset'
     required: false
     default: ''
+  dns:
+    description: 'DNS nameserver for buildkit kubernetes pods (e.g. 8.8.8.8 or 127.0.0.11); helps resolve external domains'
+    required: false
+    default: ''
   skip_bootstrap:
     description: 'Skip the bootstrap step (only create the builder)'
     required: false
@@ -317,6 +321,7 @@ runs:
             local effective_http_proxy_escaped="${effective_http_proxy//,/\\,}"
             local effective_https_proxy_escaped="${effective_https_proxy//,/\\,}"
             local effective_no_proxy_escaped="${effective_no_proxy//,/\\,}"
+            local effective_dns="${{ inputs.dns }}"
 
             local cmd=()
             if [[ "$mode" == "append" ]]; then
@@ -336,6 +341,9 @@ runs:
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
             cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
+            if [ -n "$effective_dns" ]; then
+              cmd+=("--driver-opt=dns=${effective_dns}")
+            fi
             if [ -n "$effective_http_proxy" ]; then
               cmd+=("--driver-opt=env.http_proxy=${effective_http_proxy_escaped}")
               cmd+=("--driver-opt=env.HTTP_PROXY=${effective_http_proxy_escaped}")
@@ -410,6 +418,9 @@ runs:
             cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
             cmd+=("--driver-opt=nodeselector=${selector_escaped}")
             cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
+            if [ -n "$effective_dns" ]; then
+              cmd+=("--driver-opt=dns=${effective_dns}")
+            fi
             if [ -n "$effective_http_proxy" ]; then
               cmd+=("--driver-opt=env.http_proxy=${effective_http_proxy_escaped}")
               cmd+=("--driver-opt=env.HTTP_PROXY=${effective_http_proxy_escaped}")

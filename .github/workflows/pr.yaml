@@ -524,7 +524,7 @@ jobs:
   clean-k8s-builder:
     name: Clean K8s builder if exists
     runs-on: xpu
-    if: always()
+    if: false  # keep builder for local troubleshooting; do not auto-clean in CI
     needs: [vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, operator, changed-files]
     steps:
     - name: Checkout repository
