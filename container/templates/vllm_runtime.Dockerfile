@@ -31,9 +31,19 @@ ENV VIRTUAL_ENV=/opt/dynamo/venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
 {% if device == "xpu" %}
-RUN wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null && \
-    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
-    add-apt-repository -y ppa:kobuk-team/intel-graphics
+RUN set -eux; \
+        mkdir -p /usr/share/keyrings; \
+        if wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor > /usr/share/keyrings/oneapi-archive-keyring.gpg; then \
+            true; \
+        else \
+            export GNUPGHOME="$(mktemp -d)"; \
+            gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys BAC6F0C353D04109; \
+            gpg --batch --export BAC6F0C353D04109 | gpg --dearmor > /usr/share/keyrings/oneapi-archive-keyring.gpg; \
+            rm -rf "$GNUPGHOME"; \
+        fi; \
+        chmod 644 /usr/share/keyrings/oneapi-archive-keyring.gpg; \
+        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list; \
+        add-apt-repository -y ppa:kobuk-team/intel-graphics
 {% endif %}
 
 {% if device == "cuda" %}
