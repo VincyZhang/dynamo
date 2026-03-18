@@ -230,17 +230,9 @@ COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/triton ${SIT
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/flashinfer_cubin ${SITE_PACKAGES}/flashinfer_cubin
 {% endif %}
 # Remaining packages and venv structure (bin/, include/, share/, etc.)
-COPY --chmod=775 --chown=dynamo:0 --from=framework \
-    --exclude=lib/python*/site-packages/nvidia \
-    --exclude=lib/python*/site-packages/flashinfer_jit_cache \
-    --exclude=lib/python*/site-packages/torch \
-    --exclude=lib/python*/site-packages/vllm \
-{%- if platform == "amd64" %}
-    --exclude=lib/python*/site-packages/vllm_omni \
-{%- endif %}
-    --exclude=lib/python*/site-packages/triton \
-    --exclude=lib/python*/site-packages/flashinfer_cubin \
-    ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --chmod=775 --chown=dynamo:0 --from=framework ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+# Remove packages that were already copied separately to save space
+RUN rm -rf ${VIRTUAL_ENV}/lib/python*/site-packages/{nvidia,flashinfer_jit_cache,torch,vllm,vllm_omni,triton,flashinfer_cubin} 2>/dev/null || true
 
 # Copy vllm with correct ownership (read-only, no group-write needed)
 COPY --chown=dynamo:0 --from=framework /opt/vllm /opt/vllm
