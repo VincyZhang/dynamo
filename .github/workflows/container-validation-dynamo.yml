@@ -20,7 +20,7 @@ concurrency:
 
 env:
   CUDA_VERSION: '12.9'
-  BUILDER_NAME: b-23229662873-1
+  BUILDER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   changed-files:

@@ -45,7 +45,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  BUILDER_NAME: b-23229662873-1
+  BUILDER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   changed-files:
@@ -273,7 +273,7 @@ jobs:
   clean-k8s-builder:
     name: Clean K8s builder if exists
     runs-on: prod-default-small-v2
-    if: false  # keep builder for local troubleshooting; do not auto-clean in CI
+    if: always()
     needs: [build-frontend-image, changed-files]
     steps:
     - name: Checkout repository
@@ -291,4 +291,4 @@ jobs:
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |
-        echo "Skipping builder removal to keep persistent local builder: ${{ needs.changed-files.outputs.builder_name }}"
+        docker buildx rm ${{ needs.changed-files.outputs.builder_name }} || true
