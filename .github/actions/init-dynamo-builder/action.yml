@@ -102,6 +102,10 @@ inputs:
     description: 'DNS nameserver for buildkit kubernetes pods'
     required: false
     default: ''
+  use_runner_docker_builder:
+    description: 'When true and no remote workers are configured, skip Kubernetes builder creation and reuse the runner docker builder.'
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -130,4 +134,5 @@ runs:
         https_proxy: ${{ inputs.https_proxy }}
         no_proxy: ${{ inputs.no_proxy }}
         dns: ${{ inputs.dns }}
+        use_runner_docker_builder: ${{ inputs.use_runner_docker_builder }}
 

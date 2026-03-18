@@ -24,6 +24,10 @@ inputs:
     description: 'Comma-separated list of remote buildkit worker addresses. If empty, falls back to Kubernetes driver.'
     required: false
     default: ''
+  use_runner_docker_builder:
+    description: 'When true and no remote workers are configured, skip Kubernetes builder creation and reuse the runner docker builder.'
+    required: false
+    default: 'true'
 
 
   # Kubernetes driver inputs (used when remote_builder is false)
@@ -84,10 +88,23 @@ runs:
   using: "composite"
   steps:
     - name: Setup Docker Buildx
+      id: setup-buildx
       uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       with:
         driver: docker
         install: true
+
+    - name: Use runner docker builder
+      if: inputs.buildkit_worker_addresses == '' && inputs.use_runner_docker_builder == 'true'
+      shell: bash
+      run: |
+        RESOLVED_BUILDER="${{ steps.setup-buildx.outputs.name }}"
+        if [ -z "$RESOLVED_BUILDER" ]; then
+          RESOLVED_BUILDER="default"
+        fi
+        echo "Using runner docker builder: ${RESOLVED_BUILDER}"
+        docker buildx use "$RESOLVED_BUILDER"
+        echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
 
     - name: Define remote buildkit builders
       if: inputs.buildkit_worker_addresses != ''
@@ -208,7 +225,7 @@ runs:
         echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
 
     - name: Create Kubernetes builder
-      if: inputs.buildkit_worker_addresses == ''
+      if: inputs.buildkit_worker_addresses == '' && inputs.use_runner_docker_builder != 'true'
       shell: bash
       run: |
         run_buildx_create() {
