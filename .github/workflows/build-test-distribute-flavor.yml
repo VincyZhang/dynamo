@@ -226,7 +226,7 @@ jobs:
           DEFAULT_TARGET_IMAGE_URI="${IMAGE_BASE}:${TARGET_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
           TEST_IMAGE_URI="${IMAGE_BASE}:${TEST_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
           if [ "${{ inputs.device }}" == "xpu" ]; then
-            XPU_PREBUILT_IMAGE="amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-test-xpu-${{ inputs.platform }}"
+            XPU_PREBUILT_IMAGE="dynamo:latest-vllm-xpu"
             DEFAULT_TARGET_IMAGE_URI="${XPU_PREBUILT_IMAGE}"
             TEST_IMAGE_URI="${XPU_PREBUILT_IMAGE}"
           fi
@@ -457,7 +457,7 @@ jobs:
           RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           TEST_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           if [ "${{ inputs.device }}" == "xpu" ]; then
-            XPU_PREBUILT_IMAGE="amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-test-xpu-${{ inputs.platform }}"
+            XPU_PREBUILT_IMAGE="dynamo:latest-vllm-xpu"
             RUNTIME_IMAGE="${XPU_PREBUILT_IMAGE}"
             TEST_IMAGE="${XPU_PREBUILT_IMAGE}"
           fi
