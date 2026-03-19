@@ -335,6 +335,8 @@ jobs:
         shell: bash
         env:
           ECR_HOSTNAME: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+          HTTP_PROXY: ${{ vars.HTTP_PROXY }}
+          HTTPS_PROXY: ${{ vars.HTTPS_PROXY }}
         run: |
           CUDA_MAJOR=${{ steps.calculate-target-tag.outputs.cuda_version_plain }}
           CACHE_TAG_SUFFIX="-${{ inputs.device }}"
@@ -365,6 +367,17 @@ jobs:
             NO_CACHE_ARG="--no-cache"
           fi
 
+          # Build proxy args for docker buildx
+          BUILD_PROXY_ARGS=""
+          if [ -n "$HTTP_PROXY" ]; then
+            BUILD_PROXY_ARGS+=" --build-arg HTTP_PROXY=${HTTP_PROXY}"
+            BUILD_PROXY_ARGS+=" --build-arg http_proxy=${HTTP_PROXY}"
+          fi
+          if [ -n "$HTTPS_PROXY" ]; then
+            BUILD_PROXY_ARGS+=" --build-arg HTTPS_PROXY=${HTTPS_PROXY}"
+            BUILD_PROXY_ARGS+=" --build-arg https_proxy=${HTTPS_PROXY}"
+          fi
+
           docker buildx build \
             --progress=plain \
             ${PUSH_ARGS} \
@@ -372,6 +385,7 @@ jobs:
             --platform linux/${{ inputs.platform }} \
             -f container/Dockerfile.test \
             --build-arg BASE_IMAGE=${{ steps.calculate-target-tag.outputs.default_target_image_uri }} \
+            ${BUILD_PROXY_ARGS} \
             ${CACHE_ARGS} \
             -t ${{ steps.calculate-target-tag.outputs.test_image_uri }} .
       - name: Show summary
