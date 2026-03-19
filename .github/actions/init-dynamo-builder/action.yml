@@ -94,10 +94,6 @@ inputs:
     description: 'HTTPS proxy for buildkit kubernetes pods'
     required: false
     default: ''
-  no_proxy:
-    description: 'NO_PROXY for buildkit kubernetes pods'
-    required: false
-    default: ''
   dns:
     description: 'DNS nameserver for buildkit kubernetes pods'
     required: false
@@ -132,7 +128,6 @@ runs:
         tolerations: ${{ inputs.tolerations }}
         http_proxy: ${{ inputs.http_proxy }}
         https_proxy: ${{ inputs.https_proxy }}
-        no_proxy: ${{ inputs.no_proxy }}
         dns: ${{ inputs.dns }}
         use_runner_docker_builder: ${{ inputs.use_runner_docker_builder }}
 
