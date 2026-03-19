@@ -554,6 +554,7 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
+          start_minio: 'false' # XPU tests do not use LoRA/S3, skip MinIO
 
   # ============================================================================
   # MULTI-GPU TESTS

@@ -212,8 +212,11 @@ runs:
           if docker info 2>/dev/null | grep -i "runtimes" | grep -q "nvidia"; then
             echo "✓ Docker Daemon supports Nvidia runtime, enabling GPU flags"
             GPU_FLAGS="--gpus all"
+          elif ls /dev/dri/renderD* &>/dev/null 2>&1; then
+            echo "✓ Intel XPU device detected, enabling /dev/dri device flags"
+            GPU_FLAGS="--device /dev/dri"
           else
-            echo "⚠️  Nvidia runtime not found in Docker Daemon, running in CPU-only mode"
+            echo "⚠️  No GPU detected, running in CPU-only mode"
           fi
 
           # Determine parallelization based on parallel_mode input
