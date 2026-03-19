@@ -216,6 +216,11 @@ ARG SITE_PACKAGES=${VIRTUAL_ENV}/lib/python${PYTHON_VERSION}/site-packages
 #
 # Layer sizes (uncompressed): nvidia=4.5GB, flashinfer_jit_cache=4.1GB, torch=2.1GB,
 #                             vllm=1.2GB, triton=592MB, flashinfer_cubin=437MB
+# Remaining packages and venv structure (bin/, include/, share/, etc.)
+# Keep this as a plain COPY for compatibility with Docker versions that do not support COPY --exclude.
+COPY --chmod=775 --chown=dynamo:0 --from=framework ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+# Copy large packages after full venv copy so they remain present and are chunked into separate layers.
 {% if device == "cuda" %}
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/nvidia ${SITE_PACKAGES}/nvidia
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/flashinfer_jit_cache ${SITE_PACKAGES}/flashinfer_jit_cache
@@ -229,18 +234,6 @@ COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/triton ${SIT
 {% if device == "cuda" %}
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/flashinfer_cubin ${SITE_PACKAGES}/flashinfer_cubin
 {% endif %}
-# Remaining packages and venv structure (bin/, include/, share/, etc.)
-COPY --chmod=775 --chown=dynamo:0 --from=framework \
-    --exclude=lib/python*/site-packages/nvidia \
-    --exclude=lib/python*/site-packages/flashinfer_jit_cache \
-    --exclude=lib/python*/site-packages/torch \
-    --exclude=lib/python*/site-packages/vllm \
-{%- if platform == "amd64" %}
-    --exclude=lib/python*/site-packages/vllm_omni \
-{%- endif %}
-    --exclude=lib/python*/site-packages/triton \
-    --exclude=lib/python*/site-packages/flashinfer_cubin \
-    ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # Copy vllm with correct ownership (read-only, no group-write needed)
 COPY --chown=dynamo:0 --from=framework /opt/vllm /opt/vllm
