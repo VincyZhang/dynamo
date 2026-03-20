@@ -463,6 +463,7 @@ jobs:
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       - name: Docker Login
+        if: ${{ inputs.device != 'xpu' }}
         uses: ./.github/actions/docker-login
         with:
           aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -471,6 +472,7 @@ jobs:
           azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
           azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
       - name: Pull relevant images
+        if: ${{ inputs.device != 'xpu' }}
         shell: bash
         run: |
           source ./.github/scripts/retry_docker.sh
