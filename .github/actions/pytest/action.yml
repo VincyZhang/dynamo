@@ -142,7 +142,9 @@ runs:
             VLLM_TARGET_DEVICE="cuda"
           elif ls /dev/dri/renderD* &>/dev/null 2>&1; then
             echo "✓ Intel XPU device detected, enabling /dev/dri device flags"
-            GPU_FLAGS="--device /dev/dri"
+            RENDER_DEVICE=$(ls /dev/dri/renderD* | head -n 1)
+            RENDER_GID=$(stat -c '%g' "${RENDER_DEVICE}")
+            GPU_FLAGS="--device /dev/dri:/dev/dri --group-add ${RENDER_GID}"
             VLLM_TARGET_DEVICE="xpu"
           else
             echo "⚠️  No GPU detected, running in CPU-only mode"
@@ -242,7 +244,9 @@ runs:
             VLLM_TARGET_DEVICE="cuda"
           elif ls /dev/dri/renderD* &>/dev/null 2>&1; then
             echo "✓ Intel XPU device detected, enabling /dev/dri device flags"
-            GPU_FLAGS="--device /dev/dri"
+            RENDER_DEVICE=$(ls /dev/dri/renderD* | head -n 1)
+            RENDER_GID=$(stat -c '%g' "${RENDER_DEVICE}")
+            GPU_FLAGS="--device /dev/dri:/dev/dri --group-add ${RENDER_GID}"
             VLLM_TARGET_DEVICE="xpu"
           else
             echo "⚠️  No GPU detected, running in CPU-only mode"
