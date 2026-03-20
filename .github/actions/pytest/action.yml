@@ -151,6 +151,14 @@ runs:
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
+        if [[ -n "${HTTP_PROXY:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY}")
+          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY}")
+        fi
+        if [[ -n "${HTTPS_PROXY:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY}")
+          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY}")
+        fi
 
         docker run ${GPU_FLAGS} --rm -w /workspace \
           --cpus=${NUM_CPUS} \
@@ -249,6 +257,14 @@ runs:
         DOCKER_ENV_FLAGS=()
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
+        fi
+        if [[ -n "${HTTP_PROXY:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY}")
+          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY}")
+        fi
+        if [[ -n "${HTTPS_PROXY:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY}")
+          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY}")
         fi
 
         docker run ${GPU_FLAGS} ${DOCKER_OPTS} --rm -w /workspace \
