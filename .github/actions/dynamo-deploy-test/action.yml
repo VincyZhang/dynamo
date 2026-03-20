@@ -142,6 +142,10 @@ runs:
         FRAMEWORK: ${{ inputs.framework }}
         PROFILE: ${{ inputs.profile }}
         IMAGE: ${{ inputs.image }}
+        HTTP_PROXY: ${{ env.HTTP_PROXY }}
+        HTTPS_PROXY: ${{ env.HTTPS_PROXY }}
+        http_proxy: ${{ env.HTTP_PROXY }}
+        https_proxy: ${{ env.HTTPS_PROXY }}
       run: |
         mkdir -p test-results
         pytest tests/deploy/test_deploy.py \
