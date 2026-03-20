@@ -173,6 +173,10 @@ runs:
           DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY}")
         fi
 
+        echo "🐳 Docker run command (runner v1):"
+        echo "docker run ${GPU_FLAGS} --rm -w /workspace --cpus=${NUM_CPUS} --network host ${DOCKER_ENV_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
         docker run ${GPU_FLAGS} --rm -w /workspace \
           --cpus=${NUM_CPUS} \
           --network host \
@@ -289,6 +293,10 @@ runs:
           DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY}")
           DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY}")
         fi
+
+        echo "🐳 Docker run command (dind sidecar):"
+        echo "docker run ${GPU_FLAGS} ${DOCKER_OPTS} --rm -w /workspace --network host ${DOCKER_ENV_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
         docker run ${GPU_FLAGS} ${DOCKER_OPTS} --rm -w /workspace \
           --network host \
