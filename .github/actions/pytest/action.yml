@@ -159,6 +159,10 @@ runs:
           DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY}")
           DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY}")
         fi
+        if [[ -n "${NO_PROXY:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY}")
+          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY}")
+        fi
 
         docker run ${GPU_FLAGS} --rm -w /workspace \
           --cpus=${NUM_CPUS} \
@@ -265,6 +269,10 @@ runs:
         if [[ -n "${HTTPS_PROXY:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY}")
           DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY}")
+        fi
+        if [[ -n "${NO_PROXY:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY}")
+          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY}")
         fi
 
         docker run ${GPU_FLAGS} ${DOCKER_OPTS} --rm -w /workspace \
