@@ -195,7 +195,6 @@ jobs:
         with:
           lfs: true
       - name: Docker Login
-        if: ${{ inputs.device != 'xpu' }}
         uses: ./.github/actions/docker-login
         with:
           aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -225,18 +224,17 @@ jobs:
           fi
           DEFAULT_TARGET_IMAGE_URI="${IMAGE_BASE}:${TARGET_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
           TEST_IMAGE_URI="${IMAGE_BASE}:${TEST_TAG_PLAIN}${TAG_SUFFIX}-${{ inputs.platform }}"
-          if [ "${{ inputs.device }}" == "xpu" ]; then
-            XPU_PREBUILT_IMAGE="amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-test-xpu-amd64"
-            DEFAULT_TARGET_IMAGE_URI="${XPU_PREBUILT_IMAGE}"
-            TEST_IMAGE_URI="${XPU_PREBUILT_IMAGE}"
-          fi
+          #if [ "${{ inputs.device }}" == "xpu" ]; then
+          #  XPU_PREBUILT_IMAGE="amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-test-xpu-amd64"
+          #  DEFAULT_TARGET_IMAGE_URI="${XPU_PREBUILT_IMAGE}"
+          #  TEST_IMAGE_URI="${XPU_PREBUILT_IMAGE}"
+          #fi
           echo "default_target_image_uri=${DEFAULT_TARGET_IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "test_image_uri=${TEST_IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "target_tag_plain=${TARGET_TAG_PLAIN}" >> $GITHUB_OUTPUT
           echo "test_tag_plain=${TEST_TAG_PLAIN}" >> $GITHUB_OUTPUT
           echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
       - name: Initialize Dynamo Builder
-        if: ${{ inputs.device != 'xpu' }}
         uses: ./.github/actions/init-dynamo-builder
         with:
           builder_name: ${{ inputs.builder_name }}
@@ -247,7 +245,6 @@ jobs:
           https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Calculate extra tags with platform suffix # will get redundant upon multi arch builds support
         id: extra-tags
-        if: ${{ inputs.device != 'xpu' }}
         shell: bash
         env:
           EXTRA_TAGS: ${{ inputs.extra_tags }}
@@ -282,7 +279,6 @@ jobs:
             echo "tags=" >> $GITHUB_OUTPUT
           fi
       - name: Print Build Container inputs
-        if: ${{ inputs.device != 'xpu' }}
         run: |
           echo "=== Build Container Inputs ==="
           echo "image_tag: ${{ steps.calculate-target-tag.outputs.default_target_image_uri }}"
@@ -295,7 +291,6 @@ jobs:
           echo "push_image: ${{ inputs.push_image }}"
           echo "no_load: ${{ inputs.no_load }}"
       - name: Generate Dockerfile
-        if: ${{ inputs.device != 'xpu' }}
         shell: bash
         run: |
           echo "Generating Dockerfile for target: ${{ inputs.target }} and framework: ${{ inputs.framework }}"
@@ -317,7 +312,6 @@ jobs:
               --show-result \
               --output-short-filename
       - name: Build and Push Image
-        if: ${{ inputs.device != 'xpu' }}
         id: build-image
         timeout-minutes: ${{ inputs.build_timeout_minutes }}
         uses: ./.github/actions/docker-remote-build
@@ -341,7 +335,7 @@ jobs:
           extra_build_args: |
             DYNAMO_COMMIT_SHA=${{ github.sha }}
       - name: Build and Push Test Image
-        if: ${{ inputs.target != 'dev' && inputs.device != 'xpu' }} # no need to build a separate test image for dev or xpu
+        if: ${{ inputs.target != 'dev' }} # no need to build a separate test image for dev or xpu
         shell: bash
         env:
           ECR_HOSTNAME: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
@@ -388,16 +382,11 @@ jobs:
             BUILD_PROXY_ARGS+=" --build-arg https_proxy=${HTTPS_PROXY}"
           fi
 
-          docker buildx build \
-            --progress=plain \
-            ${PUSH_ARGS} \
-            ${NO_CACHE_ARG} \
-            --platform linux/${{ inputs.platform }} \
-            -f container/Dockerfile.test \
-            --build-arg BASE_IMAGE=${{ steps.calculate-target-tag.outputs.default_target_image_uri }} \
-            ${BUILD_PROXY_ARGS} \
-            ${CACHE_ARGS} \
-            -t ${{ steps.calculate-target-tag.outputs.test_image_uri }} .
+          BUILD_CMD="docker buildx build --progress=plain ${PUSH_ARGS} ${NO_CACHE_ARG} --platform linux/${{ inputs.platform }} -f container/Dockerfile.test --build-arg BASE_IMAGE=${{ steps.calculate-target-tag.outputs.default_target_image_uri }} ${BUILD_PROXY_ARGS} ${CACHE_ARGS} -t ${{ steps.calculate-target-tag.outputs.test_image_uri }} ."
+          echo "🚀 Docker build command (test image):"
+          echo "${BUILD_CMD}"
+
+          eval "${BUILD_CMD}"
       - name: Show summary
         shell: bash
         if: ${{ inputs.push_image && inputs.show_summary && inputs.device != 'xpu' }}
@@ -455,15 +444,14 @@ jobs:
           fi
           RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           TEST_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
-          if [ "${{ inputs.device }}" == "xpu" ]; then
-            XPU_PREBUILT_IMAGE="amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-test-xpu-amd64"
-            RUNTIME_IMAGE="${XPU_PREBUILT_IMAGE}"
-            TEST_IMAGE="${XPU_PREBUILT_IMAGE}"
-          fi
+          #if [ "${{ inputs.device }}" == "xpu" ]; then
+          #  XPU_PREBUILT_IMAGE="amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-test-xpu-amd64"
+          #  RUNTIME_IMAGE="${XPU_PREBUILT_IMAGE}"
+          #  TEST_IMAGE="${XPU_PREBUILT_IMAGE}"
+          #fi
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       - name: Docker Login
-        if: ${{ inputs.device != 'xpu' }}
         uses: ./.github/actions/docker-login
         with:
           aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -472,7 +460,6 @@ jobs:
           azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
           azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
       - name: Pull relevant images
-        if: ${{ inputs.device != 'xpu' }}
         shell: bash
         run: |
           source ./.github/scripts/retry_docker.sh
@@ -523,7 +510,7 @@ jobs:
 
       # Run GPU tests sequentially (only on amd64 runners with GPU)
       # These are e2e tests marked with gpu_1 that require GPU hardware
-      - name: Run XPU tests (sequential)
+      - name: Run GPU tests (sequential)
         timeout-minutes: ${{ inputs.single_gpu_test_timeout_minutes }}
         if: ( inputs.platform == 'amd64' && inputs.device == 'cuda' && inputs.run_single_gpu_tests == true ) # We only run GPU tests on amd64 CUDA runners
         uses: ./.github/actions/pytest

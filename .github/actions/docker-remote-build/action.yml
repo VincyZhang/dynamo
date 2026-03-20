@@ -189,12 +189,11 @@ runs:
           SECRET_ARGS+=" --secret id=aws-secret-id,env=AWS_SECRET_ACCESS_KEY"
         fi
 
-        docker buildx build \
-          --progress=plain \
-          --tag "$IMAGE_TAG" \
-          --platform "${PLATFORM_FLAG}" \
-          -f ./container/rendered.Dockerfile \
-          $CACHE_ARGS $EXTRA_ARGS $SECRET_ARGS . 2>&1 | tee "${BUILD_LOG_FILE}"
+        BUILD_CMD="docker buildx build --progress=plain --tag \"$IMAGE_TAG\" --platform \"${PLATFORM_FLAG}\" -f ./container/rendered.Dockerfile $CACHE_ARGS $EXTRA_ARGS $SECRET_ARGS ."
+        echo "🚀 Docker build command:"
+        echo "$BUILD_CMD"
+
+        eval "$BUILD_CMD" 2>&1 | tee "${BUILD_LOG_FILE}"
 
         BUILD_EXIT_CODE=${PIPESTATUS[0]}
 

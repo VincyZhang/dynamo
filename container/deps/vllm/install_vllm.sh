@@ -143,13 +143,7 @@ echo "✓ vLLM repository cloned"
 
 if [ "$DEVICE" = "xpu" ]; then
     echo "\n=== Installing vLLM ==="
-    sed -i '/vllm_xpu_kernels/d' requirements/xpu.txt
     uv pip install -r requirements/xpu.txt --index-strategy unsafe-best-match
-    echo "\n=== Installing vllm_xpu_kernels ==="
-    wget https://github.com/vllm-project/vllm-xpu-kernels/releases/download/v0.1.3/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl -O /tmp/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl
-    uv pip install /tmp/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl
-    rm -f /tmp/vllm_xpu_kernels-0.1.3-cp38-abi3-linux_x86_64.whl
-    echo "✓ vllm_xpu_kernels installed"
     # The Intel base image (intel/deep-learning-essentials) may pre-export
     # CC/CXX as multi-word sccache wrappers (e.g. "sccache c++").  Meson
     # cannot handle multi-word compiler values and will abort with:
@@ -158,7 +152,7 @@ if [ "$DEVICE" = "xpu" ]; then
     case "${CC:-}" in *sccache*) export CC="${CC##* }" ;; esac
     case "${CXX:-}" in *sccache*) export CXX="${CXX##* }" ;; esac
     unset CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER RUSTC_WRAPPER 2>/dev/null || true
-
+    VLLM_TARGET_DEVICE=xpu \
     uv pip install --verbose --no-build-isolation .
     echo "✓ vllm_xpu_kernels installed"
 fi
