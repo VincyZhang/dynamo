@@ -159,6 +159,7 @@ runs:
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
+        DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
         if [[ -n "${HTTP_PROXY:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY}")
           DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY}")
@@ -275,6 +276,7 @@ runs:
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
+        DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
         if [[ -n "${HTTP_PROXY:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY}")
           DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY}")
