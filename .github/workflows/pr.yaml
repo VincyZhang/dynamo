@@ -434,7 +434,7 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           framework: ${{ env.FRAMEWORK }}
           profile: ${{ matrix.profile }}
-          image: amr-registry.caas.intel.com/aiops/catalog/intel-vllm:${{ github.sha }}-vllm-runtime-xpu-amd64
+          image: amr-registry.caas.intel.com/aiops/catalog/intel-vllm:vllm-runtime-xpu-amd64
           platform_arch: amd64
 
   deploy-test-sglang:
