@@ -151,10 +151,10 @@ jobs:
         uses: ./.github/actions/skopeo-copy
         with:
           source_registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
-          source_image: ai-dynamo/dynamo
+          source_image: aiops/catalog/intel-vllm
           source_tag: ${{ steps.build.outputs.target_tag_plain }}-cuda${{ steps.build.outputs.cuda_version_plain }}-${{ matrix.platform }}
           target_registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          target_image: ai-dynamo/dynamo
+          target_image: aiops/catalog/intel-vllm
           target_tag: ${{ steps.build.outputs.target_tag_plain }}-cuda${{ steps.build.outputs.cuda_version_plain }}-${{ matrix.platform }}
           source_aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
           source_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -173,7 +173,7 @@ jobs:
             EFA_SUFFIX="-efa"
           fi
           TARGET_TAG="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}"
-          IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TARGET_TAG}-cuda${CUDA_MAJOR}-${{ matrix.platform }}"
+          IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/aiops/catalog/intel-vllm:${TARGET_TAG}-cuda${CUDA_MAJOR}-${{ matrix.platform }}"
           echo "runtime_image=${IMAGE}" >> $GITHUB_OUTPUT
           echo "cuda_major=${CUDA_MAJOR}" >> $GITHUB_OUTPUT
       - name: Compliance scan

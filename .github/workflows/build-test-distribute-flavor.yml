@@ -250,7 +250,7 @@ jobs:
           echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
           IMAGE_BASE="${{ inputs.image_base }}"
           if [ -z "$IMAGE_BASE" ]; then
-            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/aiops/catalog/intel-vllm"
           fi
           RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           TEST_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.test_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
@@ -382,7 +382,7 @@ jobs:
           echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
           IMAGE_BASE="${{ inputs.image_base }}"
           if [ -z "$IMAGE_BASE" ]; then
-            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/aiops/catalog/intel-vllm"
           fi
           RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
@@ -454,7 +454,7 @@ jobs:
           echo "cuda_major=${CUDA_VERSION}" >> $GITHUB_OUTPUT
           IMAGE_BASE="${{ inputs.image_base }}"
           if [ -z "$IMAGE_BASE" ]; then
-            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo"
+            IMAGE_BASE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/aiops/catalog/intel-vllm"
           fi
           RUNTIME_IMAGE="${IMAGE_BASE}:${{ needs.build.outputs.target_tag_plain }}${TAG_SUFFIX}-${{ inputs.platform }}"
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
@@ -506,10 +506,10 @@ jobs:
         uses: ./.github/actions/skopeo-copy
         with:
           source_registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
-          source_image: ai-dynamo/dynamo
+          source_image: aiops/catalog/intel-vllm
           source_tag: ${{ needs.build.outputs.target_tag_plain }}${{ steps.calculate-target-tag.outputs.tag_suffix }}-${{ inputs.platform }}
           target_registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          target_image: ai-dynamo/dynamo
+          target_image: aiops/catalog/intel-vllm
           target_tag: ${{ needs.build.outputs.target_tag_plain }}${{ steps.calculate-target-tag.outputs.tag_suffix }}-${{ inputs.platform }}
           source_aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
           source_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}

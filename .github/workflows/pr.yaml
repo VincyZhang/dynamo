@@ -93,8 +93,8 @@ jobs:
     name: Operator
     runs-on: xpu
     env:
-      IMAGE_REGISTRY: ai-dynamo
-      IMAGE_REPOSITORY: dynamo
+      IMAGE_REGISTRY: aiops/catalog
+      IMAGE_REPOSITORY: intel-vllm
       ECR_HOSTNAME: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
     outputs:
       operator_default_tag: ${{ steps.build-and-push-image.outputs.operator_default_tag }}
@@ -153,12 +153,10 @@ jobs:
         env:
           NO_CACHE_FLAG: '' # placeholder for future logic to add no cache flag if needed
         run: |
-          ECR_DEFAULT_IMAGE_BASE="${ECR_HOSTNAME}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
+          LOCAL_DEFAULT_IMAGE_BASE="${{ env.LOCAL_IMAGE_BASE }}"
           DEFAULT_TAG="${{ github.sha }}-operator"
-          ACR_IMAGE_BASE="${{ secrets.AZURE_ACR_HOSTNAME }}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
           IMAGE_URIS=(
-            "${ECR_DEFAULT_IMAGE_BASE}:${DEFAULT_TAG}"
-            "${ACR_IMAGE_BASE}:${DEFAULT_TAG}"
+            "${LOCAL_DEFAULT_IMAGE_BASE}:${DEFAULT_TAG}"
           )
 
           echo "operator_default_tag=${DEFAULT_TAG}" >> $GITHUB_OUTPUT
@@ -170,7 +168,7 @@ jobs:
           fi
           docker buildx build --push ${NO_CACHE_FLAG} \
               --platform linux/amd64,linux/arm64 \
-              --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ \
+              --build-arg DOCKER_PROXY=${{ env.LOCAL_REGISTRY_HOST }}/dockerhub/ \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### 🐳 Operator Container Images" >> $GITHUB_STEP_SUMMARY
