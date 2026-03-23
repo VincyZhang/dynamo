@@ -194,6 +194,7 @@ jobs:
         uses: ./.github/actions/build-flavor
         with:
           framework: ${{ inputs.framework }}
+          device: ${{ inputs.device }}
           target: ${{ inputs.target }}
           platform: ${{ inputs.platform }}
           cuda_version: ${{ inputs.cuda_version }}
