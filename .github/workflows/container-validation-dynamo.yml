@@ -59,7 +59,7 @@ jobs:
   build:
     needs: changed-files
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-v3
+    runs-on: xpu
     name: Build
     timeout-minutes: 60
     outputs:
@@ -153,7 +153,7 @@ jobs:
   rust-checks:
     needs: [changed-files, build]
     if: needs.changed-files.outputs.core == 'true'
-    runs-on: prod-tester-amd-gpu-v1
+    runs-on: arc-prod-blue
     name: Rust Checks
     timeout-minutes: 30
     env:
@@ -193,7 +193,7 @@ jobs:
   mypy:
     needs: [changed-files, build]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-amd-v1
+    runs-on: arc-prod-blue
     name: Mypy
     timeout-minutes: 15
     env:
@@ -220,7 +220,7 @@ jobs:
   test-parallel:
     needs: [changed-files, build, mypy]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-amd-v1
+    runs-on: xpu
     name: Pytest (parallel)
     timeout-minutes: 30
     env:
@@ -252,7 +252,7 @@ jobs:
   test-sequential:
     needs: [changed-files, build, mypy]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-amd-v1
+    runs-on: xpu
     name: Pytest (sequential)
     timeout-minutes: 30
     env:

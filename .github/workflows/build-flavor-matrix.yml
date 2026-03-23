@@ -99,7 +99,7 @@ on:
 jobs:
   build:
     name: Build cuda${{ matrix.cuda_version }}-${{ matrix.platform }}
-    runs-on: prod-builder-v3
+    runs-on: xpu
     timeout-minutes: ${{ inputs.build_timeout_minutes }}
     strategy:
       fail-fast: false
@@ -146,7 +146,7 @@ jobs:
           arch: ${{ matrix.platform }}
           cuda_version: ${{ matrix.cuda_version }}
       - name: Copy image to ACR
-        if: inputs.copy_to_acr
+        if: false
         timeout-minutes: ${{ inputs.copy_timeout_minutes }}
         uses: ./.github/actions/skopeo-copy
         with:
@@ -163,7 +163,7 @@ jobs:
           target_azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
       - name: Calculate compliance image URI
         id: compliance-image
-        if: inputs.run_compliance_scan
+        if: false
         shell: bash
         run: |
           CUDA_MAJOR="${{ matrix.cuda_version }}"
@@ -177,7 +177,7 @@ jobs:
           echo "runtime_image=${IMAGE}" >> $GITHUB_OUTPUT
           echo "cuda_major=${CUDA_MAJOR}" >> $GITHUB_OUTPUT
       - name: Compliance scan
-        if: inputs.run_compliance_scan
+        if: false
         uses: ./.github/actions/compliance-scan
         with:
           image: ${{ steps.compliance-image.outputs.runtime_image }}

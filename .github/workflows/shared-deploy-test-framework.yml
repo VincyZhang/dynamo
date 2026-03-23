@@ -33,7 +33,7 @@ on:
 
 jobs:
   deploy-test:
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     timeout-minutes: 25
     permissions:
       contents: read

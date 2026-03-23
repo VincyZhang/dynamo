@@ -10,7 +10,6 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 _VALID_ARCHS = {"amd64", "arm64"}
-_ARCH_ALIASES = {"x86_64": "amd64"}
 
 
 def parse_platform(platform_str: str) -> str:
@@ -25,7 +24,7 @@ def parse_platform(platform_str: str) -> str:
     Raises ValueError for unrecognized architecture values.
     """
     parts = [p.strip() for p in platform_str.split(",")]
-    archs = [_ARCH_ALIASES.get(p.split("/")[-1], p.split("/")[-1]) for p in parts]
+    archs = [p.split("/")[-1] for p in parts]
     for arch in archs:
         if arch not in _VALID_ARCHS:
             raise ValueError(

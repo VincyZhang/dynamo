@@ -220,298 +220,37 @@ runs:
         done
         echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
 
-    - name: Create Kubernetes builder
+    - name: Create Kubernetes builder for both platforms
       if: inputs.buildkit_worker_addresses == '' && inputs.use_runner_docker_builder != 'true'
       shell: bash
       run: |
-        run_buildx_create() {
-          local -a args=("$@")
-          local output rc unknown
-
-          while true; do
-            output=$(docker buildx create "${args[@]}" 2>&1)
-            rc=$?
-            if [ $rc -eq 0 ]; then
-              echo "$output"
-              return 0
-            fi
-
-            unknown=$(echo "$output" | sed -n "s/.*unknown flag: \(--[^ ,;]*\).*/\1/p" | head -n 1)
-            if [ -z "$unknown" ]; then
-              echo "$output" >&2
-              return $rc
-            fi
-
-            echo "::warning::docker buildx create does not support ${unknown}; retrying without it." >&2
-
-            local -a filtered=()
-            local skip_next=false
-            local token next
-            for ((i=0; i<${#args[@]}; i++)); do
-              token="${args[$i]}"
-              if $skip_next; then
-                skip_next=false
-                continue
-              fi
-
-              if [[ "$token" == "$unknown" ]]; then
-                if (( i + 1 < ${#args[@]} )); then
-                  next="${args[$((i+1))]}"
-                  if [[ "$next" != --* ]]; then
-                    skip_next=true
-                  fi
-                fi
-                continue
-              fi
-
-              if [[ "$token" == "${unknown}="* ]]; then
-                continue
-              fi
-
-              filtered+=("$token")
-            done
-
-            if [ ${#filtered[@]} -eq ${#args[@]} ]; then
-              echo "$output" >&2
-              return $rc
-            fi
-
-            args=("${filtered[@]}")
-          done
-        }
-
-        log_buildx_create_cmd() {
-          local -a args=("$@")
-          local rendered="docker buildx create"
-          local token
-          for token in "${args[@]}"; do
-            rendered+=" $(printf '%q' "$token")"
-          done
-          echo "::notice::Executing: ${rendered}"
-        }
-
-        TARGET_ARCH="${{ inputs.arch }}"
-        SUPPORTS_NAME=false
-        if docker buildx create --help | grep -q -- '--name'; then
-          SUPPORTS_NAME=true
-        fi
-        RESOLVED_BUILDER="${{ inputs.builder_name }}"
-
-        case "$TARGET_ARCH" in
-          amd64|arm64|all) ;;
-          *)
-            echo "::error::Invalid arch '$TARGET_ARCH'. Must be amd64, arm64, or all."
-            exit 1
-            ;;
-        esac
-
-        if $SUPPORTS_NAME && docker buildx inspect "${RESOLVED_BUILDER}" > /dev/null 2>&1; then
+        if docker buildx inspect ${{ inputs.builder_name }} > /dev/null 2>&1; then
             # If exit code is 0 (success), print the message
-            echo "✅ Builder '${RESOLVED_BUILDER}' already exists. Skipping creation."
-            docker buildx use "${RESOLVED_BUILDER}"
+            echo "✅ Builder '${{ inputs.builder_name }}' already exists. Skipping creation."
         else
-          echo "K8s Builder '${RESOLVED_BUILDER}' does not exist. Creating it for arch=$TARGET_ARCH."
+          echo "K8s Builder '${{ inputs.builder_name }}' does not exist. Creating it."
+          docker buildx create --use --name ${{ inputs.builder_name }} --driver kubernetes --platform=linux/amd64 \
+          '--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}' \
+          '--driver-opt=namespace=${{ inputs.namespace }}' \
+          '--driver-opt=loadbalance=sticky' \
+          '--driver-opt=replicas=${{ inputs.replicas }}' \
+          '--driver-opt=requests.cpu=${{ inputs.requests_cpu }}' \
+          '--driver-opt=requests.memory=${{ inputs.requests_memory }}' \
+          '--driver-opt=limits.memory=${{ inputs.limits_memory }}' \
+          '--driver-opt="nodeselector=kubernetes.io/arch=amd64,role=dynamo-builder-fallback"' \
+          '--driver-opt="tolerations=${{ inputs.tolerations }}"'
 
-          create_node() {
-            local mode="$1"      # use|append
-            local arch="$2"      # amd64|arm64
-            local selector="kubernetes.io/arch=${arch},role=dynamo-builder-fallback"
-            local selector_escaped="${selector//,/\\,}"
-            local tolerations_escaped="${{ inputs.tolerations }}"
-            tolerations_escaped="${tolerations_escaped//,/\\,}"
-            local effective_http_proxy="${{ inputs.http_proxy }}"
-            local effective_https_proxy="${{ inputs.https_proxy }}"
-            if [ -z "$effective_http_proxy" ] && [ -n "${HTTP_PROXY:-}" ]; then
-              effective_http_proxy="${HTTP_PROXY}"
-            fi
-            if [ -z "$effective_https_proxy" ] && [ -n "${HTTPS_PROXY:-}" ]; then
-              effective_https_proxy="${HTTPS_PROXY}"
-            fi
-            local effective_http_proxy_escaped="${effective_http_proxy//,/\\,}"
-            local effective_https_proxy_escaped="${effective_https_proxy//,/\\,}"
-            local effective_dns="${{ inputs.dns }}"
-
-            local cmd=()
-            if [[ "$mode" == "append" ]]; then
-              cmd+=(--append)
-            fi
-
-            if $SUPPORTS_NAME; then
-              cmd+=(--name "${RESOLVED_BUILDER}")
-            fi
-            cmd+=(--driver kubernetes --platform="linux/${arch}")
-            cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
-            cmd+=("--driver-opt=namespace=${{ inputs.namespace }}")
-            cmd+=("--driver-opt=loadbalance=sticky")
-            cmd+=("--driver-opt=replicas=${{ inputs.replicas }}")
-            cmd+=("--driver-opt=requests.cpu=${{ inputs.requests_cpu }}")
-            cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
-            cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
-            cmd+=("--driver-opt=nodeselector=${selector_escaped}")
-            cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
-            if [ -n "$effective_dns" ]; then
-              cmd+=("--driver-opt=dns=${effective_dns}")
-            fi
-            if [ -n "$effective_http_proxy" ]; then
-              cmd+=("--driver-opt=env.http_proxy=${effective_http_proxy_escaped}")
-              cmd+=("--driver-opt=env.HTTP_PROXY=${effective_http_proxy_escaped}")
-            fi
-            if [ -n "$effective_https_proxy" ]; then
-              cmd+=("--driver-opt=env.https_proxy=${effective_https_proxy_escaped}")
-              cmd+=("--driver-opt=env.HTTPS_PROXY=${effective_https_proxy_escaped}")
-            fi
-
-            local create_output=""
-            local create_ok=false
-            if $SUPPORTS_NAME; then
-              log_buildx_create_cmd "${cmd[@]}"
-              if create_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
-                create_ok=true
-              else
-                create_output=""
-              fi
-            else
-              if [[ "$mode" == "append" ]]; then
-                log_buildx_create_cmd "${cmd[@]}"
-                if create_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd[@]}" 2>&1); then
-                  create_ok=true
-                else
-                  create_output=""
-                fi
-              else
-                log_buildx_create_cmd "${cmd[@]}"
-                if create_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
-                  create_ok=true
-                else
-                  create_output=""
-                fi
-              fi
-            fi
-
-            if $create_ok; then
-              if ! $SUPPORTS_NAME && [[ "$mode" != "append" ]]; then
-                local created_name=""
-                created_name=$(echo "$create_output" | tr -d '\r' | tail -n 1)
-                if [ -n "$created_name" ]; then
-                  RESOLVED_BUILDER="$created_name"
-                fi
-              fi
-              return 0
-            fi
-
-            if [ -n "$create_output" ]; then
-              echo "$create_output" >&2
-            fi
-            echo "::notice::Primary node selector failed for ${arch}. Retrying without role selector."
-            selector="kubernetes.io/arch=${arch}"
-            selector_escaped="${selector//,/\\,}"
-            cmd=()
-            if [[ "$mode" == "append" ]]; then
-              cmd+=(--append)
-            fi
-            if $SUPPORTS_NAME; then
-              cmd+=(--name "${RESOLVED_BUILDER}")
-            fi
-            cmd+=(--driver kubernetes --platform="linux/${arch}")
-            cmd+=("--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}")
-            cmd+=("--driver-opt=namespace=${{ inputs.namespace }}")
-            cmd+=("--driver-opt=loadbalance=sticky")
-            cmd+=("--driver-opt=replicas=${{ inputs.replicas }}")
-            cmd+=("--driver-opt=requests.cpu=${{ inputs.requests_cpu }}")
-            cmd+=("--driver-opt=requests.memory=${{ inputs.requests_memory }}")
-            cmd+=("--driver-opt=limits.memory=${{ inputs.limits_memory }}")
-            cmd+=("--driver-opt=nodeselector=${selector_escaped}")
-            cmd+=("--driver-opt=tolerations=${tolerations_escaped}")
-            if [ -n "$effective_dns" ]; then
-              cmd+=("--driver-opt=dns=${effective_dns}")
-            fi
-            if [ -n "$effective_http_proxy" ]; then
-              cmd+=("--driver-opt=env.http_proxy=${effective_http_proxy_escaped}")
-              cmd+=("--driver-opt=env.HTTP_PROXY=${effective_http_proxy_escaped}")
-            fi
-            if [ -n "$effective_https_proxy" ]; then
-              cmd+=("--driver-opt=env.https_proxy=${effective_https_proxy_escaped}")
-              cmd+=("--driver-opt=env.HTTPS_PROXY=${effective_https_proxy_escaped}")
-            fi
-
-            local retry_output=""
-            local retry_ok=false
-            if $SUPPORTS_NAME; then
-              log_buildx_create_cmd "${cmd[@]}"
-              if retry_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
-                retry_ok=true
-              fi
-            elif [[ "$mode" == "append" ]]; then
-              log_buildx_create_cmd "${cmd[@]}"
-              if retry_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd[@]}" 2>&1); then
-                retry_ok=true
-              fi
-            else
-              log_buildx_create_cmd "${cmd[@]}"
-              if retry_output=$(run_buildx_create "${cmd[@]}" 2>&1); then
-                retry_ok=true
-              fi
-            fi
-
-            if ! $retry_ok && echo "$retry_output" | grep -Eq "invalid driver option (key|value|operator|effect) for driver kubernetes"; then
-              echo "::notice::Buildx rejected tolerations driver-opt fields. Retrying fallback selector without tolerations."
-              local -a cmd_no_tolerations=()
-              for arg in "${cmd[@]}"; do
-                if [[ "$arg" == --driver-opt=tolerations=* ]]; then
-                  continue
-                fi
-                cmd_no_tolerations+=("$arg")
-              done
-
-              if $SUPPORTS_NAME; then
-                log_buildx_create_cmd "${cmd_no_tolerations[@]}"
-                if retry_output=$(run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
-                  retry_ok=true
-                fi
-              elif [[ "$mode" == "append" ]]; then
-                log_buildx_create_cmd "${cmd_no_tolerations[@]}"
-                if retry_output=$(BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
-                  retry_ok=true
-                fi
-              else
-                log_buildx_create_cmd "${cmd_no_tolerations[@]}"
-                if retry_output=$(run_buildx_create "${cmd_no_tolerations[@]}" 2>&1); then
-                  retry_ok=true
-                fi
-              fi
-            fi
-
-            if ! $retry_ok; then
-              echo "::error::Fallback node selector also failed for ${arch}."
-              if [ -n "$retry_output" ]; then
-                echo "$retry_output" >&2
-              fi
-              return 1
-            fi
-
-            if ! $SUPPORTS_NAME && [[ "$mode" != "append" ]]; then
-              local retry_created_name=""
-              retry_created_name=$(echo "$retry_output" | tr -d '\r' | tail -n 1)
-              if [ -n "$retry_created_name" ]; then
-                RESOLVED_BUILDER="$retry_created_name"
-              fi
-            fi
-
-            echo "✅ Fallback node selector succeeded for ${arch}."
-          }
-
-          if [[ "$TARGET_ARCH" == "amd64" ]]; then
-            create_node use amd64
-          elif [[ "$TARGET_ARCH" == "arm64" ]]; then
-            create_node use arm64
-          else
-            create_node use amd64
-            create_node append arm64
-          fi
-
-          docker buildx use "${RESOLVED_BUILDER}"
+          docker buildx create --append --name ${{ inputs.builder_name }} --driver kubernetes --platform=linux/arm64 \
+          '--driver-opt=requests.ephemeral-storage=${{ inputs.ephemeral_storage }}' \
+          '--driver-opt=namespace=${{ inputs.namespace }}' \
+          '--driver-opt=loadbalance=sticky' \
+          '--driver-opt=replicas=${{ inputs.replicas }}' \
+          '--driver-opt=requests.cpu=${{ inputs.requests_cpu }}' \
+          '--driver-opt=requests.memory=${{ inputs.requests_memory }}' \
+          '--driver-opt=limits.memory=${{ inputs.limits_memory }}' \
+          '--driver-opt="nodeselector=kubernetes.io/arch=arm64,role=dynamo-builder-fallback"' \
+          '--driver-opt="tolerations=${{ inputs.tolerations }}"'
         fi
-        echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
         sleep 3 # Give the builders some time to be ready
 
         if [[ "${{ inputs.skip_bootstrap }}" != "true" ]]; then
