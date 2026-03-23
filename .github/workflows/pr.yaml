@@ -382,6 +382,7 @@ jobs:
       id: setup
       uses: ./.github/actions/setup-dynamo-operator
       with:
+        use_local_kubeconfig: true
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
         registry: amr-registry.caas.intel.com
         operator_tag: ${{ needs.operator.result == 'success' && needs.operator.outputs.operator_default_tag || 'main-operator' }}

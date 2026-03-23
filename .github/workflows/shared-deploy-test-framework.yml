@@ -65,6 +65,7 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
           dockerhub_password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+          use_local_kubeconfig: true
       - name: Connect to vCluster
         id: connect-vcluster
         uses: ./.github/actions/connect-vcluster
@@ -72,6 +73,7 @@ jobs:
           host_kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
           vcluster_name: ${{ inputs.vcluster_name }}
           vcluster_namespace: ${{ inputs.namespace }}
+          use_local_kubeconfig: true
       - name: Run Dynamo Deploy Test
         id: deploy-test
         uses: ./.github/actions/dynamo-deploy-test

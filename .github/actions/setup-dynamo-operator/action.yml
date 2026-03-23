@@ -36,6 +36,10 @@ inputs:
     description: 'Kubernetes version for the vCluster control plane (must be supported by kr8s)'
     required: false
     default: 'v1.32.13'
+  use_local_kubeconfig:
+    description: 'Use local ~/.kube/config instead of kubeconfig_base64'
+    required: false
+    default: 'false'
 
 outputs:
   namespace:
@@ -80,9 +84,15 @@ runs:
     - name: Setup host kubeconfig
       shell: bash
       run: |
-        echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig-host
-        chmod 600 ${{ github.workspace }}/.kubeconfig-host
-        echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
+        if [ "${{ inputs.use_local_kubeconfig }}" == "true" ]; then
+          echo "Using local ~/.kube/config"
+          export KUBECONFIG=~/.kube/config
+          echo "KUBECONFIG=${KUBECONFIG}" >> $GITHUB_ENV
+        else
+          echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig-host
+          chmod 600 ${{ github.workspace }}/.kubeconfig-host
+          echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
+        fi
 
     - name: Install vCluster CLI
       uses: ./.github/actions/install-vcluster-cli
@@ -141,6 +151,7 @@ runs:
         host_kubeconfig_base64: ${{ inputs.kubeconfig_base64 }}
         vcluster_name: ${{ steps.resolve-names.outputs.vcluster_name }}
         vcluster_namespace: ${{ steps.resolve-names.outputs.namespace }}
+        use_local_kubeconfig: ${{ inputs.use_local_kubeconfig }}
 
     - name: Create HF token secret
       if: inputs.hf_token != ''
