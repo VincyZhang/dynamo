@@ -236,6 +236,7 @@ runs:
         framework: ${{ inputs.framework }}
         target: ${{ inputs.target }}
         platform: ${{ inputs.platform }}
+        device: ${{ inputs.device }}
         cuda_version: ${{ inputs.cuda_version }}
         aws_default_region: ${{ inputs.aws_default_region }}
         sccache_s3_bucket: false
