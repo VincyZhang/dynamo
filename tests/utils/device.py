@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+import importlib
+import json
+from typing import Any
+
+
+def detect_target_device() -> str:
+    """Detect the runtime accelerator expected by the current test environment."""
+    try:
+        torch = importlib.import_module("torch")
+
+        if torch.cuda.is_available():
+            return "cuda"
+        if hasattr(torch, "xpu") and torch.xpu.is_available():
+            return "xpu"
+    except Exception:
+        pass
+
+    return "cuda"
+
+
+def get_device_visibility_env_var() -> str:
+    """Return the runtime-specific device visibility env var."""
+    if detect_target_device() == "xpu":
+        return "ZE_AFFINITY_MASK"
+    return "CUDA_VISIBLE_DEVICES"
+
+
+def get_default_vllm_block_size() -> int:
+    """Return a runtime-compatible default vLLM block size for tests."""
+    return 64 if detect_target_device() == "xpu" else 16
+
+
+def build_nixl_kv_transfer_config() -> dict[str, Any]:
+    """Build a runtime-compatible NIXL kv-transfer config for vLLM tests."""
+    config: dict[str, Any] = {
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_both",
+    }
+    if detect_target_device() == "xpu":
+        config["kv_buffer_device"] = "xpu"
+    return config
+
+
+def build_nixl_kv_transfer_config_json() -> str:
+    """JSON-encode the runtime-compatible NIXL kv-transfer config."""
+    return json.dumps(build_nixl_kv_transfer_config())
