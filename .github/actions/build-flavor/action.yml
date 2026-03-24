@@ -275,8 +275,20 @@ runs:
         fi
         
         CACHE_TAG="test-${{ inputs.framework }}${DEVICE_SUFFIX}-${{ inputs.platform }}-cache"
-        CACHE_ARGS="--cache-from type=registry,ref=${REGISTRY}/aiops/catalog/intel-vllm:main-${CACHE_TAG}"
-        CACHE_ARGS+=" --cache-from type=registry,ref=${REGISTRY}/aiops/catalog/intel-vllm:release-${CACHE_TAG}"
+        CACHE_ARGS=""
+
+        add_cache_from_if_exists() {
+          local ref="$1"
+          if docker buildx imagetools inspect "$ref" > /dev/null 2>&1; then
+            CACHE_ARGS+=" --cache-from type=registry,ref=${ref}"
+          else
+            echo "Cache not found, skip --cache-from: ${ref}"
+          fi
+        }
+
+        add_cache_from_if_exists "${REGISTRY}/aiops/catalog/intel-vllm:main-${CACHE_TAG}"
+        add_cache_from_if_exists "${REGISTRY}/aiops/catalog/intel-vllm:release-${CACHE_TAG}"
+
         if [[ "$GITHUB_REF_NAME" == "main" ]]; then
           CACHE_ARGS+=" --cache-to type=registry,ref=${REGISTRY}/aiops/catalog/intel-vllm:main-${CACHE_TAG},mode=max"
         elif [[ "$GITHUB_REF_NAME" =~ ^release ]]; then
