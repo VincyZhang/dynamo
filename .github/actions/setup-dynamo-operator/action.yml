@@ -19,7 +19,7 @@ inputs:
   operator_repository:
     description: 'Operator image repository path under the registry'
     required: false
-    default: 'ai-dynamo/dynamo'
+    default: 'aiops/catalog/intel-vllm'
   operator_tag:
     description: 'Operator image tag (default: main-operator)'
     required: false
@@ -158,7 +158,10 @@ runs:
           --connect=false \
           --upgrade \
           --set controlPlane.distro.k8s.enabled=true \
-          --set controlPlane.distro.k8s.version=${{ inputs.vcluster_k8s_version }}
+          --set controlPlane.distro.k8s.version=${{ inputs.vcluster_k8s_version }} \
+          --set controlPlane.backingStore.database.embedded.enabled=true \
+          --set controlPlane.backingStore.etcd.embedded.enabled=false \
+          --set controlPlane.statefulSet.persistence.volumeClaim.enabled=false
         echo "::endgroup::"
 
     - name: Wait for vCluster pod to be ready
@@ -171,7 +174,25 @@ runs:
         kubectl wait --for=condition=ready pod \
           -l app=vcluster,release=${VCLUSTER_NAME} \
           -n ${NAMESPACE} \
-          --timeout=300s
+          --timeout=300s || {
+            echo "vCluster pod did not become ready; collecting host-namespace diagnostics"
+            echo "::group::vCluster pods (host namespace)"
+            kubectl get pods -n ${NAMESPACE} -o wide || true
+            echo "::endgroup::"
+            echo "::group::vCluster PVCs (host namespace)"
+            kubectl get pvc -n ${NAMESPACE} || true
+            echo "::endgroup::"
+            echo "::group::vCluster events (host namespace)"
+            kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' || true
+            echo "::endgroup::"
+            echo "::group::Describe non-ready vCluster pods"
+            kubectl get pods -n ${NAMESPACE} --no-headers 2>/dev/null | awk '$2 !~ /^([0-9]+)\/\1$/ {print $1}' | while read -r POD; do
+              [ -z "$POD" ] && continue
+              kubectl describe pod "$POD" -n ${NAMESPACE} || true
+            done
+            echo "::endgroup::"
+            exit 1
+          }
         echo "::endgroup::"
 
     - name: Connect to vCluster
@@ -222,6 +243,17 @@ runs:
         if [ "${USE_LOCAL_KUBECONFIG}" == "true" ]; then
           # Local runners often don't have a default dynamic StorageClass.
           # Disable PVC-backed components for CI deployment tests.
+          HELM_PVC_FLAGS="--set etcd.persistence.enabled=false --set nats.config.jetstream.fileStore.pvc.enabled=false"
+        fi
+
+        # Auto-disable PVC-backed components when the vCluster has no default
+        # StorageClass, regardless of runner type.
+        DEFAULT_STORAGE_CLASS=$(kubectl --kubeconfig=${{ github.workspace }}/.kubeconfig-vcluster \
+          get storageclass \
+          -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.annotations.storageclass\.kubernetes\.io/is-default-class}{"\n"}{end}' \
+          | awk -F'|' '$2=="true" {print $1; exit}')
+        if [ -z "${DEFAULT_STORAGE_CLASS}" ]; then
+          echo "No default StorageClass detected in vCluster; disabling PVC-backed chart components."
           HELM_PVC_FLAGS="--set etcd.persistence.enabled=false --set nats.config.jetstream.fileStore.pvc.enabled=false"
         fi
 
