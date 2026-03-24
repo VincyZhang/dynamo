@@ -30,6 +30,16 @@ on:
         description: 'Operator image tag'
         type: string
         required: true
+      operator_repository:
+        description: 'Operator image repository path under the registry'
+        type: string
+        required: false
+        default: 'aiops/catalog/intel-vllm'
+      image_repository:
+        description: 'Runtime image repository path under the registry'
+        type: string
+        required: false
+        default: 'aiops/catalog/intel-vllm'
 
 jobs:
   deploy-test:
@@ -61,6 +71,7 @@ jobs:
           vcluster_name: ${{ inputs.vcluster_name }}
           vcluster_namespace: ${{ inputs.namespace }}
           registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+          operator_repository: ${{ inputs.operator_repository }}
           operator_tag: ${{ inputs.operator_tag }}
           hf_token: ${{ secrets.HF_TOKEN }}
           dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
@@ -85,5 +96,5 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           framework: ${{ inputs.framework }}
           profile: ${{ matrix.profile }}
-          image: ${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:${{ github.sha }}-${{ inputs.image_suffix }}
+          image: ${{ inputs.image_repository }}:${{ github.sha }}-${{ inputs.image_suffix }}
           platform_arch: amd64

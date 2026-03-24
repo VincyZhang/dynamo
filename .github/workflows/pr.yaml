@@ -383,6 +383,7 @@ jobs:
         use_local_kubeconfig: true
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
         registry: amr-registry.caas.intel.com
+        operator_repository: aiops/catalog/intel-vllm
         operator_tag: ${{ needs.operator.result == 'success' && needs.operator.outputs.operator_default_tag || 'main-operator' }}
         hf_token: ${{ secrets.HF_TOKEN }}
         dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
@@ -403,6 +404,8 @@ jobs:
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-sglang:
@@ -420,6 +423,8 @@ jobs:
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-trtllm:
@@ -437,6 +442,8 @@ jobs:
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-cleanup:
