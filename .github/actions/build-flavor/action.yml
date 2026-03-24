@@ -166,6 +166,8 @@ runs:
         flavor: ${{ inputs.framework }}
         arch: ${{ inputs.platform }}
         cuda_version: ${{ inputs.cuda_version }}
+        http_proxy: ${{ inputs.http_proxy }}
+        https_proxy: ${{ inputs.https_proxy }}
     - name: Calculate extra tags with platform suffix
       id: extra-tags
       shell: bash

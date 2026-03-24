@@ -233,6 +233,8 @@ jobs:
       run_multi_gpu_tests: false
       copy_to_acr: false
       image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
+      http_proxy: ${{ vars.HTTP_PROXY }}
+      https_proxy: ${{ vars.HTTPS_PROXY }}
     secrets: inherit
 
   # ============================================================================
