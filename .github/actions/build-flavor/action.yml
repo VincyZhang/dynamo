@@ -95,6 +95,18 @@ inputs:
     description: 'Docker registry hostname'
     required: false
     default: 'amr-registry.caas.intel.com'
+  http_proxy:
+    description: 'HTTP proxy for network-restricted environments'
+    required: false
+    default: 'http://proxy-dmz.intel.com:912'
+  https_proxy:
+    description: 'HTTPS proxy for network-restricted environments'
+    required: false
+    default: 'http://proxy-dmz.intel.com:912'
+  no_proxy:
+    description: 'NO_PROXY bypass list for internal endpoints'
+    required: false
+    default: 'intel.com,.intel.com,localhost,127.0.0.1'
 outputs:
   target_tag_plain:
     description: 'Target tag (without registry prefix)'
@@ -265,6 +277,9 @@ runs:
       env:
         REGISTRY: ${{ inputs.registry }}
         DEVICE: ${{ inputs.device }}
+        INPUT_HTTP_PROXY: ${{ inputs.http_proxy }}
+        INPUT_HTTPS_PROXY: ${{ inputs.https_proxy }}
+        INPUT_NO_PROXY: ${{ inputs.no_proxy }}
       run: |
         DEVICE_SUFFIX=""
         if [[ "${DEVICE}" == "cuda" ]]; then
@@ -307,6 +322,34 @@ runs:
           NO_CACHE_ARG="--no-cache"
         fi
 
+        HTTP_PROXY_VAL="${INPUT_HTTP_PROXY:-${http_proxy:-${HTTP_PROXY:-}}}"
+        HTTPS_PROXY_VAL="${INPUT_HTTPS_PROXY:-${https_proxy:-${HTTPS_PROXY:-}}}"
+        NO_PROXY_VAL="${INPUT_NO_PROXY:-${no_proxy:-${NO_PROXY:-}}}"
+
+        if [ -n "${HTTP_PROXY_VAL}" ]; then
+          export http_proxy="${HTTP_PROXY_VAL}"
+          export HTTP_PROXY="${HTTP_PROXY_VAL}"
+        fi
+        if [ -n "${HTTPS_PROXY_VAL}" ]; then
+          export https_proxy="${HTTPS_PROXY_VAL}"
+          export HTTPS_PROXY="${HTTPS_PROXY_VAL}"
+        fi
+        if [ -n "${NO_PROXY_VAL}" ]; then
+          export no_proxy="${NO_PROXY_VAL}"
+          export NO_PROXY="${NO_PROXY_VAL}"
+        fi
+
+        PROXY_BUILD_ARGS=""
+        if [ -n "${HTTP_PROXY_VAL}" ]; then
+          PROXY_BUILD_ARGS+=" --build-arg http_proxy=${HTTP_PROXY_VAL} --build-arg HTTP_PROXY=${HTTP_PROXY_VAL}"
+        fi
+        if [ -n "${HTTPS_PROXY_VAL}" ]; then
+          PROXY_BUILD_ARGS+=" --build-arg https_proxy=${HTTPS_PROXY_VAL} --build-arg HTTPS_PROXY=${HTTPS_PROXY_VAL}"
+        fi
+        if [ -n "${NO_PROXY_VAL}" ]; then
+          PROXY_BUILD_ARGS+=" --build-arg no_proxy=${NO_PROXY_VAL} --build-arg NO_PROXY=${NO_PROXY_VAL}"
+        fi
+
         docker buildx build \
           --progress=plain \
           ${PUSH_ARGS} \
@@ -314,6 +357,7 @@ runs:
           --platform linux/${{ inputs.platform }} \
           -f container/Dockerfile.test \
           --build-arg BASE_IMAGE=${{ steps.calculate-target-tag.outputs.default_target_image_uri }} \
+          ${PROXY_BUILD_ARGS} \
           ${CACHE_ARGS} \
           -t ${{ steps.calculate-target-tag.outputs.test_image_uri }} .
     - name: Show summary
