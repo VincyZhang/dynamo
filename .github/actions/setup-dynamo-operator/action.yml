@@ -40,6 +40,10 @@ inputs:
     description: 'Kubernetes version for the vCluster control plane (must be supported by kr8s)'
     required: false
     default: 'v1.32.13'
+  vcluster_tolerate_all_taints:
+    description: 'When true, add a catch-all toleration to the vCluster pod so it can run on tainted CI nodes'
+    required: false
+    default: 'true'
   use_local_kubeconfig:
     description: 'Use local ~/.kube/config instead of kubeconfig_base64'
     required: false
@@ -153,6 +157,12 @@ runs:
         set -x
         # The K8s version must be supported by the kr8s Python library used in deploy tests.
         # This is independent of the host cluster version.
+        TOLERATION_FLAGS=""
+        if [ "${{ inputs.vcluster_tolerate_all_taints }}" == "true" ]; then
+          # Catch-all toleration: allows vCluster pod to be scheduled on nodes
+          # with any taint (common on dedicated CI/GPU/XPU nodes).
+          TOLERATION_FLAGS="--set controlPlane.statefulSet.scheduling.tolerations[0].operator=Exists"
+        fi
         vcluster create ${VCLUSTER_NAME} \
           --namespace ${NAMESPACE} \
           --connect=false \
@@ -161,7 +171,8 @@ runs:
           --set controlPlane.distro.k8s.version=${{ inputs.vcluster_k8s_version }} \
           --set controlPlane.backingStore.database.embedded.enabled=true \
           --set controlPlane.backingStore.etcd.embedded.enabled=false \
-          --set controlPlane.statefulSet.persistence.volumeClaim.enabled=false
+          --set controlPlane.statefulSet.persistence.volumeClaim.enabled=false \
+          ${TOLERATION_FLAGS}
         echo "::endgroup::"
 
     - name: Wait for vCluster pod to be ready
