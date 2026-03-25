@@ -28,7 +28,7 @@ class DynamoFrontendProcess(BaseDynamoFrontendProcess):
             # health check can inject extra requests and cause intermittent failures.
             "DYN_HEALTH_CHECK_ENABLED": "false",
         }
-        
+
         # Add NATS_SERVER and ETCD_ENDPOINTS from runtime_services_dynamic_ports fixture
         runtime_services = request.getfixturevalue("runtime_services_dynamic_ports")
         if runtime_services:

@@ -25,8 +25,10 @@ from tests.fault_tolerance.cancellation.utils import (
     verify_runtime_cancellation_metrics,
 )
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
-from tests.utils.device import build_nixl_kv_transfer_config_json
-from tests.utils.device import get_default_vllm_block_size
+from tests.utils.device import (
+    build_nixl_kv_transfer_config_json,
+    get_default_vllm_block_size,
+)
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.payloads import check_health_generate, check_models_api
 from tests.utils.port_utils import allocate_port, deallocate_port

@@ -17,8 +17,10 @@ from tests.fault_tolerance.etcd_ha.utils import (
     wait_for_processes_to_terminate,
 )
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
-from tests.utils.device import build_nixl_kv_transfer_config
-from tests.utils.device import get_default_vllm_block_size
+from tests.utils.device import (
+    build_nixl_kv_transfer_config,
+    get_default_vllm_block_size,
+)
 from tests.utils.engine_process import FRONTEND_PORT
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.payloads import check_health_generate, check_models_api

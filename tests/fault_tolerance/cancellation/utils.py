@@ -397,7 +397,11 @@ def _extract_runtime_cancellation_lines(metrics_text: str) -> list[str]:
         if line.startswith("dynamo_component_cancellation_total{"):
             lines.append(line)
             continue
-        if "dynamo_component_" in line and "cancellation" in line and not line.startswith("#"):
+        if (
+            "dynamo_component_" in line
+            and "cancellation" in line
+            and not line.startswith("#")
+        ):
             lines.append(line)
     return lines
 

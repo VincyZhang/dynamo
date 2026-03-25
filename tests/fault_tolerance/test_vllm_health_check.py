@@ -48,7 +48,7 @@ class DynamoWorkerProcess(ManagedProcess):
         env["DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS"] = '["generate"]'
         # TODO: Replace hardcoded port with allocate_ports() for xdist-safe parallel execution
         env["DYN_SYSTEM_PORT"] = "9345"
-        
+
         # Set ETCD endpoints for discovery
         runtime_services = request.getfixturevalue("runtime_services_dynamic_ports")
         if runtime_services and runtime_services[1] is not None:
@@ -164,7 +164,7 @@ def test_vllm_health_check_active(request, runtime_services_dynamic_ports):
             extra_env["NATS_SERVER"] = f"nats://127.0.0.1:{nats_process.port}"
         if etcd_process:
             extra_env["ETCD_ENDPOINTS"] = f"http://0.0.0.0:{etcd_process.port}"
-    
+
     with DynamoFrontendProcess(request, extra_env=extra_env if extra_env else None):
         logger.info("Frontend started.")
 
@@ -211,7 +211,9 @@ def test_vllm_health_check_active(request, runtime_services_dynamic_ports):
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.nightly
 @pytest.mark.timeout(160)  # 3x average (~50s)
-def test_vllm_health_check_passive(request, runtime_services_dynamic_ports, predownload_models):
+def test_vllm_health_check_passive(
+    request, runtime_services_dynamic_ports, predownload_models
+):
     """
     End-to-end test for worker fault tolerance with migration support.
 
@@ -230,7 +232,7 @@ def test_vllm_health_check_passive(request, runtime_services_dynamic_ports, pred
             extra_env["NATS_SERVER"] = f"nats://127.0.0.1:{nats_process.port}"
         if etcd_process:
             extra_env["ETCD_ENDPOINTS"] = f"http://0.0.0.0:{etcd_process.port}"
-    
+
     with DynamoFrontendProcess(request, extra_env=extra_env if extra_env else None):
         logger.info("Frontend started.")
 

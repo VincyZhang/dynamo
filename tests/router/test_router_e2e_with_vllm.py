@@ -20,6 +20,11 @@ from tests.router.e2e_harness import (
 )
 from tests.router.helper import generate_random_suffix
 from tests.utils.constants import DefaultPort
+from tests.utils.device import (
+    get_default_vllm_block_size,
+    get_device_visibility_env_var,
+    get_gpu_memory_utilization,
+)
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.port_utils import allocate_ports, deallocate_ports
 
@@ -36,50 +41,13 @@ pytestmark = [
 SPEEDUP_RATIO = 10.0
 NUM_REQUESTS = 10
 
-
-def _detect_target_device() -> str:
-    """Detect runtime device from torch backends."""
-    try:
-        import torch
-
-        if torch.cuda.is_available():
-            return "cuda"
-        if hasattr(torch, "xpu") and torch.xpu.is_available():
-            return "xpu"
-    except Exception:
-        # Keep fallback behavior stable in minimal test environments.
-        pass
-
-    return "cuda"
-
-
-def _is_xpu_runtime() -> bool:
-    return _detect_target_device() == "xpu"
-
-
-def _default_block_size() -> int:
-    return 64 if _is_xpu_runtime() else 16
-
-
-BLOCK_SIZE = _default_block_size()
-
-
-def _get_device_visibility_env_var() -> str:
-    """Return the runtime-specific device visibility env var.
-
-    CUDA runtime uses CUDA_VISIBLE_DEVICES, while XPU runtime uses
-    ZE_AFFINITY_MASK.
-    """
-    target_device = _detect_target_device()
-    if target_device == "xpu":
-        return "ZE_AFFINITY_MASK"
-    return "CUDA_VISIBLE_DEVICES"
+BLOCK_SIZE = get_default_vllm_block_size()
 
 
 # Shared vLLM configuration for all tests
 # gpu_memory_utilization limits actual VRAM allocation (required for multi-worker on same GPU)
 VLLM_ARGS: Dict[str, Any] = {
-    "block_size": _default_block_size(),
+    "block_size": get_default_vllm_block_size(),
     "model": MODEL_NAME,
     "gpu_memory_utilization": 0.4,  # Limit VRAM allocation per worker
     "max_model_len": 1024,  # Limit context length to reduce KV cache size
@@ -150,7 +118,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
         if vllm_args is None:
             vllm_args = {}
 
-        block_size = vllm_args.get("block_size", _default_block_size())
+        block_size = vllm_args.get("block_size", get_default_vllm_block_size())
         model = vllm_args.get("model", MODEL_NAME)
         gpu_memory_utilization = vllm_args.get("gpu_memory_utilization")
         num_gpu_blocks_override = vllm_args.get("num_gpu_blocks_override")
@@ -166,7 +134,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
         # - Each process runs on its own device via runtime-specific visibility env
         # - --kv-transfer-config enables KV cache transfer between ranks
 
-        device_visibility_env = _get_device_visibility_env_var()
+        device_visibility_env = get_device_visibility_env_var()
 
         for worker_idx in range(num_workers):
             # Calculate GPU device for this process
@@ -341,7 +309,12 @@ def test_router_decisions_vllm_multiple_workers(
     run_router_decisions_test(
         engine_process_cls=VLLMProcess,
         engine_args_name="vllm_args",
-        engine_args=VLLM_ARGS,
+        engine_args={
+            **VLLM_ARGS,
+            "gpu_memory_utilization": get_gpu_memory_utilization(
+                num_workers=2, single_gpu=True
+            ),
+        },
         request=request,
         request_plane=request_plane,
         model_name=MODEL_NAME,

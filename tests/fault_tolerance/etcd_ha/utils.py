@@ -28,7 +28,14 @@ logger = logging.getLogger(__name__)
 def _with_local_no_proxy(env: dict[str, str]) -> dict[str, str]:
     """Force localhost traffic to bypass corporate/system HTTP proxies."""
     out = env.copy()
-    for k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+    for k in (
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "all_proxy",
+    ):
         out.pop(k, None)
 
     no_proxy_entries = ["127.0.0.1", "localhost", "0.0.0.0"]
