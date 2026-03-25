@@ -110,9 +110,13 @@ runs:
         PYTEST_XML_FILE: pytest_test_report.xml
         HF_HOME: /runner/_work/_temp
         HF_TOKEN: ${{ inputs.hf_token }}
+        HF_ENDPOINT: https://hf-mirror.com
       run: |
         # Run pytest with detailed output and JUnit XML
         set +e  # Don't exit on test failures
+
+        export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+        export HF_TOKEN="${HF_TOKEN:-}"
 
         # Determine docker runtime flags and pytest command based on dry_run mode
         if [[ "${{ inputs.dry_run }}" == "true" ]]; then
@@ -147,34 +151,72 @@ runs:
         chmod 777 "${TEST_RESULTS_DIR}"
         echo "📁 Test results will be saved to: ${TEST_RESULTS_DIR}"
 
+        # Resolve proxy values from either upper-case or lower-case env names.
+        HTTP_PROXY_VALUE="${HTTP_PROXY:-${http_proxy:-}}"
+        HTTPS_PROXY_VALUE="${HTTPS_PROXY:-${https_proxy:-}}"
+        NO_PROXY_VALUE="${NO_PROXY:-${no_proxy:-}}"
+
         DOCKER_ENV_FLAGS=()
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
+        if [[ -n "${HF_ENDPOINT:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HF_ENDPOINT=${HF_ENDPOINT}")
+        fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
         DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
-        if [[ -n "${HTTP_PROXY:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY}")
-          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY}")
+        if [[ -n "${HTTP_PROXY_VALUE:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY_VALUE}")
+          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY_VALUE}")
         fi
-        if [[ -n "${HTTPS_PROXY:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY}")
-          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY}")
+        if [[ -n "${HTTPS_PROXY_VALUE:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY_VALUE}")
+          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY_VALUE}")
         fi
-        if [[ -n "${NO_PROXY:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY}")
-          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY}")
+        if [[ -n "${NO_PROXY_VALUE:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY_VALUE}")
+          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY_VALUE}")
+        fi
+
+        DOCKER_EXTRA_FLAGS=(
+          --privileged
+          --group-add render
+          --group-add video
+        )
+        if [[ -e /dev/dri/renderD128 ]]; then
+          DOCKER_EXTRA_FLAGS+=(--group-add "$(stat -c '%g' /dev/dri/renderD128)")
+        fi
+
+        # Mount optional host paths when present to support XPU/RDMA test binds.
+        mkdir -p "$HOME/.cache"
+        DOCKER_MOUNT_FLAGS=(
+          -v "$HOME/.cache:/home/dynamo/.cache"
+        )
+        if [[ -d /dev/dri/by-path ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/dev/dri/by-path:/dev/dri/by-path" )
+        fi
+        if [[ -d /dev/infiniband ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/dev/infiniband:/dev/infiniband" )
+        fi
+        if [[ -d /sys/class/net ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/sys/class/net:/sys/class/net" )
+        fi
+        if [[ -d /sys/class/infiniband_verbs ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/sys/class/infiniband_verbs:/sys/class/infiniband_verbs" )
         fi
 
         echo "🐳 Docker run command (runner v1):"
-        echo "docker run ${GPU_FLAGS} --rm -w /workspace --cpus=${NUM_CPUS} --network host ${DOCKER_ENV_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
+        echo "docker run ${GPU_FLAGS} ${DOCKER_EXTRA_FLAGS[@]} --rm -w /workspace --cpus=${NUM_CPUS} --network host ${DOCKER_ENV_FLAGS[@]} ${DOCKER_MOUNT_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-        docker run ${GPU_FLAGS} --rm -w /workspace \
+        docker run ${GPU_FLAGS} \
+          "${DOCKER_EXTRA_FLAGS[@]}" \
+          --rm -w /workspace \
           --cpus=${NUM_CPUS} \
           --shm-size=200m \
           --network host \
           "${DOCKER_ENV_FLAGS[@]}" \
+          "${DOCKER_MOUNT_FLAGS[@]}" \
           --name ${{ env.CONTAINER_ID }}_pytest \
           -v "${TEST_RESULTS_DIR}:/workspace/test-results" \
           ${{ inputs.image_tag }} \
@@ -204,9 +246,13 @@ runs:
         PYTEST_XML_FILE: pytest_test_report.xml
         HF_HOME: /runner/_work/_temp
         HF_TOKEN: ${{ inputs.hf_token }}
+        HF_ENDPOINT: https://hf-mirror.com
       run: |
         # Run pytest with detailed output and JUnit XML
         set +e  # Don't exit on test failures
+
+        export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+        export HF_TOKEN="${HF_TOKEN:-}"
 
         # /dev/shm sizing: NIXL uses UCX which allocates shared memory segments in /dev/shm
         # via shm_open(). Each NIXL agent with num_threads=8 creates 9 UCX workers, each needing
@@ -269,32 +315,69 @@ runs:
         echo "📁 Test results will be saved to: ${TEST_RESULTS_DIR}"
         echo "▶️ Executing: $PYTEST_CMD"
 
+        # Resolve proxy values from either upper-case or lower-case env names.
+        HTTP_PROXY_VALUE="${HTTP_PROXY:-${http_proxy:-}}"
+        HTTPS_PROXY_VALUE="${HTTPS_PROXY:-${https_proxy:-}}"
+        NO_PROXY_VALUE="${NO_PROXY:-${no_proxy:-}}"
+
         DOCKER_ENV_FLAGS=()
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
+        if [[ -n "${HF_ENDPOINT:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HF_ENDPOINT=${HF_ENDPOINT}")
+        fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
         DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
-        if [[ -n "${HTTP_PROXY:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY}")
-          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY}")
+        if [[ -n "${HTTP_PROXY_VALUE:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY_VALUE}")
+          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY_VALUE}")
         fi
-        if [[ -n "${HTTPS_PROXY:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY}")
-          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY}")
+        if [[ -n "${HTTPS_PROXY_VALUE:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY_VALUE}")
+          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY_VALUE}")
         fi
-        if [[ -n "${NO_PROXY:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY}")
-          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY}")
+        if [[ -n "${NO_PROXY_VALUE:-}" ]]; then
+          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY_VALUE}")
+          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY_VALUE}")
+        fi
+
+        DOCKER_EXTRA_FLAGS=(
+          --privileged
+          --group-add render
+          --group-add video
+        )
+        if [[ -e /dev/dri/renderD128 ]]; then
+          DOCKER_EXTRA_FLAGS+=(--group-add "$(stat -c '%g' /dev/dri/renderD128)")
+        fi
+
+        mkdir -p "$HOME/.cache"
+        DOCKER_MOUNT_FLAGS=(
+          -v "$HOME/.cache:/home/dynamo/.cache"
+        )
+        if [[ -d /dev/dri/by-path ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/dev/dri/by-path:/dev/dri/by-path" )
+        fi
+        if [[ -d /dev/infiniband ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/dev/infiniband:/dev/infiniband" )
+        fi
+        if [[ -d /sys/class/net ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/sys/class/net:/sys/class/net" )
+        fi
+        if [[ -d /sys/class/infiniband_verbs ]]; then
+          DOCKER_MOUNT_FLAGS+=( -v "/sys/class/infiniband_verbs:/sys/class/infiniband_verbs" )
         fi
 
         echo "🐳 Docker run command (dind sidecar):"
-        echo "docker run ${GPU_FLAGS} ${DOCKER_OPTS} --rm -w /workspace --network host ${DOCKER_ENV_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
+        echo "docker run ${GPU_FLAGS} ${DOCKER_OPTS} ${DOCKER_EXTRA_FLAGS[@]} --rm -w /workspace --network host ${DOCKER_ENV_FLAGS[@]} ${DOCKER_MOUNT_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-        docker run ${GPU_FLAGS} ${DOCKER_OPTS} --rm -w /workspace \
+        docker run ${GPU_FLAGS} ${DOCKER_OPTS} \
+          "${DOCKER_EXTRA_FLAGS[@]}" \
+          --rm -w /workspace \
           --network host \
           "${DOCKER_ENV_FLAGS[@]}" \
+          "${DOCKER_MOUNT_FLAGS[@]}" \
           --name ${{ env.CONTAINER_ID }}_pytest \
           -v "${TEST_RESULTS_DIR}:/workspace/test-results" \
           ${{ inputs.image_tag }} \
