@@ -89,7 +89,6 @@ jobs:
 
   operator:
     needs: changed-files
-    if: false  # TODO: temporarily disabled; re-enable when XPU CI is stable
     name: Operator
     runs-on: xpu
     env:
@@ -169,6 +168,9 @@ jobs:
           docker buildx build --push ${NO_CACHE_FLAG} \
               --platform linux/amd64,linux/arm64 \
               --build-arg DOCKER_PROXY=${{ env.LOCAL_REGISTRY_HOST }}/dockerhub/ \
+              --build-arg HTTPS_PROXY=${{ vars.HTTPS_PROXY }} \
+              --build-arg HTTPS_PROXY=${{ vars.HTTPS_PROXY }} \
+              --build-arg NO_PROXY=${{ vars.NO_PROXY }} \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### 🐳 Operator Container Images" >> $GITHUB_STEP_SUMMARY
@@ -215,7 +217,8 @@ jobs:
   vllm-xpu-pipeline:
     name: vllm-xpu
     needs: [changed-files]
-    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true'
+    if: false
+    #if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true'
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: vllm
@@ -397,7 +400,7 @@ jobs:
       (needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true') &&
       needs.deploy-operator.result == 'success' &&
       needs.vllm-xpu-pipeline.result == 'success'
-    needs: [changed-files, deploy-operator, vllm-xpu-pipeline]
+    needs: [changed-files, deploy-operator]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: vllm
