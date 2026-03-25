@@ -50,7 +50,7 @@ trtllm =[
 vllm = [
     "uvloop",
     "nixl[cu12]<=0.10.1",
-    "vllm[flashinfer,runai,otel]==0.17.1",
+    "vllm[flashinfer,runai,otel]==0.18.0",
     # vllm-omni 0.16.0 is now on PyPI; install only future rc builds from source in container builds
     # (see container/deps/vllm/install_vllm.sh). pip install ai-dynamo[vllm] will
     # not include vllm-omni — install it separately from source if needed.
@@ -63,6 +63,10 @@ sglang = [
     "sglang[diffusion]==0.5.9",
     "nixl[cu12]<=0.10.1",
     "cupy-cuda12x>=13.0.0",
+]
+
+mocker = [
+    "aiconfigurator>=0.7.0",
 ]
 
 [project.entry-points.pytest11]
@@ -226,8 +230,8 @@ markers = [
     "gpu_2: marks tests to run on 2GPUs",
     "gpu_4: marks tests to run on 4GPUs",
     "gpu_8: marks tests to run on 8GPUs",
-    "xpu_1: marks tests to run on XPU",
-    "xpu_2: marks tests to run on 2XPUs",
+    "xpu_1: marks tests to run on 1 XPU",
+    "xpu_2: marks tests to run on 2 XPUs",
     "max_vram_gib(N): peak VRAM in GiB (with 10% safety). Filter with --max-vram-gib=N",
     "e2e: marks tests as end-to-end tests",
     "integration: marks tests as integration tests",
