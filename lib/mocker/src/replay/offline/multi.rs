@@ -1,23 +1,37 @@
 // SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::events::{SimulationEvent, SimulationEventKind};
+use super::events::{SimulationEvent, SimulationWorkerStage};
 use super::normalize_trace_requests;
-use super::state::OfflineWorkerState;
+use super::runtime_utils::{
+    WorkerCompletionPayload, next_timestamp as choose_next_timestamp, pop_next_concurrency_ready,
+    pop_next_trace_ready, pop_ready_worker_completion, push_worker_completion,
+};
+#[cfg(test)]
+use super::state::OfflineWorkerSnapshot;
+use super::state::{AggRequestState, OfflineWorkerState};
 use crate::common::protocols::{DirectRequest, MockEngineArgs, OutputSignal};
+use crate::loadgen::{ReplayRequestHashes, Trace, WorkloadDriver};
 use crate::replay::router::OfflineReplayRouter;
+#[cfg(test)]
+use crate::replay::router::OfflineRouterSnapshot;
 use crate::replay::{ReplayRouterMode, TraceCollector, TraceSimulationReport};
 use crate::scheduler::RouterEventVisibility;
 use anyhow::bail;
 use dynamo_kv_router::config::KvRouterConfig;
 use dynamo_kv_router::protocols::RouterEvent;
-use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
+use std::collections::{BinaryHeap, HashMap, VecDeque};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy)]
 enum ReplayMode {
     Trace,
     Concurrency { max_in_flight: usize },
+}
+
+enum AdmissionSource {
+    Requests(VecDeque<DirectRequest>),
+    Workload(WorkloadDriver),
 }
 
 #[cfg(test)]
@@ -32,6 +46,17 @@ struct OfflineRuntimeStats {
     max_router_pending: usize,
 }
 
+#[cfg(test)]
+#[derive(Debug, Clone, PartialEq)]
+struct OfflineRuntimeSnapshot {
+    now_ms: f64,
+    worker_active_requests: Vec<Vec<Uuid>>,
+    workers: Vec<OfflineWorkerSnapshot>,
+    router_pending_request_ids: Vec<Uuid>,
+    prefill_completed: Vec<Uuid>,
+    router: Option<OfflineRouterSnapshot>,
+}
+
 #[cfg(not(test))]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct OfflineRuntimeStats;
@@ -40,15 +65,19 @@ struct OfflineRuntime {
     now_ms: f64,
     next_worker_idx: usize,
     next_event_seq: u64,
-    pending: VecDeque<DirectRequest>,
-    router_pending: HashMap<Uuid, DirectRequest>,
+    admission: AdmissionSource,
+    requests: HashMap<Uuid, AggRequestState>,
+    queued_requests: usize,
     workers: Vec<OfflineWorkerState>,
     collector: TraceCollector,
     events: BinaryHeap<SimulationEvent>,
     mode: ReplayMode,
     router: Option<OfflineReplayRouter>,
-    prefill_completed: HashSet<Uuid>,
     stats: OfflineRuntimeStats,
+    #[cfg(test)]
+    worker_active_requests: Vec<Vec<Uuid>>,
+    #[cfg(test)]
+    stepped: bool,
 }
 
 impl OfflineRuntime {
@@ -56,6 +85,42 @@ impl OfflineRuntime {
         args: &MockEngineArgs,
         router_config: Option<KvRouterConfig>,
         pending: VecDeque<DirectRequest>,
+        num_workers: usize,
+        mode: ReplayMode,
+        router_mode: ReplayRouterMode,
+    ) -> anyhow::Result<Self> {
+        Self::new_with_source(
+            args,
+            router_config,
+            AdmissionSource::Requests(pending),
+            num_workers,
+            mode,
+            router_mode,
+        )
+    }
+
+    fn new_workload(
+        args: &MockEngineArgs,
+        router_config: Option<KvRouterConfig>,
+        driver: WorkloadDriver,
+        num_workers: usize,
+        mode: ReplayMode,
+        router_mode: ReplayRouterMode,
+    ) -> anyhow::Result<Self> {
+        Self::new_with_source(
+            args,
+            router_config,
+            AdmissionSource::Workload(driver),
+            num_workers,
+            mode,
+            router_mode,
+        )
+    }
+
+    fn new_with_source(
+        args: &MockEngineArgs,
+        router_config: Option<KvRouterConfig>,
+        admission: AdmissionSource,
         num_workers: usize,
         mode: ReplayMode,
         router_mode: ReplayRouterMode,
@@ -73,8 +138,9 @@ impl OfflineRuntime {
             now_ms: 0.0,
             next_worker_idx: 0,
             next_event_seq: 0,
-            pending,
-            router_pending: HashMap::new(),
+            admission,
+            requests: HashMap::new(),
+            queued_requests: 0,
             workers: (0..num_workers)
                 .map(|worker_idx| {
                     OfflineWorkerState::new(worker_idx, args.clone(), capture_kv_events)
@@ -84,11 +150,14 @@ impl OfflineRuntime {
             events: BinaryHeap::new(),
             mode,
             router,
-            prefill_completed: HashSet::new(),
             #[cfg(test)]
             stats: OfflineRuntimeStats::default(),
             #[cfg(not(test))]
             stats: OfflineRuntimeStats,
+            #[cfg(test)]
+            worker_active_requests: vec![Vec::new(); num_workers],
+            #[cfg(test)]
+            stepped: false,
         })
     }
 
@@ -97,7 +166,7 @@ impl OfflineRuntime {
             .iter()
             .map(OfflineWorkerState::in_flight)
             .sum::<usize>()
-            + self.router_pending.len()
+            + self.queued_requests
     }
 
     fn record_in_flight_peak(&mut self) {
@@ -148,14 +217,21 @@ impl OfflineRuntime {
         self.validate_worker_idx(worker_idx)?;
         self.workers[worker_idx].receive_request(request);
         self.record_dispatch(uuid, worker_idx);
+        #[cfg(test)]
+        self.worker_active_requests[worker_idx].push(uuid);
         Ok(())
     }
 
     fn dispatch_router_admissions(&mut self, admissions: Vec<(Uuid, usize)>) -> anyhow::Result<()> {
         for (uuid, worker_idx) in admissions {
-            let request = self.router_pending.remove(&uuid).ok_or_else(|| {
-                anyhow::anyhow!("offline replay missing queued request state for {uuid}")
-            })?;
+            let request = self
+                .requests
+                .get_mut(&uuid)
+                .ok_or_else(|| {
+                    anyhow::anyhow!("offline replay missing queued request state for {uuid}")
+                })?
+                .take_queued_request(uuid)?;
+            self.queued_requests = self.queued_requests.saturating_sub(1);
             self.dispatch_to_worker(request, uuid, worker_idx)?;
         }
         Ok(())
@@ -165,6 +241,7 @@ impl OfflineRuntime {
         &mut self,
         mut request: DirectRequest,
         arrival_time_ms: f64,
+        replay_hashes: Option<ReplayRequestHashes>,
     ) -> anyhow::Result<Uuid> {
         let uuid = request.uuid.unwrap_or_else(Uuid::new_v4);
         request.uuid = Some(uuid);
@@ -180,56 +257,58 @@ impl OfflineRuntime {
         );
 
         let Some(router) = self.router.as_mut() else {
+            self.requests.insert(uuid, AggRequestState::new_running());
             let worker_idx = self.next_worker_idx;
             self.next_worker_idx = (self.next_worker_idx + 1) % self.workers.len();
             self.dispatch_to_worker(request, uuid, worker_idx)?;
             return Ok(uuid);
         };
 
-        let maybe_worker_idx = router.submit_request(&request, self.now_ms)?;
+        let maybe_worker_idx =
+            router.submit_request_with_hashes(&request, replay_hashes, self.now_ms)?;
         self.record_router_pending();
         if let Some(worker_idx) = maybe_worker_idx {
+            self.requests.insert(uuid, AggRequestState::new_running());
             self.dispatch_to_worker(request, uuid, worker_idx)?;
             return Ok(uuid);
         }
 
-        self.router_pending.insert(uuid, request);
+        self.requests
+            .insert(uuid, AggRequestState::new_queued(request));
+        self.queued_requests += 1;
         self.record_in_flight_peak();
         Ok(uuid)
     }
 
     fn is_done(&self) -> bool {
-        self.pending.is_empty()
-            && self.events.is_empty()
+        self.events.is_empty()
             && self.cluster_in_flight() == 0
+            && match &self.admission {
+                AdmissionSource::Requests(pending) => pending.is_empty(),
+                AdmissionSource::Workload(driver) => driver.is_drained(),
+            }
             && self.workers.iter().all(OfflineWorkerState::is_drained)
     }
 
-    fn next_timestamp(&self) -> Option<f64> {
+    fn next_timestamp(&mut self) -> Option<f64> {
         let next_event_ms = self.events.peek().map(|event| event.at_ms);
-        let next_arrival_ms = match self.mode {
-            ReplayMode::Trace => self
-                .pending
+        let cluster_in_flight = self.cluster_in_flight();
+        let next_arrival_ms = match (&self.mode, &mut self.admission) {
+            (ReplayMode::Trace, AdmissionSource::Requests(pending)) => pending
                 .front()
                 .and_then(|request| request.arrival_timestamp_ms),
-            ReplayMode::Concurrency { .. } => None,
+            (ReplayMode::Trace, AdmissionSource::Workload(driver)) => driver.next_ready_time_ms(),
+            (ReplayMode::Concurrency { max_in_flight }, AdmissionSource::Workload(driver)) => {
+                if cluster_in_flight < *max_in_flight {
+                    driver.next_ready_time_ms()
+                } else {
+                    None
+                }
+            }
+            (ReplayMode::Concurrency { .. }, AdmissionSource::Requests(_)) => None,
         };
 
-        match (next_arrival_ms, next_event_ms) {
-            (Some(arrival_ms), Some(event_ms)) => Some(arrival_ms.min(event_ms)),
-            (Some(arrival_ms), None) => Some(arrival_ms),
-            (None, Some(event_ms)) => Some(event_ms),
-            (None, None) => None,
-        }
-    }
-
-    fn push_event(&mut self, at_ms: f64, kind: SimulationEventKind) {
-        self.events.push(SimulationEvent {
-            at_ms,
-            seq_no: self.next_event_seq,
-            kind,
-        });
-        self.next_event_seq += 1;
+        choose_next_timestamp(next_arrival_ms, next_event_ms)
     }
 
     fn apply_completed_requests(&mut self, worker_idx: usize, completed_requests: usize) {
@@ -249,6 +328,8 @@ impl OfflineRuntime {
     fn process_output_signal(&mut self, signal: OutputSignal) -> anyhow::Result<()> {
         let mut admissions = Vec::new();
         if signal.completed {
+            #[cfg(test)]
+            self.remove_active_request(signal.uuid);
             if let Some(router) = self.router.as_mut() {
                 admissions = router.free(signal.uuid)?;
                 #[cfg(test)]
@@ -257,15 +338,33 @@ impl OfflineRuntime {
                 }
                 self.record_router_pending();
             }
-            self.prefill_completed.remove(&signal.uuid);
+            self.requests.remove(&signal.uuid).ok_or_else(|| {
+                anyhow::anyhow!("offline replay missing request state for {}", signal.uuid)
+            })?;
+            if let AdmissionSource::Workload(driver) = &mut self.admission {
+                driver.on_complete(signal.uuid, self.now_ms)?;
+            }
             self.dispatch_router_admissions(admissions)?;
             return Ok(());
         }
 
-        if !self.prefill_completed.insert(signal.uuid) {
+        let already_marked = self
+            .requests
+            .get(&signal.uuid)
+            .ok_or_else(|| {
+                anyhow::anyhow!("offline replay missing request state for {}", signal.uuid)
+            })?
+            .prefill_completed();
+        if already_marked {
             return Ok(());
         }
 
+        self.requests
+            .get_mut(&signal.uuid)
+            .ok_or_else(|| {
+                anyhow::anyhow!("offline replay missing request state for {}", signal.uuid)
+            })?
+            .mark_prefill_completed();
         if let Some(router) = self.router.as_mut() {
             admissions = router.mark_prefill_completed(signal.uuid)?;
             #[cfg(test)]
@@ -277,6 +376,20 @@ impl OfflineRuntime {
         self.dispatch_router_admissions(admissions)?;
 
         Ok(())
+    }
+
+    #[cfg(test)]
+    fn remove_active_request(&mut self, uuid: Uuid) {
+        for active_requests in &mut self.worker_active_requests {
+            let Some(position) = active_requests
+                .iter()
+                .position(|candidate| *candidate == uuid)
+            else {
+                continue;
+            };
+            active_requests.remove(position);
+            return;
+        }
     }
 
     fn process_completed_pass(
@@ -296,25 +409,15 @@ impl OfflineRuntime {
 
     fn apply_worker_completions(&mut self) -> anyhow::Result<bool> {
         let mut changed = false;
-        loop {
-            let Some(event) = self.events.peek() else {
-                break;
-            };
-            if event.at_ms != self.now_ms {
-                break;
-            }
-            if !matches!(event.kind, SimulationEventKind::WorkerCompletion { .. }) {
-                break;
-            }
-
-            let event = self.events.pop().expect("event must exist after peek");
-            let SimulationEventKind::WorkerCompletion {
-                worker_idx,
-                completed_requests,
-                output_signals,
-                kv_events,
-            } = event.kind;
-
+        while let Some(WorkerCompletionPayload {
+            stage,
+            worker_idx,
+            completed_requests,
+            output_signals,
+            kv_events,
+        }) = pop_ready_worker_completion(&mut self.events, self.now_ms)
+        {
+            debug_assert_eq!(stage, SimulationWorkerStage::Aggregated);
             self.workers[worker_idx].mark_idle();
             self.process_completed_pass(worker_idx, completed_requests, output_signals, kv_events)?;
             changed = true;
@@ -325,20 +428,33 @@ impl OfflineRuntime {
 
     fn release_trace_arrivals(&mut self) -> anyhow::Result<bool> {
         let mut released_any = false;
-        while self
-            .pending
-            .front()
-            .and_then(|request| request.arrival_timestamp_ms)
-            .is_some_and(|arrival_ms| arrival_ms <= self.now_ms)
-        {
-            let request = self
-                .pending
-                .pop_front()
-                .expect("front request must exist when arrival is ready");
-            let arrival_ms = request
-                .arrival_timestamp_ms
-                .expect("trace replay requests must have an arrival timestamp");
-            self.assign_request(request, arrival_ms)?;
+        if matches!(self.admission, AdmissionSource::Requests(_)) {
+            loop {
+                let next_ready = match &mut self.admission {
+                    AdmissionSource::Requests(pending) => {
+                        pop_next_trace_ready(pending, self.now_ms)
+                    }
+                    AdmissionSource::Workload(_) => unreachable!(),
+                };
+                let Some((request, arrival_ms)) = next_ready else {
+                    break;
+                };
+                self.assign_request(request, arrival_ms, None)?;
+                released_any = true;
+            }
+            return Ok(released_any);
+        }
+
+        let ready_requests = match &mut self.admission {
+            AdmissionSource::Requests(_) => unreachable!(),
+            AdmissionSource::Workload(driver) => driver.pop_ready(self.now_ms, usize::MAX),
+        };
+        for ready in ready_requests {
+            self.assign_request(
+                ready.request,
+                ready.scheduled_ready_at_ms,
+                ready.replay_hashes,
+            )?;
             released_any = true;
         }
 
@@ -347,11 +463,38 @@ impl OfflineRuntime {
 
     fn top_off_concurrency(&mut self, max_in_flight: usize) -> anyhow::Result<bool> {
         let mut released_any = false;
-        while self.cluster_in_flight() < max_in_flight {
-            let Some(request) = self.pending.pop_front() else {
-                break;
-            };
-            self.assign_request(request, self.now_ms)?;
+        if matches!(self.admission, AdmissionSource::Requests(_)) {
+            loop {
+                let cluster_in_flight = self.cluster_in_flight();
+                let next_ready = match &mut self.admission {
+                    AdmissionSource::Requests(pending) => pop_next_concurrency_ready(
+                        pending,
+                        self.now_ms,
+                        cluster_in_flight,
+                        max_in_flight,
+                    ),
+                    AdmissionSource::Workload(_) => unreachable!(),
+                };
+                let Some((request, arrival_ms)) = next_ready else {
+                    break;
+                };
+                self.assign_request(request, arrival_ms, None)?;
+                released_any = true;
+            }
+            return Ok(released_any);
+        }
+
+        let available = max_in_flight.saturating_sub(self.cluster_in_flight());
+        if available == 0 {
+            return Ok(false);
+        }
+
+        let ready_requests = match &mut self.admission {
+            AdmissionSource::Requests(_) => unreachable!(),
+            AdmissionSource::Workload(driver) => driver.pop_ready(self.now_ms, available),
+        };
+        for ready in ready_requests {
+            self.assign_request(ready.request, self.now_ms, ready.replay_hashes)?;
             released_any = true;
         }
 
@@ -391,9 +534,12 @@ impl OfflineRuntime {
                 }
 
                 self.workers[worker_idx].mark_busy();
-                self.push_event(
+                push_worker_completion(
+                    &mut self.events,
+                    &mut self.next_event_seq,
                     executed.end_ms,
-                    SimulationEventKind::WorkerCompletion {
+                    WorkerCompletionPayload {
+                        stage: SimulationWorkerStage::Aggregated,
                         worker_idx,
                         completed_requests: executed.completed_requests,
                         output_signals: executed.output_signals,
@@ -449,6 +595,64 @@ impl OfflineRuntime {
 
         Ok((self.collector, self.stats))
     }
+
+    #[cfg(test)]
+    fn advance_one_timestamp(&mut self) -> anyhow::Result<bool> {
+        if self.is_done() {
+            return Ok(false);
+        }
+
+        if !self.stepped {
+            self.stepped = true;
+            self.drain_current_timestamp()?;
+            return Ok(true);
+        }
+
+        let Some(next_timestamp_ms) = self.next_timestamp() else {
+            bail!(
+                "offline replay reached a dead end with {} in-flight requests remaining",
+                self.cluster_in_flight()
+            );
+        };
+
+        self.now_ms = next_timestamp_ms;
+        self.drain_current_timestamp()?;
+        Ok(true)
+    }
+
+    #[cfg(test)]
+    fn debug_snapshot(&self) -> OfflineRuntimeSnapshot {
+        let mut router_pending_request_ids = self
+            .requests
+            .iter()
+            .filter(|(_, state)| state.is_queued_at_router())
+            .map(|(uuid, _)| *uuid)
+            .collect::<Vec<_>>();
+        router_pending_request_ids.sort_unstable();
+        let mut prefill_completed = self
+            .requests
+            .iter()
+            .filter(|(_, state)| state.prefill_completed())
+            .map(|(uuid, _)| *uuid)
+            .collect::<Vec<_>>();
+        prefill_completed.sort_unstable();
+
+        OfflineRuntimeSnapshot {
+            now_ms: self.now_ms,
+            worker_active_requests: self.worker_active_requests.clone(),
+            workers: self
+                .workers
+                .iter()
+                .map(OfflineWorkerState::debug_snapshot)
+                .collect(),
+            router_pending_request_ids,
+            prefill_completed,
+            router: self
+                .router
+                .as_ref()
+                .map(OfflineReplayRouter::debug_snapshot),
+        }
+    }
 }
 
 pub(crate) fn simulate_trace_multi(
@@ -487,6 +691,49 @@ pub(crate) fn simulate_concurrency_multi(
         &args,
         router_config,
         pending,
+        num_workers,
+        ReplayMode::Concurrency { max_in_flight },
+        router_mode,
+    )?
+    .run()?;
+    Ok(collector.finish())
+}
+
+pub(crate) fn simulate_trace_workload_multi(
+    args: MockEngineArgs,
+    router_config: Option<KvRouterConfig>,
+    trace: Trace,
+    num_workers: usize,
+    router_mode: ReplayRouterMode,
+) -> anyhow::Result<TraceSimulationReport> {
+    let args = args.normalized()?;
+    let driver = trace.into_trace_driver()?;
+    let (collector, _) = OfflineRuntime::new_workload(
+        &args,
+        router_config,
+        driver,
+        num_workers,
+        ReplayMode::Trace,
+        router_mode,
+    )?
+    .run()?;
+    Ok(collector.finish())
+}
+
+pub(crate) fn simulate_concurrency_workload_multi(
+    args: MockEngineArgs,
+    router_config: Option<KvRouterConfig>,
+    trace: Trace,
+    max_in_flight: usize,
+    num_workers: usize,
+    router_mode: ReplayRouterMode,
+) -> anyhow::Result<TraceSimulationReport> {
+    let args = args.normalized()?;
+    let driver = trace.into_concurrency_driver()?;
+    let (collector, _) = OfflineRuntime::new_workload(
+        &args,
+        router_config,
+        driver,
         num_workers,
         ReplayMode::Concurrency { max_in_flight },
         router_mode,
@@ -538,10 +785,52 @@ fn run_concurrency_multi_collect_with_stats(
 }
 
 #[cfg(test)]
+fn run_trace_workload_multi_collect_with_stats(
+    args: &MockEngineArgs,
+    trace: Trace,
+    num_workers: usize,
+    router_mode: ReplayRouterMode,
+) -> (TraceCollector, OfflineRuntimeStats) {
+    OfflineRuntime::new_workload(
+        args,
+        None,
+        trace.into_trace_driver().unwrap(),
+        num_workers,
+        ReplayMode::Trace,
+        router_mode,
+    )
+    .unwrap()
+    .run()
+    .unwrap()
+}
+
+#[cfg(test)]
+fn run_concurrency_workload_multi_collect_with_stats(
+    args: &MockEngineArgs,
+    trace: Trace,
+    max_in_flight: usize,
+    num_workers: usize,
+    router_mode: ReplayRouterMode,
+) -> (TraceCollector, OfflineRuntimeStats) {
+    OfflineRuntime::new_workload(
+        args,
+        None,
+        trace.into_concurrency_driver().unwrap(),
+        num_workers,
+        ReplayMode::Concurrency { max_in_flight },
+        router_mode,
+    )
+    .unwrap()
+    .run()
+    .unwrap()
+}
+
+#[cfg(test)]
 mod tests {
     use super::super::single::{run_concurrency_single_collect, run_trace_single_collect};
     use super::*;
     use crate::common::protocols::{EngineType, SglangArgs};
+    use crate::loadgen::{SessionTrace, TurnTrace};
     use dynamo_kv_router::config::RouterQueuePolicy;
 
     fn replay_args(enable_prefix_caching: bool, enable_chunked_prefill: bool) -> MockEngineArgs {
@@ -595,6 +884,286 @@ mod tests {
             }))
             .build()
             .unwrap()
+    }
+
+    fn multiturn_trace() -> Trace {
+        Trace {
+            block_size: 64,
+            sessions: vec![
+                SessionTrace {
+                    session_id: "session-a".to_string(),
+                    first_arrival_timestamp_ms: Some(0.0),
+                    turns: vec![
+                        TurnTrace {
+                            input_length: 64,
+                            max_output_tokens: 2,
+                            hash_ids: vec![11],
+                            delay_after_previous_ms: 0.0,
+                        },
+                        TurnTrace {
+                            input_length: 192,
+                            max_output_tokens: 2,
+                            hash_ids: vec![21, 22, 23],
+                            delay_after_previous_ms: 10.0,
+                        },
+                    ],
+                },
+                SessionTrace {
+                    session_id: "session-b".to_string(),
+                    first_arrival_timestamp_ms: Some(5.0),
+                    turns: vec![TurnTrace {
+                        input_length: 128,
+                        max_output_tokens: 2,
+                        hash_ids: vec![31, 32],
+                        delay_after_previous_ms: 0.0,
+                    }],
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn test_trace_workload_follow_up_turn_arrives_after_completion_plus_delay() {
+        let args = fast_router_args();
+        let (collector, stats) = run_trace_workload_multi_collect_with_stats(
+            &args,
+            multiturn_trace(),
+            2,
+            ReplayRouterMode::RoundRobin,
+        );
+
+        let first_turn_uuid = *stats
+            .dispatch_order
+            .iter()
+            .find(|uuid| {
+                collector
+                    .snapshot(**uuid)
+                    .is_some_and(|stats| stats.input_length == 64)
+            })
+            .unwrap();
+        let second_turn_uuid = *stats
+            .dispatch_order
+            .iter()
+            .find(|uuid| {
+                collector
+                    .snapshot(**uuid)
+                    .is_some_and(|stats| stats.input_length == 192)
+            })
+            .unwrap();
+        let session_b_uuid = *stats
+            .dispatch_order
+            .iter()
+            .find(|uuid| {
+                collector
+                    .snapshot(**uuid)
+                    .is_some_and(|stats| stats.input_length == 128)
+            })
+            .unwrap();
+
+        let first_turn = collector.snapshot(first_turn_uuid).unwrap();
+        let second_turn = collector.snapshot(second_turn_uuid).unwrap();
+        let session_b = collector.snapshot(session_b_uuid).unwrap();
+
+        assert_eq!(first_turn.arrival_time_ms, 0.0);
+        assert_eq!(session_b.arrival_time_ms, 5.0);
+        assert!(
+            second_turn.arrival_time_ms >= first_turn.last_token_ms.unwrap() + 10.0,
+            "follow-up turn should unlock after completion plus delay"
+        );
+    }
+
+    #[test]
+    fn test_concurrency_workload_delayed_follow_up_does_not_bypass_other_ready_sessions() {
+        let args = fast_router_args();
+        let (collector, stats) = run_concurrency_workload_multi_collect_with_stats(
+            &args,
+            multiturn_trace(),
+            1,
+            2,
+            ReplayRouterMode::RoundRobin,
+        );
+
+        assert_eq!(stats.max_in_flight_seen, 1);
+        let dispatch_input_lengths = stats
+            .dispatch_order
+            .iter()
+            .map(|uuid| collector.snapshot(*uuid).unwrap().input_length)
+            .collect::<Vec<_>>();
+        assert_eq!(dispatch_input_lengths, vec![64, 128, 192]);
+    }
+
+    #[test]
+    fn test_trace_workload_kv_router_precomputed_hashes_match_request_fallback() {
+        let args = fast_router_args();
+        let requests = vec![
+            DirectRequest {
+                tokens: [vec![11; 64], vec![21; 32]].concat(),
+                max_output_tokens: 2,
+                uuid: Some(Uuid::from_u128(111)),
+                dp_rank: 0,
+                arrival_timestamp_ms: Some(0.0),
+            },
+            DirectRequest {
+                tokens: [vec![11; 64], vec![22; 32]].concat(),
+                max_output_tokens: 2,
+                uuid: Some(Uuid::from_u128(222)),
+                dp_rank: 0,
+                arrival_timestamp_ms: Some(500.0),
+            },
+        ];
+        let workload = Trace {
+            block_size: 64,
+            sessions: vec![
+                SessionTrace {
+                    session_id: "session-a".to_string(),
+                    first_arrival_timestamp_ms: Some(0.0),
+                    turns: vec![TurnTrace {
+                        input_length: 96,
+                        max_output_tokens: 2,
+                        hash_ids: vec![11, 21],
+                        delay_after_previous_ms: 0.0,
+                    }],
+                },
+                SessionTrace {
+                    session_id: "session-b".to_string(),
+                    first_arrival_timestamp_ms: Some(500.0),
+                    turns: vec![TurnTrace {
+                        input_length: 96,
+                        max_output_tokens: 2,
+                        hash_ids: vec![11, 22],
+                        delay_after_previous_ms: 0.0,
+                    }],
+                },
+            ],
+        };
+
+        let (request_collector, request_stats) =
+            run_trace_multi_collect_with_stats(&args, requests, 2, ReplayRouterMode::KvRouter);
+        let (workload_collector, workload_stats) = run_trace_workload_multi_collect_with_stats(
+            &args,
+            workload,
+            2,
+            ReplayRouterMode::KvRouter,
+        );
+        let request_report = request_collector.finish();
+        let workload_report = workload_collector.finish();
+
+        assert_eq!(request_stats.dispatch_history.len(), 2);
+        assert_eq!(workload_stats.dispatch_history.len(), 2);
+        assert_eq!(
+            request_stats.dispatch_history[0],
+            request_stats.dispatch_history[1]
+        );
+        assert_eq!(
+            workload_stats.dispatch_history[0],
+            workload_stats.dispatch_history[1]
+        );
+        assert_eq!(
+            request_report.request_counts.completed_requests,
+            workload_report.request_counts.completed_requests
+        );
+        assert_eq!(
+            request_report.request_counts.total_input_tokens,
+            workload_report.request_counts.total_input_tokens
+        );
+        assert_eq!(
+            request_report.request_counts.total_output_tokens,
+            workload_report.request_counts.total_output_tokens
+        );
+        assert_eq!(
+            request_report.prefix_cache_reused_ratio,
+            workload_report.prefix_cache_reused_ratio
+        );
+    }
+
+    #[test]
+    fn test_multi_worker_trace_kv_router_debug_snapshot_tracks_queue_and_cached_dispatch() {
+        let args = queueing_router_args(RouterQueuePolicy::Fcfs);
+        let mut runtime = OfflineRuntime::new(
+            &args,
+            None,
+            normalize_trace_requests(
+                vec![
+                    DirectRequest {
+                        tokens: vec![11; 64],
+                        max_output_tokens: 8,
+                        uuid: Some(Uuid::from_u128(11)),
+                        dp_rank: 0,
+                        arrival_timestamp_ms: Some(0.0),
+                    },
+                    DirectRequest {
+                        tokens: vec![22; 64],
+                        max_output_tokens: 8,
+                        uuid: Some(Uuid::from_u128(22)),
+                        dp_rank: 0,
+                        arrival_timestamp_ms: Some(0.0),
+                    },
+                    DirectRequest {
+                        tokens: vec![11; 64],
+                        max_output_tokens: 2,
+                        uuid: Some(Uuid::from_u128(33)),
+                        dp_rank: 0,
+                        arrival_timestamp_ms: Some(0.1),
+                    },
+                ],
+                1.0,
+            )
+            .unwrap(),
+            2,
+            ReplayMode::Trace,
+            ReplayRouterMode::KvRouter,
+        )
+        .unwrap();
+
+        assert!(runtime.advance_one_timestamp().unwrap());
+        let initial = runtime.debug_snapshot();
+        let initial_router = initial.router.as_ref().unwrap();
+
+        assert_eq!(initial.now_ms, 0.0);
+        assert!(initial.router_pending_request_ids.is_empty());
+        assert!(initial_router.pending.is_empty());
+        assert_eq!(
+            initial
+                .worker_active_requests
+                .iter()
+                .map(Vec::len)
+                .collect::<Vec<_>>(),
+            vec![1, 1]
+        );
+        assert!(initial_router.indexer.total_cached_blocks > 0);
+
+        assert!(runtime.advance_one_timestamp().unwrap());
+        let queued = runtime.debug_snapshot();
+        let queued_router = queued.router.as_ref().unwrap();
+
+        assert_eq!(queued.now_ms, 0.1);
+        assert_eq!(queued.router_pending_request_ids, vec![Uuid::from_u128(33)]);
+        assert_eq!(queued_router.pending.len(), 1);
+        assert_eq!(queued_router.pending[0].uuid, Uuid::from_u128(33));
+
+        let cached_workers = queued_router.pending[0]
+            .overlap_blocks_by_worker
+            .iter()
+            .filter(|(_, overlap)| *overlap > 0)
+            .map(|(worker_idx, _)| *worker_idx)
+            .collect::<Vec<_>>();
+        assert_eq!(cached_workers.len(), 1);
+        let cached_worker = cached_workers[0];
+
+        while !runtime
+            .stats
+            .assigned_worker_by_uuid
+            .contains_key(&Uuid::from_u128(33))
+        {
+            assert!(runtime.advance_one_timestamp().unwrap());
+        }
+
+        let dispatched = runtime.debug_snapshot();
+        assert!(dispatched.router_pending_request_ids.is_empty());
+        assert_eq!(
+            runtime.stats.assigned_worker_by_uuid[&Uuid::from_u128(33)],
+            cached_worker
+        );
     }
 
     #[test]
@@ -929,16 +1498,16 @@ mod tests {
         let request_1 = collector.snapshot(Uuid::from_u128(1)).unwrap();
         let request_2 = collector.snapshot(Uuid::from_u128(2)).unwrap();
         let request_3 = collector.snapshot(Uuid::from_u128(3)).unwrap();
+        let first_unblock_ms = request_1
+            .first_token_ms
+            .unwrap()
+            .min(request_2.first_token_ms.unwrap());
 
         assert!(stats.max_router_pending > 0);
         assert!(request_3.first_admit_ms.unwrap() > request_3.arrival_time_ms);
-        assert!(
-            request_3.first_admit_ms.unwrap()
-                < request_1
-                    .last_token_ms
-                    .unwrap()
-                    .min(request_2.last_token_ms.unwrap())
-        );
+        assert_eq!(request_3.first_admit_ms.unwrap(), first_unblock_ms);
+        assert!(request_3.first_admit_ms.unwrap() < request_1.last_token_ms.unwrap());
+        assert!(request_3.first_admit_ms.unwrap() < request_2.last_token_ms.unwrap());
     }
 
     #[test]
@@ -1008,6 +1577,72 @@ mod tests {
     }
 
     #[test]
+    fn test_multi_worker_trace_kv_router_fcfs_and_lcfs_admit_queued_requests_in_opposite_timestamp_order()
+     {
+        let requests = vec![
+            DirectRequest {
+                tokens: vec![10; 64],
+                max_output_tokens: 8,
+                uuid: Some(Uuid::from_u128(10)),
+                dp_rank: 0,
+                arrival_timestamp_ms: Some(0.0),
+            },
+            DirectRequest {
+                tokens: vec![20; 128],
+                max_output_tokens: 8,
+                uuid: Some(Uuid::from_u128(20)),
+                dp_rank: 0,
+                arrival_timestamp_ms: Some(0.0),
+            },
+            DirectRequest {
+                tokens: vec![30; 64],
+                max_output_tokens: 1,
+                uuid: Some(Uuid::from_u128(30)),
+                dp_rank: 0,
+                arrival_timestamp_ms: Some(0.1),
+            },
+            DirectRequest {
+                tokens: vec![40; 64],
+                max_output_tokens: 1,
+                uuid: Some(Uuid::from_u128(40)),
+                dp_rank: 0,
+                arrival_timestamp_ms: Some(0.2),
+            },
+        ];
+
+        let (fcfs_collector, fcfs_stats) = run_trace_multi_collect_with_stats(
+            &queueing_router_args(RouterQueuePolicy::Fcfs),
+            requests.clone(),
+            2,
+            ReplayRouterMode::KvRouter,
+        );
+        let (lcfs_collector, lcfs_stats) = run_trace_multi_collect_with_stats(
+            &queueing_router_args(RouterQueuePolicy::Lcfs),
+            requests,
+            2,
+            ReplayRouterMode::KvRouter,
+        );
+
+        let fcfs_request_30 = fcfs_collector.snapshot(Uuid::from_u128(30)).unwrap();
+        let fcfs_request_40 = fcfs_collector.snapshot(Uuid::from_u128(40)).unwrap();
+        let lcfs_request_30 = lcfs_collector.snapshot(Uuid::from_u128(30)).unwrap();
+        let lcfs_request_40 = lcfs_collector.snapshot(Uuid::from_u128(40)).unwrap();
+
+        assert!(fcfs_stats.max_router_pending > 0);
+        assert!(lcfs_stats.max_router_pending > 0);
+        assert_eq!(
+            &fcfs_stats.dispatch_order[2..4],
+            &[Uuid::from_u128(30), Uuid::from_u128(40)]
+        );
+        assert_eq!(
+            &lcfs_stats.dispatch_order[2..4],
+            &[Uuid::from_u128(40), Uuid::from_u128(30)]
+        );
+        assert!(fcfs_request_30.first_admit_ms.unwrap() < fcfs_request_40.first_admit_ms.unwrap());
+        assert!(lcfs_request_40.first_admit_ms.unwrap() < lcfs_request_30.first_admit_ms.unwrap());
+    }
+
+    #[test]
     fn test_multi_worker_concurrency_kv_router_respects_max_in_flight() {
         let args = queueing_router_args(RouterQueuePolicy::Fcfs);
         let (_, stats) = run_concurrency_multi_collect_with_stats(
@@ -1049,6 +1684,51 @@ mod tests {
 
         assert_eq!(stats.max_in_flight_seen, 3);
         assert!(stats.max_router_pending > 0);
+    }
+
+    #[test]
+    fn test_multi_worker_concurrency_kv_router_records_backfill_timing() {
+        let args = queueing_router_args(RouterQueuePolicy::Fcfs);
+        let (collector, stats) = run_concurrency_multi_collect_with_stats(
+            &args,
+            vec![
+                DirectRequest {
+                    tokens: vec![1; 64],
+                    max_output_tokens: 2,
+                    uuid: Some(Uuid::from_u128(11)),
+                    dp_rank: 0,
+                    arrival_timestamp_ms: None,
+                },
+                DirectRequest {
+                    tokens: vec![2; 64],
+                    max_output_tokens: 4,
+                    uuid: Some(Uuid::from_u128(22)),
+                    dp_rank: 0,
+                    arrival_timestamp_ms: None,
+                },
+                DirectRequest {
+                    tokens: vec![3; 64],
+                    max_output_tokens: 2,
+                    uuid: Some(Uuid::from_u128(33)),
+                    dp_rank: 0,
+                    arrival_timestamp_ms: None,
+                },
+            ],
+            2,
+            2,
+            ReplayRouterMode::KvRouter,
+        );
+
+        let request_1 = collector.snapshot(Uuid::from_u128(11)).unwrap();
+        let request_2 = collector.snapshot(Uuid::from_u128(22)).unwrap();
+        let request_3 = collector.snapshot(Uuid::from_u128(33)).unwrap();
+
+        assert_eq!(request_1.arrival_time_ms, 0.0);
+        assert_eq!(request_2.arrival_time_ms, 0.0);
+        assert_eq!(request_3.arrival_time_ms, request_1.last_token_ms.unwrap());
+        assert!(request_3.arrival_time_ms < request_2.last_token_ms.unwrap());
+        assert_eq!(request_3.first_admit_ms.unwrap(), request_3.arrival_time_ms);
+        assert_eq!(stats.max_in_flight_seen, 2);
     }
 
     #[test]
