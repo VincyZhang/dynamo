@@ -156,7 +156,20 @@ runs:
         HTTPS_PROXY_VALUE="${HTTPS_PROXY:-${https_proxy:-}}"
         NO_PROXY_VALUE="${NO_PROXY:-${no_proxy:-}}"
 
+        # Container cache paths (backed by host mount: $HOME/.cache -> /home/dynamo/.cache)
+        CONTAINER_CACHE_ROOT="/home/dynamo/.cache"
+        CONTAINER_HF_HOME="${CONTAINER_CACHE_ROOT}/huggingface"
+        CONTAINER_HF_HUB_CACHE="${CONTAINER_HF_HOME}/hub"
+        CONTAINER_TRANSFORMERS_CACHE="${CONTAINER_HF_HOME}/transformers"
+        CONTAINER_HF_DATASETS_CACHE="${CONTAINER_HF_HOME}/datasets"
+
         DOCKER_ENV_FLAGS=()
+        DOCKER_ENV_FLAGS+=(--env "XDG_CACHE_HOME=${CONTAINER_CACHE_ROOT}")
+        DOCKER_ENV_FLAGS+=(--env "HF_HOME=${CONTAINER_HF_HOME}")
+        DOCKER_ENV_FLAGS+=(--env "HF_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
+        DOCKER_ENV_FLAGS+=(--env "HUGGINGFACE_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
+        DOCKER_ENV_FLAGS+=(--env "TRANSFORMERS_CACHE=${CONTAINER_TRANSFORMERS_CACHE}")
+        DOCKER_ENV_FLAGS+=(--env "HF_DATASETS_CACHE=${CONTAINER_HF_DATASETS_CACHE}")
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
@@ -320,7 +333,20 @@ runs:
         HTTPS_PROXY_VALUE="${HTTPS_PROXY:-${https_proxy:-}}"
         NO_PROXY_VALUE="${NO_PROXY:-${no_proxy:-}}"
 
+        # Container cache paths (backed by host mount: $HOME/.cache -> /home/dynamo/.cache)
+        CONTAINER_CACHE_ROOT="/home/dynamo/.cache"
+        CONTAINER_HF_HOME="${CONTAINER_CACHE_ROOT}/huggingface"
+        CONTAINER_HF_HUB_CACHE="${CONTAINER_HF_HOME}/hub"
+        CONTAINER_TRANSFORMERS_CACHE="${CONTAINER_HF_HOME}/transformers"
+        CONTAINER_HF_DATASETS_CACHE="${CONTAINER_HF_HOME}/datasets"
+
         DOCKER_ENV_FLAGS=()
+        DOCKER_ENV_FLAGS+=(--env "XDG_CACHE_HOME=${CONTAINER_CACHE_ROOT}")
+        DOCKER_ENV_FLAGS+=(--env "HF_HOME=${CONTAINER_HF_HOME}")
+        DOCKER_ENV_FLAGS+=(--env "HF_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
+        DOCKER_ENV_FLAGS+=(--env "HUGGINGFACE_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
+        DOCKER_ENV_FLAGS+=(--env "TRANSFORMERS_CACHE=${CONTAINER_TRANSFORMERS_CACHE}")
+        DOCKER_ENV_FLAGS+=(--env "HF_DATASETS_CACHE=${CONTAINER_HF_DATASETS_CACHE}")
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
