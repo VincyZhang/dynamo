@@ -327,7 +327,7 @@ def _test_python_router_bindings(
         AssertionError: If requests fail or router doesn't work correctly
     """
     # Create KvRouterConfig with default settings
-    kv_router_config = KvRouterConfig(min_initial_workers=num_workers)
+    kv_router_config = KvRouterConfig()
 
     # Create KvRouter Python object
     kv_router = KvRouter(
@@ -830,7 +830,6 @@ def _test_router_indexers_sync(
             router_snapshot_threshold=20,
             durable_kv_events=durable_kv_events,
             router_event_threads=router_event_threads,
-            min_initial_workers=num_workers,
         )
 
         # If standalone indexer mode, launch mockers one-by-one and register.
@@ -1483,7 +1482,6 @@ def _test_router_decisions(
             use_kv_events=use_kv_events,
             durable_kv_events=durable_kv_events,
             router_event_threads=router_event_threads,
-            min_initial_workers=expected_num_instances,
         )
         kv_router = KvRouter(
             endpoint=endpoint,
