@@ -96,7 +96,7 @@ jobs:
   # ============================================================================
   vllm-dev-pipeline:
     name: vllm-dev
-    uses: ./.github/workflows/build-flavor-matrix.yml
+    uses: ./.github/workflows/build-flavor.yml
     with:
       framework: vllm
       target: dev
@@ -111,7 +111,7 @@ jobs:
 
   sglang-dev-pipeline:
     name: sglang-dev
-    uses: ./.github/workflows/build-flavor-matrix.yml
+    uses: ./.github/workflows/build-flavor.yml
     with:
       framework: sglang
       target: dev
@@ -126,7 +126,7 @@ jobs:
 
   trtllm-dev-pipeline:
     name: trtllm-dev
-    uses: ./.github/workflows/build-flavor-matrix.yml
+    uses: ./.github/workflows/build-flavor.yml
     with:
       framework: trtllm
       target: dev
@@ -234,12 +234,12 @@ jobs:
         shell: bash
         working-directory: ./deploy/operator
         run: |
-          docker buildx build --platform linux/arm64 --target linter --progress=plain .
+          docker buildx build --platform linux/arm64 --target linter --progress=plain --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ .
       - name: Tester
         shell: bash
         working-directory: ./deploy/operator
         run: |
-          docker buildx build --platform linux/arm64 --target tester --progress=plain .
+          docker buildx build --platform linux/arm64 --target tester --progress=plain --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ .
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
@@ -290,6 +290,7 @@ jobs:
           fi
           docker buildx build --push ${NO_CACHE_FLAG} \
               --platform linux/amd64,linux/arm64 \
+              --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### 🐳 Operator Container Images" >> $GITHUB_STEP_SUMMARY
@@ -320,7 +321,6 @@ jobs:
       with:
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
         registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
-        operator_repository: aiops/catalog/intel-vllm
         operator_tag: ${{ needs.operator.outputs.operator_default_tag }}
         hf_token: ${{ secrets.HF_TOKEN }}
         dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
@@ -332,12 +332,10 @@ jobs:
     with:
       framework: vllm
       profiles: '["agg", "agg_router", "disagg", "disagg_router"]'
-      image_suffix: vllm-runtime-cuda12-amd64
+      image_suffix: vllm-runtime-cuda12
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
-      operator_repository: aiops/catalog/intel-vllm
-      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-sglang:
@@ -346,12 +344,10 @@ jobs:
     with:
       framework: sglang
       profiles: '["agg", "agg_router"]'
-      image_suffix: sglang-runtime-cuda12-amd64
+      image_suffix: sglang-runtime-cuda12
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
-      operator_repository: aiops/catalog/intel-vllm
-      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-trtllm:
@@ -360,12 +356,10 @@ jobs:
     with:
       framework: trtllm
       profiles: '["agg", "agg_router"]'
-      image_suffix: trtllm-runtime-cuda13-amd64
+      image_suffix: trtllm-runtime-cuda13
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
-      operator_repository: aiops/catalog/intel-vllm
-      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-cleanup:
@@ -494,5 +488,3 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "@ops-support Please investigate the failures above."
-
-

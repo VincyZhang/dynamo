@@ -62,15 +62,11 @@ runs:
         fi
 
     - name: Check for changes
+      uses: tj-actions/changed-files@aa08304bd477b800d468db44fe10f6c61f7f7b11  # v42.1.0
       id: filter
-      shell: bash
-      run: |
-        npm --prefix .github/scripts install --no-audit --no-fund --silent
-        node .github/scripts/changed-files-local.js \
-          --filters .github/filters.yaml \
-          --base-sha "${{ steps.merge-base.outputs.base_sha }}" \
-          --head-sha "${{ github.sha }}" \
-          --output "$GITHUB_OUTPUT"
+      with:
+        files_yaml_from_source_file: .github/filters.yaml
+        base_sha: ${{ steps.merge-base.outputs.base_sha }}
 
     - name: Debug changed files
       shell: bash

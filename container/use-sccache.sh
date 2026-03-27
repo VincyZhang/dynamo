@@ -113,24 +113,14 @@ setup_env() {
         # Wrapper scripts (installed during sccache install) route only pure
         # compilations (-c flag) through sccache; linking goes directly to
         # the real compiler so autoconf's link tests pass.
-        # If CC/CXX were previously set to multi-word values like
-        # "/usr/local/bin/sccache c++", strip the sccache prefix so wrappers
-        # always invoke a real compiler binary.
-        echo '  _cc_real="${CC:-gcc}";'
-        echo '  case "${_cc_real}" in "sccache "*|"/usr/local/bin/sccache "*) _cc_real="${_cc_real#* }" ;; esac;'
-        echo '  _cxx_real="${CXX:-g++}";'
-        echo '  case "${_cxx_real}" in "sccache "*|"/usr/local/bin/sccache "*) _cxx_real="${_cxx_real#* }" ;; esac;'
-        echo '  export SCCACHE_CC_REAL="${_cc_real}";'
-        echo '  export SCCACHE_CXX_REAL="${_cxx_real}";'
+        echo '  export SCCACHE_CC_REAL="${CC:-gcc}";'
+        echo '  export SCCACHE_CXX_REAL="${CXX:-g++}";'
         echo '  export CC="/usr/local/bin/sccache-cc";'
         echo '  export CXX="/usr/local/bin/sccache-cxx";'
     fi
 
     echo 'else'
     echo '  echo "WARNING: sccache server failed to start, building without cache";'
-    echo '  unset RUSTC_WRAPPER CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER CMAKE_CUDA_COMPILER_LAUNCHER;'
-    echo '  case "${CC:-}" in "sccache "*|"/usr/local/bin/sccache "*) export CC=gcc ;; esac;'
-    echo '  case "${CXX:-}" in "sccache "*|"/usr/local/bin/sccache "*) export CXX=g++ ;; esac;'
     echo 'fi'
 }
 

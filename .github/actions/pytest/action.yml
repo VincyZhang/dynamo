@@ -110,12 +110,10 @@ runs:
         PYTEST_XML_FILE: pytest_test_report.xml
         HF_HOME: /runner/_work/_temp
         HF_TOKEN: ${{ inputs.hf_token }}
-        HF_ENDPOINT: https://hf-mirror.com
       run: |
         # Run pytest with detailed output and JUnit XML
         set +e  # Don't exit on test failures
 
-        export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
         export HF_TOKEN="${HF_TOKEN:-}"
 
         # Determine docker runtime flags and pytest command based on dry_run mode
@@ -167,9 +165,6 @@ runs:
         DOCKER_ENV_FLAGS+=(--env "HF_DATASETS_CACHE=${CONTAINER_HF_DATASETS_CACHE}")
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
-        fi
-        if [[ -n "${HF_ENDPOINT:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HF_ENDPOINT=${HF_ENDPOINT}")
         fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
         DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
@@ -242,12 +237,10 @@ runs:
         PYTEST_XML_FILE: pytest_test_report.xml
         HF_HOME: /runner/_work/_temp
         HF_TOKEN: ${{ inputs.hf_token }}
-        HF_ENDPOINT: https://hf-mirror.com
       run: |
         # Run pytest with detailed output and JUnit XML
         set +e  # Don't exit on test failures
 
-        export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
         export HF_TOKEN="${HF_TOKEN:-}"
 
         # /dev/shm sizing: NIXL uses UCX which allocates shared memory segments in /dev/shm
@@ -327,9 +320,6 @@ runs:
         DOCKER_ENV_FLAGS+=(--env "HF_DATASETS_CACHE=${CONTAINER_HF_DATASETS_CACHE}")
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
-        fi
-        if [[ -n "${HF_ENDPOINT:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HF_ENDPOINT=${HF_ENDPOINT}")
         fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
         DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")

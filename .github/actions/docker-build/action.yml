@@ -91,8 +91,9 @@ runs:
         echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
         cargo install cbindgen
 
+        DOCKER_PROXY="${ECR_HOSTNAME}/dockerhub/"
         pushd deploy/inference-gateway/epp
-        make all
+        make all DOCKER_PROXY=${DOCKER_PROXY}
         popd
 
         EPP_GIT_TAG=$(git describe --tags --dirty --always 2>/dev/null || echo "dev")
@@ -347,11 +348,9 @@ runs:
 
     # Upload comprehensive build metrics as artifact
     - name: Upload Comprehensive Build Metrics
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6
+      uses: actions/upload-artifact@v4
       if: always()
-      continue-on-error: true
       with:
         name: build-metrics-${{ inputs.framework }}-${{ inputs.target }}-${{ env.PLATFORM_ARCH }}-${{ github.run_id }}-${{ job.check_run_id }}
         path: build-metrics/build-${{ inputs.framework }}-${{ env.PLATFORM_ARCH }}-${{ github.run_id }}-${{ job.check_run_id }}.json
         retention-days: 7
-        compression-level: 0

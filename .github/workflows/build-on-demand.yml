@@ -32,11 +32,18 @@ jobs:
     runs-on: ubuntu-slim
     outputs:
       builder_name: ${{ steps.export-builder-name.outputs.builder_name }}
+      sanitized_ref_name: ${{ steps.sanitize-ref.outputs.sanitized_ref_name }}
     steps:
       - name: Export builder name
         id: export-builder-name
         run: |
           echo "builder_name=${{ env.BUILDER_NAME }}" >> $GITHUB_OUTPUT
+      - name: Sanitize ref name for container tags
+        id: sanitize-ref
+        shell: bash
+        run: |
+          sanitized=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g' | sed 's/^-//;s/-$//' | cut -c1-128)
+          echo "sanitized_ref_name=${sanitized}" >> $GITHUB_OUTPUT
 
   # ============================================================================
   # FRAMEWORK PIPELINES (build-only)
@@ -45,7 +52,7 @@ jobs:
   vllm-pipeline:
     needs: [init]
     if: inputs.build_vllm
-    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    uses: ./.github/workflows/build-flavor.yml
     with:
       framework: vllm
       target: runtime
@@ -53,12 +60,15 @@ jobs:
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
+      push_image: true
+      run_compliance_scan: false
+      copy_to_acr: true
     secrets: inherit
 
   sglang-pipeline:
     needs: [init]
     if: inputs.build_sglang
-    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    uses: ./.github/workflows/build-flavor.yml
     with:
       framework: sglang
       target: runtime
@@ -66,12 +76,15 @@ jobs:
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
+      push_image: true
+      run_compliance_scan: false
+      copy_to_acr: true
     secrets: inherit
 
   trtllm-pipeline:
     needs: [init]
     if: inputs.build_trtllm
-    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    uses: ./.github/workflows/build-flavor.yml
     with:
       framework: trtllm
       target: runtime
@@ -79,6 +92,9 @@ jobs:
       cuda_versions: '["13.1"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
+      push_image: true
+      run_compliance_scan: false
+      copy_to_acr: true
     secrets: inherit
 
   # ============================================================================
@@ -118,9 +134,12 @@ jobs:
           ECR_DEFAULT_IMAGE_BASE="${ECR_HOSTNAME}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
           ACR_IMAGE_BASE="${{ secrets.AZURE_ACR_HOSTNAME }}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
           DEFAULT_TAG="${{ github.sha }}-operator"
+          BRANCH_TAG="${{ needs.init.outputs.sanitized_ref_name }}-operator"
           IMAGE_URIS=(
             "${ECR_DEFAULT_IMAGE_BASE}:${DEFAULT_TAG}"
             "${ACR_IMAGE_BASE}:${DEFAULT_TAG}"
+            "${ECR_DEFAULT_IMAGE_BASE}:${BRANCH_TAG}"
+            "${ACR_IMAGE_BASE}:${BRANCH_TAG}"
           )
 
           TAGGING_FLAGS=$(printf -- '-t %s ' "${IMAGE_URIS[@]}")
@@ -128,6 +147,7 @@ jobs:
 
           docker buildx build --push \
               --platform linux/amd64,linux/arm64 \
+              --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### Operator Container Images" >> $GITHUB_STEP_SUMMARY
