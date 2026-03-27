@@ -25,7 +25,7 @@ jobs:
     with:
       framework: vllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       extra_tags: |
         ${{ github.ref_name == 'main' && 'main-vllm' || '' }}
@@ -50,7 +50,7 @@ jobs:
     with:
       framework: sglang
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       extra_tags: |
         ${{ github.ref_name == 'main' && 'main-sglang' || '' }}
@@ -75,7 +75,7 @@ jobs:
     with:
       framework: trtllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["13.1"]'
       extra_tags: |
         ${{ github.ref_name == 'main' && 'main-trtllm' || '' }}
@@ -96,11 +96,11 @@ jobs:
   # ============================================================================
   vllm-dev-pipeline:
     name: vllm-dev
-    uses: ./.github/workflows/build-flavor.yml
+    uses: ./.github/workflows/build-flavor-matrix.yml
     with:
       framework: vllm
       target: dev
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
       build_timeout_minutes: 60
@@ -111,11 +111,11 @@ jobs:
 
   sglang-dev-pipeline:
     name: sglang-dev
-    uses: ./.github/workflows/build-flavor.yml
+    uses: ./.github/workflows/build-flavor-matrix.yml
     with:
       framework: sglang
       target: dev
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
       build_timeout_minutes: 60
@@ -126,11 +126,11 @@ jobs:
 
   trtllm-dev-pipeline:
     name: trtllm-dev
-    uses: ./.github/workflows/build-flavor.yml
+    uses: ./.github/workflows/build-flavor-matrix.yml
     with:
       framework: trtllm
       target: dev
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["13.1"]'
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
       build_timeout_minutes: 60
@@ -150,7 +150,7 @@ jobs:
     with:
       framework: vllm
       target: runtime
-      platform: 'linux/amd64'
+      platforms: '["amd64"]'
       cuda_versions: '["12.9"]'
       make_efa: true
       extra_tags: |
@@ -174,7 +174,7 @@ jobs:
     with:
       framework: trtllm
       target: runtime
-      platform: 'linux/amd64'
+      platforms: '["amd64"]'
       cuda_versions: '["13.1"]'
       make_efa: true
       extra_tags: |
@@ -221,7 +221,9 @@ jobs:
         with:
           builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
           flavor: general
-          arch: 'linux/amd64,linux/arm64'
+          all_arch: 'true'
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -321,6 +323,7 @@ jobs:
       with:
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
         registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+        operator_repository: aiops/catalog/intel-vllm
         operator_tag: ${{ needs.operator.outputs.operator_default_tag }}
         hf_token: ${{ secrets.HF_TOKEN }}
         dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
@@ -332,10 +335,12 @@ jobs:
     with:
       framework: vllm
       profiles: '["agg", "agg_router", "disagg", "disagg_router"]'
-      image_suffix: vllm-runtime-cuda12
+      image_suffix: vllm-runtime-cuda12-amd64
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-sglang:
@@ -344,10 +349,12 @@ jobs:
     with:
       framework: sglang
       profiles: '["agg", "agg_router"]'
-      image_suffix: sglang-runtime-cuda12
+      image_suffix: sglang-runtime-cuda12-amd64
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-trtllm:
@@ -356,10 +363,12 @@ jobs:
     with:
       framework: trtllm
       profiles: '["agg", "agg_router"]'
-      image_suffix: trtllm-runtime-cuda13
+      image_suffix: trtllm-runtime-cuda13-amd64
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-cleanup:
@@ -432,6 +441,8 @@ jobs:
         builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
         buildkit_worker_addresses: '' # k8s builder
         skip_bootstrap: true
+        http_proxy: ${{ vars.HTTP_PROXY }}
+        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |
@@ -488,3 +499,5 @@ jobs:
                 text:
                   type: mrkdwn
                   text: "@ops-support Please investigate the failures above."
+
+

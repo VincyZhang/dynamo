@@ -24,7 +24,8 @@ env:
 
 jobs:
   changed-files:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: arc-prod-blue
     outputs:
       core: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || steps.changes.outputs.core == 'true' }}
       planner: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || steps.changes.outputs.planner == 'true' }}
@@ -46,7 +47,8 @@ jobs:
           echo "builder_name=${{ env.BUILDER_NAME }}" >> $GITHUB_OUTPUT
 
   dynamo-status-check:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: arc-prod-blue
     needs: [changed-files, build, rust-checks, mypy, test-parallel, test-sequential]
     if: always()
     steps:
@@ -57,7 +59,7 @@ jobs:
   build:
     needs: changed-files
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-v3
+    runs-on: xpu
     name: Build
     timeout-minutes: 60
     outputs:
@@ -74,7 +76,9 @@ jobs:
         with:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
-          arch: linux/amd64
+          arch: amd64
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
         uses: ./.github/actions/docker-login
@@ -149,7 +153,7 @@ jobs:
   rust-checks:
     needs: [changed-files, build]
     if: needs.changed-files.outputs.core == 'true'
-    runs-on: prod-tester-amd-gpu-v1
+    runs-on: arc-prod-blue
     name: Rust Checks
     timeout-minutes: 30
     env:
@@ -189,7 +193,7 @@ jobs:
   mypy:
     needs: [changed-files, build]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-amd-v1
+    runs-on: arc-prod-blue
     name: Mypy
     timeout-minutes: 15
     env:
@@ -216,7 +220,7 @@ jobs:
   test-parallel:
     needs: [changed-files, build, mypy]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-amd-v1
+    runs-on: xpu
     name: Pytest (parallel)
     timeout-minutes: 30
     env:
@@ -248,7 +252,7 @@ jobs:
   test-sequential:
     needs: [changed-files, build, mypy]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: prod-builder-amd-v1
+    runs-on: xpu
     name: Pytest (sequential)
     timeout-minutes: 30
     env:

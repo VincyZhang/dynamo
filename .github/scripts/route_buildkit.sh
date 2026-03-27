@@ -154,6 +154,17 @@ MAX_RETRIES=${MAX_RETRIES:-2}
 RETRY_DELAY=${RETRY_DELAY:-30}
 # ---------------------------
 
+write_output() {
+  local key=$1
+  local value=$2
+
+  if [ -n "${GITHUB_OUTPUT:-}" ]; then
+    echo "${key}=${value}" >> "$GITHUB_OUTPUT"
+  else
+    echo "${key}=${value}"
+  fi
+}
+
 # Function to discover SPECIFIC active pod indices
 # This handles gaps (e.g., if pod-0 and pod-2 are up, but pod-1 is down)
 get_active_indices() {
@@ -312,9 +323,9 @@ for ARCH in "${ARCHS[@]}"; do
         echo "⚠️  Warning: No remote BuildKit pods available for ${ARCH}."
 
         for flavor in "${FLAVORS[@]}"; do
-          echo "${flavor}_${ARCH}=" >> "$GITHUB_OUTPUT"
+          write_output "${flavor}_${ARCH}" ""
         done
-        exit 1
+        continue 2
       fi
     done
   fi
@@ -340,6 +351,6 @@ for ARCH in "${ARCHS[@]}"; do
     echo "    -> Routing ${flavor}_${ARCH} to Candidate Pool: {${TARGET_INDICES[*]}} | Selected: ${RANDOM_VALUE}"
 
     # Write to GitHub Output
-    echo "${flavor}_${ARCH}=$ADDRS" >> "$GITHUB_OUTPUT"
+    write_output "${flavor}_${ARCH}" "$ADDRS"
   done
 done

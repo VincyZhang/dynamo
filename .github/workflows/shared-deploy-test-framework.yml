@@ -30,10 +30,20 @@ on:
         description: 'Operator image tag'
         type: string
         required: true
+      operator_repository:
+        description: 'Operator image repository path under the registry'
+        type: string
+        required: false
+        default: 'aiops/catalog/intel-vllm'
+      image_repository:
+        description: 'Runtime image repository path under the registry'
+        type: string
+        required: false
+        default: 'aiops/catalog/intel-vllm'
 
 jobs:
   deploy-test:
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     timeout-minutes: 25
     permissions:
       contents: read
@@ -61,10 +71,12 @@ jobs:
           vcluster_name: ${{ inputs.vcluster_name }}
           vcluster_namespace: ${{ inputs.namespace }}
           registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+          operator_repository: ${{ inputs.operator_repository }}
           operator_tag: ${{ inputs.operator_tag }}
           hf_token: ${{ secrets.HF_TOKEN }}
           dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
           dockerhub_password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+          use_local_kubeconfig: true
       - name: Connect to vCluster
         id: connect-vcluster
         uses: ./.github/actions/connect-vcluster
@@ -72,6 +84,7 @@ jobs:
           host_kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
           vcluster_name: ${{ inputs.vcluster_name }}
           vcluster_namespace: ${{ inputs.namespace }}
+          use_local_kubeconfig: true
       - name: Run Dynamo Deploy Test
         id: deploy-test
         uses: ./.github/actions/dynamo-deploy-test
@@ -83,6 +96,6 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           framework: ${{ inputs.framework }}
           profile: ${{ matrix.profile }}
-          image: ${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:${{ github.sha }}-${{ inputs.image_suffix }}
+          image: ${{ inputs.image_repository }}:${{ github.sha }}-${{ inputs.image_suffix }}
           platform_arch: amd64
           extra_pytest_args: -m framework_only

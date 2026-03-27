@@ -144,7 +144,17 @@ echo "✓ vLLM repository cloned"
 if [ "$DEVICE" = "xpu" ]; then
     echo "\n=== Installing vLLM ==="
     uv pip install -r requirements/xpu.txt --index-strategy unsafe-best-match
+    # The Intel base image (intel/deep-learning-essentials) may pre-export
+    # CC/CXX as multi-word sccache wrappers (e.g. "sccache c++").  Meson
+    # cannot handle multi-word compiler values and will abort with:
+    #   ERROR: Compiler /usr/local/bin/sccache c++ cannot compile programs.
+    # Strip the sccache prefix so meson gets a real single-token executable.
+    case "${CC:-}" in *sccache*) export CC="${CC##* }" ;; esac
+    case "${CXX:-}" in *sccache*) export CXX="${CXX##* }" ;; esac
+    unset CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER RUSTC_WRAPPER 2>/dev/null || true
+    VLLM_TARGET_DEVICE=xpu \
     uv pip install --verbose --no-build-isolation .
+    echo "✓ vllm_xpu_kernels installed"
 fi
 
 if [ "$DEVICE" = "cuda" ]; then

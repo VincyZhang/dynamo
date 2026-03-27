@@ -52,49 +52,46 @@ jobs:
   vllm-pipeline:
     needs: [init]
     if: inputs.build_vllm
-    uses: ./.github/workflows/build-flavor.yml
+    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: vllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
-      push_image: true
-      run_compliance_scan: false
-      copy_to_acr: true
+      build_only: true
+      sanitized_ref_name: ${{ needs.init.outputs.sanitized_ref_name }}
     secrets: inherit
 
   sglang-pipeline:
     needs: [init]
     if: inputs.build_sglang
-    uses: ./.github/workflows/build-flavor.yml
+    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: sglang
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
-      push_image: true
-      run_compliance_scan: false
-      copy_to_acr: true
+      build_only: true
+      sanitized_ref_name: ${{ needs.init.outputs.sanitized_ref_name }}
     secrets: inherit
 
   trtllm-pipeline:
     needs: [init]
     if: inputs.build_trtllm
-    uses: ./.github/workflows/build-flavor.yml
+    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: trtllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["13.1"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
-      push_image: true
-      run_compliance_scan: false
-      copy_to_acr: true
+      build_only: true
+      sanitized_ref_name: ${{ needs.init.outputs.sanitized_ref_name }}
     secrets: inherit
 
   # ============================================================================
@@ -118,7 +115,9 @@ jobs:
         with:
           builder_name: ${{ needs.init.outputs.builder_name }}
           flavor: general
-          arch: 'linux/amd64,linux/arm64'
+          all_arch: 'true'
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -177,6 +176,8 @@ jobs:
         builder_name: ${{ needs.init.outputs.builder_name }}
         buildkit_worker_addresses: ''
         skip_bootstrap: true
+        http_proxy: ${{ vars.HTTP_PROXY }}
+        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |

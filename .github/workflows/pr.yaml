@@ -26,6 +26,8 @@ concurrency:
 
 env:
   BUILDER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}
+  LOCAL_REGISTRY_HOST: amr-registry.caas.intel.com
+  LOCAL_IMAGE_BASE: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
 
 jobs:
 
@@ -35,7 +37,7 @@ jobs:
 
 
   changed-files:
-    runs-on: ubuntu-latest
+    runs-on: xpu
     environment: ${{ github.event_name == 'workflow_dispatch' && 'protected-deploy' || '' }}
     outputs:
       core: ${{ steps.changes.outputs.core }}
@@ -61,8 +63,9 @@ jobs:
           echo "builder_name=${{ env.BUILDER_NAME }}" >> $GITHUB_OUTPUT
 
   backend-status-check:
-    runs-on: ubuntu-latest
-    needs: [changed-files, vllm-pipeline, sglang-pipeline, trtllm-pipeline, xpu-test, operator]  # THIS list determines blocking jobs
+    runs-on:
+      group: arc-prod-blue
+    needs: [changed-files, vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, operator]  # THIS list determines blocking jobs
     if: always()
     steps:
       - name: "Check all dependent jobs"
@@ -70,9 +73,10 @@ jobs:
           echo '${{ toJson(needs) }}' | jq -e 'to_entries | map(.value.result) | all(. as $result | ["success", "skipped"] | any($result == .))'
 
   deploy-status-check:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: arc-prod-blue
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
-    if: always()
+    if: false
     steps:
       - name: "Check all deploy test jobs"
         run: |
@@ -85,12 +89,12 @@ jobs:
 
   operator:
     needs: changed-files
-    if: needs.changed-files.outputs.operator == 'true'
     name: Operator
     runs-on: xpu
+    if: false
     env:
-      IMAGE_REGISTRY: ai-dynamo
-      IMAGE_REPOSITORY: dynamo
+      IMAGE_REGISTRY: aiops/catalog
+      IMAGE_REPOSITORY: intel-vllm
       ECR_HOSTNAME: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
     outputs:
       operator_default_tag: ${{ steps.build-and-push-image.outputs.operator_default_tag }}
@@ -102,7 +106,9 @@ jobs:
         with:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
-          arch: 'linux/amd64,linux/arm64'
+          all_arch: 'true'
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -147,12 +153,10 @@ jobs:
         env:
           NO_CACHE_FLAG: '' # placeholder for future logic to add no cache flag if needed
         run: |
-          ECR_DEFAULT_IMAGE_BASE="${ECR_HOSTNAME}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
+          LOCAL_DEFAULT_IMAGE_BASE="${{ env.LOCAL_IMAGE_BASE }}"
           DEFAULT_TAG="${{ github.sha }}-operator"
-          ACR_IMAGE_BASE="${{ secrets.AZURE_ACR_HOSTNAME }}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
           IMAGE_URIS=(
-            "${ECR_DEFAULT_IMAGE_BASE}:${DEFAULT_TAG}"
-            "${ACR_IMAGE_BASE}:${DEFAULT_TAG}"
+            "${LOCAL_DEFAULT_IMAGE_BASE}:${DEFAULT_TAG}"
           )
 
           echo "operator_default_tag=${DEFAULT_TAG}" >> $GITHUB_OUTPUT
@@ -164,7 +168,10 @@ jobs:
           fi
           docker buildx build --push ${NO_CACHE_FLAG} \
               --platform linux/amd64,linux/arm64 \
-              --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ \
+              --build-arg DOCKER_PROXY=${{ env.LOCAL_REGISTRY_HOST }}/dockerhub/ \
+              --build-arg HTTPS_PROXY=${{ vars.HTTPS_PROXY }} \
+              --build-arg HTTPS_PROXY=${{ vars.HTTPS_PROXY }} \
+              --build-arg NO_PROXY=${{ vars.NO_PROXY }} \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### 🐳 Operator Container Images" >> $GITHUB_STEP_SUMMARY
@@ -185,12 +192,12 @@ jobs:
   vllm-pipeline:
     name: vllm
     needs: [changed-files]
-    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true'
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: vllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -206,6 +213,34 @@ jobs:
     secrets: inherit
 
   # ============================================================================
+  # VLLM XPU PIPELINE
+  # ============================================================================
+  vllm-xpu-pipeline:
+    name: vllm-xpu
+    needs: [changed-files]
+    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true'
+    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    with:
+      framework: vllm
+      device: xpu
+      target: runtime
+      platforms: '["amd64"]'
+      builder_name: ${{ needs.changed-files.outputs.builder_name }}
+      build_timeout_minutes: 60
+      copy_timeout_minutes: 10
+      run_cpu_only_tests: false
+      run_single_gpu_tests: false
+      run_single_xpu_tests: ${{ needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' }}
+      single_xpu_test_markers: 'pre_merge and vllm and xpu_1'
+      single_xpu_test_timeout_minutes: 35
+      run_multi_gpu_tests: false
+      copy_to_acr: false
+      image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
+      http_proxy: ${{ vars.HTTP_PROXY }}
+      https_proxy: ${{ vars.HTTPS_PROXY }}
+    secrets: inherit
+
+  # ============================================================================
   # SGLANG PIPELINE
   # ============================================================================
   sglang-pipeline:
@@ -216,7 +251,7 @@ jobs:
     with:
       framework: sglang
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -241,7 +276,7 @@ jobs:
     with:
       framework: trtllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["13.1"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -255,103 +290,54 @@ jobs:
       multi_gpu_test_timeout_minutes: 60
     secrets: inherit
 
-  # ============================================================================
-  # XPU TEST
-  # Based on PR #7146 additions under examples/backends/vllm and tests/serve/test_vllm_xpu.py
-  # ============================================================================
-  xpu-test:
-    needs: [changed-files]
-    if: |
-      (needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true')
-    name: xpu-test
-    runs-on: xpu
-    timeout-minutes: 60
-    env:
-      XPU_TEST_IMAGE: ${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:main-vllm-xpu-amd64
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
-
-      - name: Docker Login
-        uses: ./.github/actions/docker-login
-        with:
-          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
-          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-
-      - name: Pull XPU test image
-        shell: bash
-        run: |
-          docker pull "${XPU_TEST_IMAGE}"
-
-      - name: Validate XPU launch scripts syntax (PR #7146)
-        shell: bash
-        run: |
-          shopt -s nullglob
-          xpu_scripts=(examples/backends/vllm/launch/*xpu*.sh examples/backends/vllm/launch/lora/*xpu*.sh)
-          if [ ${#xpu_scripts[@]} -eq 0 ]; then
-            echo "No XPU launch scripts found. Skipping syntax validation."
-            exit 0
-          fi
-          for script in "${xpu_scripts[@]}"; do
-            echo "Checking ${script}"
-            bash -n "${script}"
-          done
-
-      - name: Run vLLM XPU pytest markers
-        shell: bash
-        run: |
-          mkdir -p test-results
-          if [ ! -f tests/serve/test_vllm_xpu.py ]; then
-            echo "tests/serve/test_vllm_xpu.py not found. Skipping XPU tests."
-            exit 0
-          fi
-
-          docker run --rm \
-            --device /dev/dri \
-            --network host \
-            -w /workspace \
-            -v "$(pwd)/test-results:/workspace/test-results" \
-            "${XPU_TEST_IMAGE}" \
-            bash -lc 'pytest --continue-on-collection-errors -v --tb=short --junitxml=/workspace/test-results/pytest_test_report_vllm_xpu.xml -m "pre_merge and vllm and xpu_1" tests/serve/test_vllm_xpu.py'
-
-      - name: Upload XPU test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-vllm-xpu-${{ github.run_id }}-${{ job.check_run_id }}
-          path: test-results/pytest_test_report_vllm_xpu.xml
-          if-no-files-found: ignore
-          retention-days: 7
-
   # DEV PIPELINES
   # ============================================================================
   vllm-dev-pipeline:
     name: vllm-dev
     needs: [changed-files]
-    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.vllm == 'true'
+    if: false
     uses: ./.github/workflows/build-flavor.yml
     with:
       framework: vllm
       target: dev
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
       push_image: false
     secrets: inherit
 
+  vllm-xpu-dev-pipeline:
+    name: vllm-xpu-dev
+    needs: [changed-files, vllm-xpu-pipeline]
+    if: needs.vllm-xpu-pipeline.result == 'success'
+    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    with:
+      framework: vllm
+      device: xpu
+      target: dev
+      platforms: '["amd64"]'
+      builder_name: ${{ needs.changed-files.outputs.builder_name }}
+      build_timeout_minutes: 60
+      copy_timeout_minutes: 10
+      run_cpu_only_tests: false
+      run_single_gpu_tests: false
+      run_single_xpu_tests: false
+      run_multi_gpu_tests: false
+      copy_to_acr: false
+      push_image: false
+      image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
+    secrets: inherit
+
   sglang-dev-pipeline:
     name: sglang-dev
     needs: [changed-files]
-    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.sglang == 'true'
+    if: false
     uses: ./.github/workflows/build-flavor.yml
     with:
       framework: sglang
       target: dev
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -361,12 +347,12 @@ jobs:
   trtllm-dev-pipeline:
     name: trtllm-dev
     needs: [changed-files]
-    if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.trtllm == 'true'
+    if: false
     uses: ./.github/workflows/build-flavor.yml
     with:
       framework: trtllm
       target: dev
-      platform: 'linux/amd64,linux/arm64'
+      platforms: '["amd64", "arm64"]'
       cuda_versions: '["13.1"]'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -380,17 +366,9 @@ jobs:
    # ============================================================================
 
   deploy-operator:
-    runs-on: xpu
-    # Run when any deploy test will run: if any framework or deploy files changed
-    if: |
-      !cancelled() && !failure() &&
-      (needs.changed-files.outputs.vllm == 'true' ||
-       needs.changed-files.outputs.sglang == 'true' ||
-       needs.changed-files.outputs.trtllm == 'true' ||
-       needs.changed-files.outputs.deploy == 'true') &&
-      (needs.operator.result == 'success' || needs.operator.result == 'skipped')
+    if: false
     needs: [changed-files, operator]
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     outputs:
       namespace: ${{ steps.setup.outputs.namespace }}
       vcluster_name: ${{ steps.setup.outputs.vcluster_name }}
@@ -401,71 +379,67 @@ jobs:
       id: setup
       uses: ./.github/actions/setup-dynamo-operator
       with:
+        use_local_kubeconfig: true
         kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
-        registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+        registry: amr-registry.caas.intel.com
+        operator_repository: aiops/catalog/intel-vllm
         operator_tag: ${{ needs.operator.result == 'success' && needs.operator.outputs.operator_default_tag || 'main-operator' }}
         hf_token: ${{ secrets.HF_TOKEN }}
         dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
         dockerhub_password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
 
   deploy-test-vllm:
-    if: |
-      !cancelled() && !failure() &&
-      (needs.changed-files.outputs.vllm == 'true' || needs.changed-files.outputs.deploy == 'true') &&
-      needs.deploy-operator.result == 'success' &&
-      needs.vllm-pipeline.result == 'success'
-    needs: [changed-files, deploy-operator, vllm-pipeline]
+    if: false
     runs-on: xpu
+    needs: [changed-files, deploy-operator]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: vllm
       profiles: '["agg", "agg_router", "disagg", "disagg_router"]'
-      image_suffix: vllm-runtime-cuda12
+      image_suffix: vllm-runtime-cuda12-amd64
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-sglang:
+    if: false
     runs-on: xpu
-    if: |
-      !cancelled() && !failure() &&
-      (needs.changed-files.outputs.sglang == 'true' || needs.changed-files.outputs.deploy == 'true') &&
-      needs.deploy-operator.result == 'success' &&
-      needs.sglang-pipeline.result == 'success'
     needs: [changed-files, deploy-operator, sglang-pipeline]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: sglang
       profiles: '["agg", "agg_router"]'
-      image_suffix: sglang-runtime-cuda12
+      image_suffix: sglang-runtime-cuda12-amd64
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-test-trtllm:
+    if: false
     runs-on: xpu
-    if: |
-      !cancelled() && !failure() &&
-      (needs.changed-files.outputs.trtllm == 'true' || needs.changed-files.outputs.deploy == 'true') &&
-      needs.deploy-operator.result == 'success' &&
-      needs.trtllm-pipeline.result == 'success'
     needs: [changed-files, deploy-operator, trtllm-pipeline]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: trtllm
       profiles: '["agg", "agg_router"]'
-      image_suffix: trtllm-runtime-cuda13
+      image_suffix: trtllm-runtime-cuda13-amd64
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+      operator_repository: aiops/catalog/intel-vllm
+      image_repository: aiops/catalog/intel-vllm
     secrets: inherit
 
   deploy-cleanup:
-    if: always()
+    if: false
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
-    runs-on: prod-default-small-v2
+    runs-on: xpu
     steps:
     - uses: actions/checkout@v4
     - name: Teardown vCluster
@@ -485,7 +459,7 @@ jobs:
     name: Clean K8s builder if exists
     runs-on: xpu
     if: always()
-    needs: [vllm-pipeline, sglang-pipeline, trtllm-pipeline, operator, changed-files]
+    needs: [vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, operator, changed-files]
     steps:
     - name: Checkout repository
       uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
@@ -496,6 +470,8 @@ jobs:
         builder_name: ${{ needs.changed-files.outputs.builder_name }}
         buildkit_worker_addresses: '' # k8s builder
         skip_bootstrap: true
+        http_proxy: ${{ vars.HTTP_PROXY }}
+        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |

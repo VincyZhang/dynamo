@@ -11,6 +11,10 @@ inputs:
   vcluster_namespace:
     description: 'Host namespace where the vCluster is running'
     required: true
+  use_local_kubeconfig:
+    description: 'Use local ~/.kube/config instead of kubeconfig_base64'
+    required: false
+    default: 'false'
 outputs:
   kubeconfig_base64:
     description: 'Base64-encoded kubeconfig for the vCluster (points to 127.0.0.1:8443 via port-forward)'
@@ -22,9 +26,15 @@ runs:
     - name: Setup host kubeconfig
       shell: bash
       run: |
-        echo "${{ inputs.host_kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig-host
-        chmod 600 ${{ github.workspace }}/.kubeconfig-host
-        echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
+        if [ "${{ inputs.use_local_kubeconfig }}" == "true" ]; then
+          echo "Using local ~/.kube/config"
+          export KUBECONFIG=~/.kube/config
+          echo "KUBECONFIG=${KUBECONFIG}" >> $GITHUB_ENV
+        else
+          echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig-host
+          chmod 600 ${{ github.workspace }}/.kubeconfig-host
+          echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
+        fi
 
     - name: Install vCluster CLI
       uses: ./.github/actions/install-vcluster-cli

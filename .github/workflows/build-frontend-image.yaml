@@ -91,7 +91,9 @@ jobs:
         with:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
-          arch: 'linux/amd64,linux/arm64'
+          all_arch: 'true'
+          http_proxy: ${{ vars.HTTP_PROXY }}
+          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -156,8 +158,6 @@ jobs:
           echo "extra_tags: ${{ steps.calculate-target-tag.outputs.azure_target_image_uri }}"
           echo "epp_image_uri: ${{ steps.calculate-target-tag.outputs.epp_image_uri }}"
           echo "push_image: true"
-
-
       - name: Build Frontend Container
         id: build-image
         timeout-minutes: 30
@@ -225,7 +225,8 @@ jobs:
           target: frontend
 
   frontend-status-check:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: arc-prod-blue
     needs: [changed-files, build-frontend-image]
     if: always()
     steps:
@@ -248,6 +249,8 @@ jobs:
         builder_name: ${{ needs.changed-files.outputs.builder_name }}
         buildkit_worker_addresses: '' # k8s builder
         skip_bootstrap: true
+        http_proxy: ${{ vars.HTTP_PROXY }}
+        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |

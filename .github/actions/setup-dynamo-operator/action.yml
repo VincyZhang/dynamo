@@ -16,6 +16,10 @@ inputs:
   registry:
     description: 'Container registry hostname (e.g. myregistry.azurecr.io)'
     required: true
+  operator_repository:
+    description: 'Operator image repository path under the registry'
+    required: false
+    default: 'aiops/catalog/intel-vllm'
   operator_tag:
     description: 'Operator image tag (default: main-operator)'
     required: false
@@ -36,6 +40,26 @@ inputs:
     description: 'Kubernetes version for the vCluster control plane (must be supported by kr8s)'
     required: false
     default: 'v1.32.13'
+  vcluster_tolerate_all_taints:
+    description: 'When true, add a catch-all toleration to the vCluster pod so it can run on tainted CI nodes'
+    required: false
+    default: 'true'
+  use_local_kubeconfig:
+    description: 'Use local ~/.kube/config instead of kubeconfig_base64'
+    required: false
+    default: 'false'
+  http_proxy:
+    description: 'HTTP proxy URL'
+    required: false
+    default: ''
+  https_proxy:
+    description: 'HTTPS proxy URL'
+    required: false
+    default: ''
+  no_proxy:
+    description: 'Comma-separated list of hosts to bypass proxy (local machine IP is appended automatically)'
+    required: false
+    default: 'localhost,127.0.0.1'
 
 outputs:
   namespace:
@@ -80,9 +104,29 @@ runs:
     - name: Setup host kubeconfig
       shell: bash
       run: |
-        echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig-host
-        chmod 600 ${{ github.workspace }}/.kubeconfig-host
-        echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
+        if [ "${{ inputs.use_local_kubeconfig }}" == "true" ]; then
+          echo "Using local ~/.kube/config"
+          export KUBECONFIG=~/.kube/config
+          echo "KUBECONFIG=${KUBECONFIG}" >> $GITHUB_ENV
+        else
+          echo "${{ inputs.kubeconfig_base64 }}" | base64 -d > ${{ github.workspace }}/.kubeconfig-host
+          chmod 600 ${{ github.workspace }}/.kubeconfig-host
+          echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
+        fi
+
+    - name: Setup proxy environment
+      shell: bash
+      run: |
+        LOCAL_IP=$(hostname -I | awk '{print $1}')
+        BASE_NO_PROXY="${{ inputs.no_proxy }}"
+        FULL_NO_PROXY="${BASE_NO_PROXY},${LOCAL_IP}"
+        echo "HTTP_PROXY=${{ inputs.http_proxy }}" >> $GITHUB_ENV
+        echo "HTTPS_PROXY=${{ inputs.https_proxy }}" >> $GITHUB_ENV
+        echo "http_proxy=${{ inputs.http_proxy }}" >> $GITHUB_ENV
+        echo "https_proxy=${{ inputs.https_proxy }}" >> $GITHUB_ENV
+        echo "NO_PROXY=${FULL_NO_PROXY}" >> $GITHUB_ENV
+        echo "no_proxy=${FULL_NO_PROXY}" >> $GITHUB_ENV
+        echo "Proxy set: HTTP=${{ inputs.http_proxy }}, NO_PROXY=${FULL_NO_PROXY}"
 
     - name: Install vCluster CLI
       uses: ./.github/actions/install-vcluster-cli
@@ -94,7 +138,7 @@ runs:
       run: |
         echo "::group::Create host namespace $NAMESPACE"
         set -x
-        kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply --validate=false -f -
         kubectl label namespaces ${NAMESPACE} \
           nscleanup/enabled=true \
           nscleanup/ttl=7200 \
@@ -113,12 +157,22 @@ runs:
         set -x
         # The K8s version must be supported by the kr8s Python library used in deploy tests.
         # This is independent of the host cluster version.
+        TOLERATION_FLAGS=""
+        if [ "${{ inputs.vcluster_tolerate_all_taints }}" == "true" ]; then
+          # Catch-all toleration: allows vCluster pod to be scheduled on nodes
+          # with any taint (common on dedicated CI/GPU/XPU nodes).
+          TOLERATION_FLAGS="--set controlPlane.statefulSet.scheduling.tolerations[0].operator=Exists"
+        fi
         vcluster create ${VCLUSTER_NAME} \
           --namespace ${NAMESPACE} \
           --connect=false \
           --upgrade \
           --set controlPlane.distro.k8s.enabled=true \
-          --set controlPlane.distro.k8s.version=${{ inputs.vcluster_k8s_version }}
+          --set controlPlane.distro.k8s.version=${{ inputs.vcluster_k8s_version }} \
+          --set controlPlane.backingStore.database.embedded.enabled=true \
+          --set controlPlane.backingStore.etcd.embedded.enabled=false \
+          --set controlPlane.statefulSet.persistence.volumeClaim.enabled=false \
+          ${TOLERATION_FLAGS}
         echo "::endgroup::"
 
     - name: Wait for vCluster pod to be ready
@@ -128,12 +182,28 @@ runs:
         NAMESPACE: ${{ steps.resolve-names.outputs.namespace }}
       run: |
         echo "::group::Wait for vCluster pod"
-        # Give the API server a moment to register the new pod
-        sleep 20
         kubectl wait --for=condition=ready pod \
           -l app=vcluster,release=${VCLUSTER_NAME} \
           -n ${NAMESPACE} \
-          --timeout=900s
+          --timeout=300s || {
+            echo "vCluster pod did not become ready; collecting host-namespace diagnostics"
+            echo "::group::vCluster pods (host namespace)"
+            kubectl get pods -n ${NAMESPACE} -o wide || true
+            echo "::endgroup::"
+            echo "::group::vCluster PVCs (host namespace)"
+            kubectl get pvc -n ${NAMESPACE} || true
+            echo "::endgroup::"
+            echo "::group::vCluster events (host namespace)"
+            kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' || true
+            echo "::endgroup::"
+            echo "::group::Describe non-ready vCluster pods"
+            kubectl get pods -n ${NAMESPACE} --no-headers 2>/dev/null | awk '$2 !~ /^([0-9]+)\/\1$/ {print $1}' | while read -r POD; do
+              [ -z "$POD" ] && continue
+              kubectl describe pod "$POD" -n ${NAMESPACE} || true
+            done
+            echo "::endgroup::"
+            exit 1
+          }
         echo "::endgroup::"
 
     - name: Connect to vCluster
@@ -143,6 +213,7 @@ runs:
         host_kubeconfig_base64: ${{ inputs.kubeconfig_base64 }}
         vcluster_name: ${{ steps.resolve-names.outputs.vcluster_name }}
         vcluster_namespace: ${{ steps.resolve-names.outputs.namespace }}
+        use_local_kubeconfig: ${{ inputs.use_local_kubeconfig }}
 
     - name: Create HF token secret
       if: inputs.hf_token != ''
@@ -170,12 +241,32 @@ runs:
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
+        OPERATOR_REPOSITORY: ${{ inputs.operator_repository }}
         OPERATOR_TAG: ${{ inputs.operator_tag }}
+        USE_LOCAL_KUBECONFIG: ${{ inputs.use_local_kubeconfig }}
       run: |
         echo "::group::Install Dynamo platform via Helm (inside vCluster)"
         set -x
-        OPERATOR_REPO="${REGISTRY}/ai-dynamo/dynamo"
+        OPERATOR_REPO="${REGISTRY}/${OPERATOR_REPOSITORY}"
         echo "Using operator image: ${OPERATOR_REPO}:${OPERATOR_TAG}"
+
+        HELM_PVC_FLAGS=""
+        if [ "${USE_LOCAL_KUBECONFIG}" == "true" ]; then
+          # Local runners often don't have a default dynamic StorageClass.
+          # Disable PVC-backed components for CI deployment tests.
+          HELM_PVC_FLAGS="--set etcd.persistence.enabled=false --set nats.config.jetstream.fileStore.pvc.enabled=false"
+        fi
+
+        # Auto-disable PVC-backed components when the vCluster has no default
+        # StorageClass, regardless of runner type.
+        DEFAULT_STORAGE_CLASS=$(kubectl --kubeconfig=${{ github.workspace }}/.kubeconfig-vcluster \
+          get storageclass \
+          -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.annotations.storageclass\.kubernetes\.io/is-default-class}{"\n"}{end}' \
+          | awk -F'|' '$2=="true" {print $1; exit}')
+        if [ -z "${DEFAULT_STORAGE_CLASS}" ]; then
+          echo "No default StorageClass detected in vCluster; disabling PVC-backed chart components."
+          HELM_PVC_FLAGS="--set etcd.persistence.enabled=false --set nats.config.jetstream.fileStore.pvc.enabled=false"
+        fi
 
         helm repo add bitnami https://charts.bitnami.com/bitnami
         cd deploy/helm/charts/platform/
@@ -188,6 +279,7 @@ runs:
           --set dynamo-operator.gpuDiscovery.enabled=false \
           --set global.grove.install=true \
           --set global.kai-scheduler.install=false \
+          ${HELM_PVC_FLAGS} \
           --debug
         echo "::endgroup::"
 
@@ -196,7 +288,7 @@ runs:
       run: |
         echo "::group::Wait for operator rollout inside vCluster"
         kubectl --kubeconfig=${{ github.workspace }}/.kubeconfig-vcluster \
-          rollout status deployment -n default --watch --timeout=900s
+          rollout status deployment -n default --watch --timeout=600s
         echo "::endgroup::"
 
     - name: Debug deployment failure
@@ -210,26 +302,12 @@ runs:
 
         echo "### VCLUSTER OPERATOR DEPLOYMENT FAILED" | tee -a $GITHUB_STEP_SUMMARY
 
-        echo "::group::Pod status (host namespace)"
-        kubectl get pods -n ${NAMESPACE} -o wide 2>&1 || true
-        echo "::endgroup::"
-
-        echo "::group::Events (host namespace)"
-        kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' 2>&1 || true
-        echo "::endgroup::"
-
-        echo "::group::Describe pods (host namespace)"
-        kubectl describe pods -n ${NAMESPACE} 2>&1 || true
-        echo "::endgroup::"
-
-        if [ ! -f "${VKUBECONFIG}" ]; then
-          echo "::warning::vCluster kubeconfig not found — vCluster never connected successfully"
-          echo "- **vCluster kubeconfig missing** — connect-vcluster step failed before writing .kubeconfig-vcluster" >> $GITHUB_STEP_SUMMARY
-          exit 0
-        fi
-
         echo "::group::Pod status (vCluster)"
         kubectl --kubeconfig=${VKUBECONFIG} get pods -A -o wide 2>&1 || true
+        echo "::endgroup::"
+
+        echo "::group::Pod status (host namespace)"
+        kubectl get pods -n ${NAMESPACE} -o wide 2>&1 || true
         echo "::endgroup::"
 
         NOT_READY=$(kubectl --kubeconfig=${VKUBECONFIG} get pods -n default --no-headers 2>/dev/null \

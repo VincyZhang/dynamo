@@ -13,6 +13,10 @@ inputs:
     description: 'Docker platform to build on, ie. linux/amd64'
     required: false
     default: 'linux/amd64'
+  device:
+    description: 'Build device (cuda, xpu, cpu) used for cache key suffix'
+    required: false
+    default: 'cuda'
   cuda_version:
     description: 'CUDA version to use'
     required: true
@@ -52,7 +56,7 @@ inputs:
   use_sccache:
     description: 'Use SCCache for caching'
     required: false
-    default: 'true'
+    default: 'false'
   extra_build_args:
     description: 'Additional Docker build args (newline-separated list of KEY=VALUE pairs)'
     required: false
@@ -78,6 +82,7 @@ runs:
         GITHUB_RUN_ID: ${{ github.run_id }}
         GITHUB_JOB: ${{ github.job }}
         GITHUB_REF_NAME: ${{ github.ref_name }}
+        DEVICE: ${{ inputs.device }}
         CUDA_VERSION: ${{ inputs.cuda_version }}
       run: |
         set -x
@@ -93,6 +98,10 @@ runs:
         PLATFORM_SAFE=$(echo "${PLATFORM}" | sed 's|linux/||g; s/,/-/g')
 
         CUDA_VERSION_MAJOR=${CUDA_VERSION%%.*}
+        CACHE_TAG_SUFFIX="-${DEVICE}"
+        if [[ "${DEVICE}" == "cuda" ]]; then
+          CACHE_TAG_SUFFIX="-cuda${CUDA_VERSION_MAJOR}"
+        fi
 
         BUILD_START_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         echo "BUILD_START_TIME=${BUILD_START_TIME}" >> $GITHUB_ENV
@@ -109,20 +118,20 @@ runs:
         # Set base cache args and set --cache-to if this is a main commit
         CACHE_ARGS=""
         if [[ "${{ inputs.target }}" != "frontend" ]]; then
-          CACHE_TAG="${{ inputs.framework }}-cuda${CUDA_VERSION_MAJOR}-${PLATFORM_SAFE}-cache"
-          CACHE_ARGS="--cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG} "
-          CACHE_ARGS+="--cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:release-${CACHE_TAG} "
+          CACHE_TAG="${{ inputs.framework }}${CACHE_TAG_SUFFIX}-${PLATFORM_SAFE}-cache"
+          CACHE_ARGS="--cache-from type=registry,ref=${ECR_HOSTNAME}/aiops/catalog/intel-vllm:main-${CACHE_TAG} "
+          CACHE_ARGS+="--cache-from type=registry,ref=${ECR_HOSTNAME}/aiops/catalog/intel-vllm:release-${CACHE_TAG} "
           if [[ "$GITHUB_REF_NAME" =~ ^release ]]; then
             # Release branches also use release cache
-            CACHE_ARGS+="--cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:release-${CACHE_TAG},mode=max "
+            CACHE_ARGS+="--cache-to type=registry,ref=${ECR_HOSTNAME}/aiops/catalog/intel-vllm:release-${CACHE_TAG},mode=max "
           elif [[ "$GITHUB_REF_NAME" == "main" ]]; then
-            CACHE_ARGS+="--cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG},mode=max "
+            CACHE_ARGS+="--cache-to type=registry,ref=${ECR_HOSTNAME}/aiops/catalog/intel-vllm:main-${CACHE_TAG},mode=max "
           fi
         else
-          CACHE_TAG="${{ inputs.target }}-cuda${CUDA_VERSION_MAJOR}-${PLATFORM_SAFE}-cache"
-          CACHE_ARGS="--cache-from type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG} "
+          CACHE_TAG="${{ inputs.target }}${CACHE_TAG_SUFFIX}-${PLATFORM_SAFE}-cache"
+          CACHE_ARGS="--cache-from type=registry,ref=${ECR_HOSTNAME}/aiops/catalog/intel-vllm:main-${CACHE_TAG} "
           if [[ "$GITHUB_REF_NAME" == "main" ]]; then
-            CACHE_ARGS+="--cache-to type=registry,ref=${ECR_HOSTNAME}/ai-dynamo/dynamo:main-${CACHE_TAG},mode=max "
+            CACHE_ARGS+="--cache-to type=registry,ref=${ECR_HOSTNAME}/aiops/catalog/intel-vllm:main-${CACHE_TAG},mode=max "
           fi
         fi
 
@@ -135,6 +144,16 @@ runs:
           EXTRA_ARGS+=" --build-arg USE_SCCACHE=true"
           EXTRA_ARGS+=" --build-arg SCCACHE_BUCKET=${SCCACHE_S3_BUCKET}"
           EXTRA_ARGS+=" --build-arg SCCACHE_REGION=${AWS_DEFAULT_REGION}"
+        fi
+        EFFECTIVE_HTTP_PROXY="${HTTP_PROXY:-${http_proxy:-}}"
+        EFFECTIVE_HTTPS_PROXY="${HTTPS_PROXY:-${https_proxy:-}}"
+        if [ -n "$EFFECTIVE_HTTP_PROXY" ]; then
+          EXTRA_ARGS+=" --build-arg HTTP_PROXY=${EFFECTIVE_HTTP_PROXY}"
+          EXTRA_ARGS+=" --build-arg http_proxy=${EFFECTIVE_HTTP_PROXY}"
+        fi
+        if [ -n "$EFFECTIVE_HTTPS_PROXY" ]; then
+          EXTRA_ARGS+=" --build-arg HTTPS_PROXY=${EFFECTIVE_HTTPS_PROXY}"
+          EXTRA_ARGS+=" --build-arg https_proxy=${EFFECTIVE_HTTPS_PROXY}"
         fi
         if [ "${{ inputs.push_image }}" == "true" ]; then
           EXTRA_ARGS+=" --push"
@@ -170,12 +189,11 @@ runs:
           SECRET_ARGS+=" --secret id=aws-secret-id,env=AWS_SECRET_ACCESS_KEY"
         fi
 
-        docker buildx build \
-          --progress=plain \
-          --tag "$IMAGE_TAG" \
-          --platform "${PLATFORM_FLAG}" \
-          -f ./container/rendered.Dockerfile \
-          $CACHE_ARGS $EXTRA_ARGS $SECRET_ARGS . 2>&1 | tee "${BUILD_LOG_FILE}"
+        BUILD_CMD="docker buildx build --progress=plain --tag \"$IMAGE_TAG\" --platform \"${PLATFORM_FLAG}\" -f ./container/rendered.Dockerfile $CACHE_ARGS $EXTRA_ARGS $SECRET_ARGS ."
+        echo "🚀 Docker build command:"
+        echo "$BUILD_CMD"
+
+        eval "$BUILD_CMD" 2>&1 | tee "${BUILD_LOG_FILE}"
 
         BUILD_EXIT_CODE=${PIPESTATUS[0]}
 
@@ -349,8 +367,10 @@ runs:
     - name: Upload Comprehensive Build Metrics
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6
       if: always()
+      continue-on-error: true
       with:
         name: build-metrics-${{ inputs.framework }}-${{ inputs.target }}-${{ env.PLATFORM_ARCH }}-${{ github.run_id }}-${{ job.check_run_id }}
         path: build-metrics/build-${{ inputs.framework }}-${{ env.PLATFORM_ARCH }}-${{ github.run_id }}-${{ job.check_run_id }}.json
         retention-days: 7
+        compression-level: 0
 

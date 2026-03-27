@@ -11,8 +11,8 @@ description: 'Route buildkit workers and bootstrap buildx builder for dynamo bui
 #   4. Falls back to Kubernetes driver if no remote workers are available
 #
 # Architecture modes:
-#   - Single arch: Set arch to 'linux/amd64' or 'linux/arm64'
-#   - Multi arch:  Set arch to 'linux/amd64,linux/arm64'
+#   - Single arch: Set arch to 'amd64' or 'arm64' to initialize for one architecture
+#   - Multi arch: Set all_arch to 'true' to initialize for both amd64 and arm64
 #
 # Flavor routing:
 #   BuildKit pods are assigned to flavors based on pod index modulo 3:
@@ -26,14 +26,14 @@ description: 'Route buildkit workers and bootstrap buildx builder for dynamo bui
 #     with:
 #       builder_name: my-builder
 #       flavor: general
-#       arch: 'linux/amd64,linux/arm64'
+#       all_arch: 'true'
 #
 #   # Initialize for single architecture with specific flavor and CUDA version:
 #   - uses: ./.github/actions/init-dynamo-builder
 #     with:
 #       builder_name: my-builder
 #       flavor: vllm
-#       arch: 'linux/amd64'
+#       arch: amd64
 #       cuda_version: '12.9'
 
 inputs:
@@ -45,9 +45,13 @@ inputs:
     required: false
     default: 'general'
   arch:
-    description: 'Docker platform string: linux/amd64, linux/arm64, or linux/amd64,linux/arm64'
+    description: 'Target architecture (amd64, arm64). Ignored if all_arch is true.'
     required: false
-    default: 'linux/amd64'
+    default: 'amd64'
+  all_arch:
+    description: 'If true, initialize builder for both amd64 and arm64 architectures'
+    required: false
+    default: 'false'
   cuda_version:
     description: 'CUDA version (12.9, 13.0). Optional for general flavor.'
     required: false
@@ -82,56 +86,32 @@ inputs:
     description: 'Tolerations for buildkit pods'
     required: false
     default: "key=buildkit-fallback-worker,value=true,operator=Equal,effect=NoSchedule"
+  http_proxy:
+    description: 'HTTP proxy for buildkit kubernetes pods'
+    required: false
+    default: ''
+  https_proxy:
+    description: 'HTTPS proxy for buildkit kubernetes pods'
+    required: false
+    default: ''
+  dns:
+    description: 'DNS nameserver for buildkit kubernetes pods'
+    required: false
+    default: ''
+  use_runner_docker_builder:
+    description: 'When true and no remote workers are configured, skip Kubernetes builder creation and reuse the runner docker builder.'
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
   steps:
-    - name: Route buildkit workers
-      id: route-buildkit
-      continue-on-error: true
-      shell: bash
-      run: |
-        CUDA_ARG=""
-        if [[ -n "${{ inputs.cuda_version }}" ]]; then
-          CUDA_ARG="--cuda ${{ inputs.cuda_version }}"
-        fi
-        # Strip linux/ prefix (e.g. linux/amd64,linux/arm64 → amd64,arm64)
-        ARCH="${{ inputs.arch }}"
-        ARCH="${ARCH//linux\//}"
-        if [[ "$ARCH" == *","* ]]; then
-          ROUTE_ARCH="all"
-        else
-          ROUTE_ARCH="$ARCH"
-        fi
-        echo "running with --arch ${ROUTE_ARCH} --flavor ${{ inputs.flavor }} $CUDA_ARG"
-        .github/scripts/route_buildkit.sh --arch ${ROUTE_ARCH} --flavor ${{ inputs.flavor }} $CUDA_ARG
-
-    - name: Prepare worker addresses and platform
+    - name: Use local Kubernetes builder only
       id: prepare
       shell: bash
-      env:
-        AMD64_ADDRS: ${{ steps.route-buildkit.outputs[format('{0}_amd64', inputs.flavor)] }}
-        ARM64_ADDRS: ${{ steps.route-buildkit.outputs[format('{0}_arm64', inputs.flavor)] }}
       run: |
-        # Strip linux/ prefix (e.g. linux/amd64,linux/arm64 → amd64,arm64)
-        ARCH="${{ inputs.arch }}"
-        ARCH="${ARCH//linux\//}"
-        if [[ "$ARCH" == *","* ]]; then
-          # Multi-arch: combine both worker pools
-          if [[ -n "$AMD64_ADDRS" && -n "$ARM64_ADDRS" ]]; then
-            echo "worker_addresses=${AMD64_ADDRS},${ARM64_ADDRS}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "$AMD64_ADDRS" ]]; then
-            echo "worker_addresses=${AMD64_ADDRS}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "$ARM64_ADDRS" ]]; then
-            echo "worker_addresses=${ARM64_ADDRS}" >> "$GITHUB_OUTPUT"
-          else
-            echo "worker_addresses=" >> "$GITHUB_OUTPUT"
-          fi
-        elif [[ "$ARCH" == "arm64" ]]; then
-          echo "worker_addresses=${ARM64_ADDRS}" >> "$GITHUB_OUTPUT"
-        else
-          echo "worker_addresses=${AMD64_ADDRS}" >> "$GITHUB_OUTPUT"
-        fi
+        echo "Skipping remote BuildKit discovery; forcing local Kubernetes builder fallback."
+        echo "worker_addresses=" >> "$GITHUB_OUTPUT"
 
     - name: Bootstrap buildkit
       uses: ./.github/actions/bootstrap-buildkit
@@ -140,9 +120,14 @@ runs:
         buildkit_worker_addresses: ${{ steps.prepare.outputs.worker_addresses }}
         ephemeral_storage: ${{ inputs.ephemeral_storage }}
         namespace: ${{ inputs.namespace }}
+        arch: ${{ inputs.all_arch == 'true' && 'all' || inputs.arch }}
         replicas: ${{ inputs.replicas }}
         requests_cpu: ${{ inputs.requests_cpu }}
         requests_memory: ${{ inputs.requests_memory }}
         limits_memory: ${{ inputs.limits_memory }}
         tolerations: ${{ inputs.tolerations }}
+        http_proxy: ${{ inputs.http_proxy }}
+        https_proxy: ${{ inputs.https_proxy }}
+        dns: ${{ inputs.dns }}
+        use_runner_docker_builder: ${{ inputs.use_runner_docker_builder }}
 
