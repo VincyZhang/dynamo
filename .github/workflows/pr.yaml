@@ -297,28 +297,7 @@ jobs:
       push_image: false
     secrets: inherit
 
-  vllm-xpu-dev-pipeline:
-    name: vllm-xpu-dev
-    needs: [changed-files, vllm-xpu-pipeline]
-    if: needs.vllm-xpu-pipeline.result == 'success'
-    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
-    with:
-      framework: vllm
-      device: xpu
-      target: dev
-      platform: 'linux/amd64'
-      builder_name: ${{ needs.changed-files.outputs.builder_name }}
-      build_timeout_minutes: 60
-      copy_timeout_minutes: 10
-      run_cpu_only_tests: false
-      run_single_gpu_tests: false
-      run_single_xpu_tests: false
-      run_multi_gpu_tests: false
-      copy_to_acr: false
-      push_image: false
-      image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
-    secrets: inherit
-
+  
   sglang-dev-pipeline:
     name: sglang-dev
     needs: [changed-files]

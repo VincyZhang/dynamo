@@ -218,7 +218,7 @@ jobs:
         inputs.build_image
     needs: [build]
     name: Test ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}-${{ inputs.platform }}
-    runs-on: ${{ inputs.device == 'xpu' && 'xpu' || (inputs.platform == 'amd64' && 'prod-tester-amd-gpu-v1' || 'xpu') }}
+    runs-on: ${{ inputs.device == 'xpu' && 'xpu' || (inputs.platform == 'linux/amd64' && 'prod-tester-amd-gpu-v1' || 'xpu') }}
     env:
       FRAMEWORK: ${{ inputs.framework }}
     steps:
@@ -308,7 +308,7 @@ jobs:
       # These are e2e tests marked with gpu_1 that require GPU hardware
       - name: Run GPU tests (sequential)
         timeout-minutes: ${{ inputs.single_gpu_test_timeout_minutes }}
-        if: ( inputs.platform == 'amd64' && inputs.device == 'cuda' && inputs.run_single_gpu_tests == true ) # We only run GPU tests on amd64 CUDA runners
+        if: ( inputs.platform == 'linux/amd64' && inputs.device == 'cuda' && inputs.run_single_gpu_tests == true ) # We only run GPU tests on amd64 CUDA runners
         uses: ./.github/actions/pytest
         with:
           image_tag: ${{ steps.calculate-target-tag.outputs.test_image }}
@@ -346,7 +346,7 @@ jobs:
     if: |
         inputs.run_multi_gpu_tests &&
         inputs.build_image &&
-        ( inputs.platform != 'arm64' )
+        ( inputs.platform != 'linux/arm64' )
     needs: [build]
     name: Multi-gpu test ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}-${{ inputs.platform }}
     runs-on: prod-tester-amd-gpu-4-v1
@@ -415,7 +415,7 @@ jobs:
     if: inputs.build_image && inputs.push_image && inputs.device != 'xpu'
     needs: [build]
     name: Compliance ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}-${{ inputs.platform }}
-    runs-on: ${{ inputs.platform == 'amd64' && 'xpu' }}
+    runs-on: ${{ inputs.platform == 'linux/amd64' && 'xpu' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0

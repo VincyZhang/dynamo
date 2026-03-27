@@ -164,7 +164,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJson(inputs.platforms) }}
+        platform: ${{ fromJson(format('["{0}"]', replace(inputs.platform, ',', '","'))) }}
         version_selector: ${{ fromJson(inputs.device == 'xpu' && '[""]' || inputs.cuda_versions) }}
     # This name weirdly shows in the checks overview, but not once you dive into
     # a specific workflow. Keeping it as a short placeholder
