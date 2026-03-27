@@ -23,8 +23,7 @@ on:
 jobs:
   test-results:
     name: Test Results
-    runs-on:
-      group: ubuntu-latest
+    runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion != 'skipped'
 
     permissions:

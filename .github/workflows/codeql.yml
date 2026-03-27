@@ -6,8 +6,7 @@ on:
 jobs:
   codeql:
     name: Analyze Codebase
-    runs-on:
-      group: ubuntu-latest
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read

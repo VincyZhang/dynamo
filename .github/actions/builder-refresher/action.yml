@@ -10,7 +10,7 @@ description: 'Ensure a BuildKit builder is healthy; re-initialize it if the conn
 #      still reachable.  If it succeeds the action exits immediately — no extra
 #      work is done.
 #   2. If the inspect/bootstrap fails the builder is considered stale and
-#      init-dynamo-builder is called with the same flavor/arch/cuda_version that
+#      init-dynamo-builder is called with the same flavor/cuda_version that
 #      were used when the builder was first created, effectively re-routing
 #      workers and re-registering the builder from scratch.
 
@@ -21,10 +21,6 @@ inputs:
   flavor:
     description: 'Buildkit flavor used to route workers on re-init (vllm, sglang, trtllm, general)'
     required: true
-  arch:
-    description: 'Docker platform string used on re-init (e.g. linux/amd64, linux/arm64, linux/amd64,linux/arm64)'
-    required: false
-    default: 'linux/amd64'
   cuda_version:
     description: 'CUDA version used on re-init (e.g. 12.9, 13.0). Leave empty for general flavor.'
     required: false
@@ -85,7 +81,6 @@ runs:
       with:
         builder_name: ${{ inputs.builder_name }}
         flavor: ${{ inputs.flavor }}
-        arch: ${{ inputs.arch }}
         cuda_version: ${{ inputs.cuda_version }}
         ephemeral_storage: ${{ inputs.ephemeral_storage }}
         namespace: ${{ inputs.namespace }}

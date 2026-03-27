@@ -23,8 +23,7 @@ permissions:
 
 jobs:
   stale:
-    runs-on:
-      group: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/stale@v9
         with:

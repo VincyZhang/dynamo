@@ -137,16 +137,6 @@ on:
         required: false
         type: boolean
         default: false
-      build_only:
-        description: 'Build and push only — skip all tests, show summary'
-        required: false
-        type: boolean
-        default: false
-      sanitized_ref_name:
-        description: 'Sanitized git ref name for branch-tagged images (used with build_only)'
-        required: false
-        type: string
-        default: ''
       image_base:
         description: 'Override image registry+repo base (e.g. amr-registry.caas.intel.com/ai-dynamo-xpu/intel-vllm). Defaults to ECR when empty.'
         required: false
@@ -215,8 +205,6 @@ jobs:
           no_cache: ${{ inputs.no_cache }}
           make_efa: ${{ inputs.make_efa }}
           extra_tags: ${{ inputs.extra_tags }}
-          build_only: ${{ inputs.build_only }}
-          sanitized_ref_name: ${{ inputs.sanitized_ref_name }}
           show_summary: ${{ inputs.push_image && inputs.show_summary }}
 
 
@@ -226,7 +214,6 @@ jobs:
   # ============================================================================
   test:
     if: |
-        !inputs.build_only &&
         ( inputs.run_cpu_only_tests || inputs.run_single_gpu_tests || inputs.run_single_xpu_tests ) &&
         inputs.build_image
     needs: [build]
@@ -357,7 +344,6 @@ jobs:
   multi-gpu-test:
     # Multi-GPU support limited to AMD64 only
     if: |
-        !inputs.build_only &&
         inputs.run_multi_gpu_tests &&
         inputs.build_image &&
         ( inputs.platform != 'arm64' )
@@ -476,7 +462,6 @@ jobs:
     # Run if copy_to_acr is true AND build succeeded AND (test succeeded OR test was skipped)
     if: |
       always() &&
-      !inputs.build_only &&
       inputs.copy_to_acr &&
       needs.build.result == 'success' &&
       (needs.test.result == 'success' || needs.test.result == 'skipped')

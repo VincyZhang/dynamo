@@ -39,10 +39,6 @@ inputs:
     description: 'Kubernetes namespace for buildkit pods'
     required: false
     default: 'buildkit'
-  arch:
-    description: 'Target architecture for fallback kubernetes builder (amd64, arm64, all)'
-    required: false
-    default: 'all'
   replicas:
     description: 'Number of buildkit replicas'
     required: false
@@ -77,7 +73,6 @@ runs:
       with:
         driver: docker
         install: true
-
     - name: Use runner docker builder
       if: inputs.buildkit_worker_addresses == '' && inputs.use_runner_docker_builder == 'true'
       shell: bash
@@ -94,119 +89,17 @@ runs:
       if: inputs.buildkit_worker_addresses != ''
       shell: bash
       run: |
-        run_buildx_create() {
-          local -a args=("$@")
-          local output rc unknown
-
-          while true; do
-            output=$(docker buildx create "${args[@]}" 2>&1)
-            rc=$?
-            if [ $rc -eq 0 ]; then
-              echo "$output"
-              return 0
-            fi
-
-            unknown=$(echo "$output" | sed -n "s/.*unknown flag: \(--[^ ,;]*\).*/\1/p" | head -n 1)
-            if [ -z "$unknown" ]; then
-              echo "$output" >&2
-              return $rc
-            fi
-
-            echo "::warning::docker buildx create does not support ${unknown}; retrying without it." >&2
-
-            local -a filtered=()
-            local skip_next=false
-            local token next
-            for ((i=0; i<${#args[@]}; i++)); do
-              token="${args[$i]}"
-              if $skip_next; then
-                skip_next=false
-                continue
-              fi
-
-              if [[ "$token" == "$unknown" ]]; then
-                if (( i + 1 < ${#args[@]} )); then
-                  next="${args[$((i+1))]}"
-                  if [[ "$next" != --* ]]; then
-                    skip_next=true
-                  fi
-                fi
-                continue
-              fi
-
-              if [[ "$token" == "${unknown}="* ]]; then
-                continue
-              fi
-
-              filtered+=("$token")
-            done
-
-            if [ ${#filtered[@]} -eq ${#args[@]} ]; then
-              echo "$output" >&2
-              return $rc
-            fi
-
-            args=("${filtered[@]}")
-          done
-        }
-
-        log_buildx_create_cmd() {
-          local -a args=("$@")
-          local rendered="docker buildx create"
-          local token
-          for token in "${args[@]}"; do
-            rendered+=" $(printf '%q' "$token")"
-          done
-          echo "::notice::Executing: ${rendered}"
-        }
-
         ADDRS="${{ inputs.buildkit_worker_addresses }}"
         IFS=',' read -ra ADDR_LIST <<< "$ADDRS"
-        SUPPORTS_NAME=false
-        if docker buildx create --help | grep -q -- '--name'; then
-          SUPPORTS_NAME=true
-        fi
-
         FIRST=true
-        RESOLVED_BUILDER="${{ inputs.builder_name }}"
         for addr in "${ADDR_LIST[@]}"; do
           if $FIRST; then
-            local_create_output=""
-            if $SUPPORTS_NAME; then
-              log_buildx_create_cmd --name "${RESOLVED_BUILDER}" --driver remote "$addr"
-              local_create_output=$(run_buildx_create --name "${RESOLVED_BUILDER}" --driver remote "$addr")
-            else
-              # Legacy buildx without --name returns the created builder name on stdout.
-              log_buildx_create_cmd --driver remote "$addr"
-              local_create_output=$(run_buildx_create --driver remote "$addr")
-              RESOLVED_BUILDER=$(echo "$local_create_output" | tr -d '\r' | tail -n 1)
-              if [ -z "$RESOLVED_BUILDER" ]; then
-                echo "::error::Failed to resolve builder name from buildx create output"
-                exit 1
-              fi
-            fi
-
-            if $SUPPORTS_NAME && ! docker buildx inspect "${RESOLVED_BUILDER}" >/dev/null 2>&1; then
-              detected_name=$(echo "$local_create_output" | tr -d '\r' | tail -n 1)
-              if [ -n "$detected_name" ]; then
-                RESOLVED_BUILDER="$detected_name"
-              fi
-            fi
-
-            docker buildx use "${RESOLVED_BUILDER}"
+            docker buildx create --use --name ${{ inputs.builder_name }} --driver remote "$addr"
             FIRST=false
           else
-            if $SUPPORTS_NAME; then
-              log_buildx_create_cmd --append --name "${RESOLVED_BUILDER}" --driver remote "$addr"
-              run_buildx_create --append --name "${RESOLVED_BUILDER}" --driver remote "$addr" >/dev/null
-            else
-              docker buildx use "${RESOLVED_BUILDER}"
-              log_buildx_create_cmd --append --driver remote "$addr"
-              BUILDX_BUILDER="${RESOLVED_BUILDER}" run_buildx_create --append --driver remote "$addr" >/dev/null
-            fi
+            docker buildx create --append --name ${{ inputs.builder_name }} --driver remote "$addr"
           fi
         done
-        echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
 
     - name: Create Kubernetes builder for both platforms
       if: inputs.buildkit_worker_addresses == '' && inputs.use_runner_docker_builder != 'true'

@@ -32,18 +32,11 @@ jobs:
     runs-on: ubuntu-slim
     outputs:
       builder_name: ${{ steps.export-builder-name.outputs.builder_name }}
-      sanitized_ref_name: ${{ steps.sanitize-ref.outputs.sanitized_ref_name }}
     steps:
       - name: Export builder name
         id: export-builder-name
         run: |
           echo "builder_name=${{ env.BUILDER_NAME }}" >> $GITHUB_OUTPUT
-      - name: Sanitize ref name for container tags
-        id: sanitize-ref
-        shell: bash
-        run: |
-          sanitized=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g' | sed 's/^-//;s/-$//' | cut -c1-128)
-          echo "sanitized_ref_name=${sanitized}" >> $GITHUB_OUTPUT
 
   # ============================================================================
   # FRAMEWORK PIPELINES (build-only)
@@ -56,12 +49,10 @@ jobs:
     with:
       framework: vllm
       target: runtime
-      platforms: '["amd64", "arm64"]'
+      platform: 'linux/amd64,linux/arm64'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
-      build_only: true
-      sanitized_ref_name: ${{ needs.init.outputs.sanitized_ref_name }}
     secrets: inherit
 
   sglang-pipeline:
@@ -71,12 +62,10 @@ jobs:
     with:
       framework: sglang
       target: runtime
-      platforms: '["amd64", "arm64"]'
+      platform: 'linux/amd64,linux/arm64'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
-      build_only: true
-      sanitized_ref_name: ${{ needs.init.outputs.sanitized_ref_name }}
     secrets: inherit
 
   trtllm-pipeline:
@@ -86,12 +75,10 @@ jobs:
     with:
       framework: trtllm
       target: runtime
-      platforms: '["amd64", "arm64"]'
+      platform: 'linux/amd64,linux/arm64'
       cuda_versions: '["13.1"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
-      build_only: true
-      sanitized_ref_name: ${{ needs.init.outputs.sanitized_ref_name }}
     secrets: inherit
 
   # ============================================================================
@@ -115,7 +102,7 @@ jobs:
         with:
           builder_name: ${{ needs.init.outputs.builder_name }}
           flavor: general
-          all_arch: 'true'
+          arch: 'linux/amd64,linux/arm64'
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -131,12 +118,9 @@ jobs:
           ECR_DEFAULT_IMAGE_BASE="${ECR_HOSTNAME}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
           ACR_IMAGE_BASE="${{ secrets.AZURE_ACR_HOSTNAME }}/${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}"
           DEFAULT_TAG="${{ github.sha }}-operator"
-          BRANCH_TAG="${{ needs.init.outputs.sanitized_ref_name }}-operator"
           IMAGE_URIS=(
             "${ECR_DEFAULT_IMAGE_BASE}:${DEFAULT_TAG}"
             "${ACR_IMAGE_BASE}:${DEFAULT_TAG}"
-            "${ECR_DEFAULT_IMAGE_BASE}:${BRANCH_TAG}"
-            "${ACR_IMAGE_BASE}:${BRANCH_TAG}"
           )
 
           TAGGING_FLAGS=$(printf -- '-t %s ' "${IMAGE_URIS[@]}")

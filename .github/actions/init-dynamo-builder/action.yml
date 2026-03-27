@@ -11,7 +11,6 @@ description: 'Route buildkit workers and bootstrap buildx builder for dynamo bui
 #   4. Falls back to Kubernetes driver if no remote workers are available
 #
 # Architecture modes:
-#   - Single arch: Set arch to 'amd64' or 'arm64' to initialize for one architecture
 #   - Multi arch: Set all_arch to 'true' to initialize for both amd64 and arm64
 #
 # Flavor routing:
@@ -28,14 +27,6 @@ description: 'Route buildkit workers and bootstrap buildx builder for dynamo bui
 #       flavor: general
 #       all_arch: 'true'
 #
-#   # Initialize for single architecture with specific flavor and CUDA version:
-#   - uses: ./.github/actions/init-dynamo-builder
-#     with:
-#       builder_name: my-builder
-#       flavor: vllm
-#       arch: amd64
-#       cuda_version: '12.9'
-
 inputs:
   builder_name:
     description: 'Name for the buildx builder'
@@ -44,10 +35,6 @@ inputs:
     description: 'Buildkit flavor (vllm, trtllm, sglang, general)'
     required: false
     default: 'general'
-  arch:
-    description: 'Target architecture (amd64, arm64). Ignored if all_arch is true.'
-    required: false
-    default: 'amd64'
   all_arch:
     description: 'If true, initialize builder for both amd64 and arm64 architectures'
     required: false
@@ -108,7 +95,6 @@ runs:
         buildkit_worker_addresses: ${{ steps.prepare.outputs.worker_addresses }}
         ephemeral_storage: ${{ inputs.ephemeral_storage }}
         namespace: ${{ inputs.namespace }}
-        arch: ${{ inputs.all_arch == 'true' && 'all' || inputs.arch }}
         replicas: ${{ inputs.replicas }}
         requests_cpu: ${{ inputs.requests_cpu }}
         requests_memory: ${{ inputs.requests_memory }}

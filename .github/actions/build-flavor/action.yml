@@ -8,7 +8,7 @@ inputs:
     description: 'Target stage for Docker rendering'
     required: true
   platform:
-    description: 'Platform to build (amd64 or arm64)'
+    description: 'Docker platform string (e.g. linux/amd64, linux/amd64,linux/arm64)'
     required: true
   cuda_version:
     description: 'CUDA version to build (e.g., 12.9, 13.0)'
@@ -71,14 +71,7 @@ inputs:
     description: 'Additional tags (newline-separated, -$platform suffix auto-appended)'
     required: false
     default: ''
-  build_only:
-    description: 'Build and push only — controls extra tag logic'
-    required: false
-    default: 'false'
-  sanitized_ref_name:
-    description: 'Sanitized git ref name for branch-tagged images'
-    required: false
-    default: ''
+
   show_summary:
     description: 'Show build summary (caller decides when to show)'
     required: false
@@ -152,7 +145,6 @@ runs:
       with:
         builder_name: ${{ inputs.builder_name }}
         flavor: ${{ inputs.framework }}
-        arch: ${{ inputs.platform }}
         cuda_version: ${{ inputs.cuda_version }}
     - name: Calculate extra tags with platform suffix
       id: extra-tags
@@ -164,6 +156,8 @@ runs:
         REGISTRY: ${{ inputs.registry }}
       run: |
         CUDA_VERSION_MAJOR=${CUDA_VERSION%%.*}
+        ECR_REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_default_region }}.amazonaws.com"
+        ACR_REGISTRY="${{ inputs.azure_acr_hostname }}"
         AMR_REGISTRY="${REGISTRY}"
         
         # Device-aware tag suffix (cuda vs xpu vs cpu)
@@ -181,15 +175,7 @@ runs:
             fi
           done <<< "$EXTRA_TAGS"
         fi
-        if [ "${{ inputs.build_only }}" == "true" ]; then
-          if [ -z "${{ inputs.sanitized_ref_name }}" ]; then
-            echo "::warning::sanitized_ref_name is empty but build_only is true; skipping branch tags"
-          else
-            BRANCH_TAG="${{ inputs.sanitized_ref_name }}-${{ inputs.framework }}"
-            RESULT+="${AMR_REGISTRY}/aiops/catalog/intel-vllm:${BRANCH_TAG}-${DEVICE_SUFFIX}-${{ inputs.platform }}"$'\n'
-            RESULT+="${AMR_REGISTRY}/aiops/catalog/intel-vllm:${{ steps.calculate-target-tag.outputs.target_tag_plain }}-${DEVICE_SUFFIX}-${{ inputs.platform }}"$'\n'
-          fi
-        fi
+
         if [ -n "$RESULT" ]; then
           echo "tags<<EOF" >> $GITHUB_OUTPUT
           echo "$RESULT" >> $GITHUB_OUTPUT
@@ -257,7 +243,6 @@ runs:
       with:
         builder_name: ${{ inputs.builder_name }}
         flavor: ${{ inputs.framework }}
-        arch: ${{ inputs.platform }}
         cuda_version: ${{ inputs.cuda_version }}
     - name: Build and Push Test Image
       if: ${{ inputs.target != 'dev' }}

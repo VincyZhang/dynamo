@@ -14,10 +14,9 @@ on:
         description: 'Target stage for Docker rendering'
         required: true
         type: string
-      platforms:
-        description: 'Platforms to build (JSON array, e.g., ["amd64", "arm64"])'
-        required: true
-        type: string
+      platform:
+        description: 'Docker platform(s) to build (e.g. linux/amd64,linux/arm64)'
+        required: false
       cuda_versions:
         description: 'CUDA versions to build (JSON array, e.g., ["12.9", "13.0"])'
         required: true
@@ -48,16 +47,6 @@ on:
         default: false
       no_cache:
         description: 'Disable Docker build cache'
-        required: false
-        type: boolean
-        default: false
-      sanitized_ref_name:
-        description: 'Sanitized git ref name for branch-tagged images'
-        required: false
-        type: string
-        default: ''
-      build_only:
-        description: 'Build and push only — enables branch-tagged images'
         required: false
         type: boolean
         default: false
@@ -104,7 +93,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJson(inputs.platforms) }}
         cuda_version: ${{ fromJson(inputs.cuda_versions) }}
     steps:
       - name: Checkout repository
@@ -117,7 +105,7 @@ jobs:
         with:
           framework: ${{ inputs.framework }}
           target: ${{ inputs.target }}
-          platform: ${{ matrix.platform }}
+          platform: ${{ inputs.platform }}
           cuda_version: ${{ matrix.cuda_version }}
           builder_name: ${{ inputs.builder_name }}
           aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -134,17 +122,7 @@ jobs:
           no_cache: ${{ inputs.no_cache }}
           make_efa: ${{ inputs.make_efa }}
           extra_tags: ${{ inputs.extra_tags }}
-          sanitized_ref_name: ${{ inputs.sanitized_ref_name }}
-          build_only: ${{ inputs.build_only }}
           show_summary: ${{ inputs.push_image }}
-      - name: Refresh BuildKit builder
-        if: ${{ inputs.target != 'dev' }}
-        uses: ./.github/actions/builder-refresher
-        with:
-          builder_name: ${{ inputs.builder_name }}
-          flavor: ${{ inputs.framework }}
-          arch: ${{ matrix.platform }}
-          cuda_version: ${{ matrix.cuda_version }}
       - name: Copy image to ACR
         if: false
         timeout-minutes: ${{ inputs.copy_timeout_minutes }}

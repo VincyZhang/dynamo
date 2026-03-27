@@ -11,8 +11,7 @@ on:
 jobs:
   conventional-commits:
     name: Validate PR title and add label
-    runs-on:
-      group: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses:  ytanikin/pr-conventional-commits@b628c5a234cc32513014b7bfdd1e47b532124d98
         with:

@@ -21,8 +21,7 @@ on:
 
 jobs:
   label:
-    runs-on:
-      group: ubuntu-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
