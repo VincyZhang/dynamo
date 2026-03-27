@@ -380,7 +380,6 @@ jobs:
 
   deploy-test-vllm:
     if: false
-    runs-on: xpu
     needs: [changed-files, deploy-operator]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
@@ -396,7 +395,6 @@ jobs:
 
   deploy-test-sglang:
     if: false
-    runs-on: xpu
     needs: [changed-files, deploy-operator, sglang-pipeline]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
@@ -412,7 +410,6 @@ jobs:
 
   deploy-test-trtllm:
     if: false
-    runs-on: xpu
     needs: [changed-files, deploy-operator, trtllm-pipeline]
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
