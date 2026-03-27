@@ -56,7 +56,7 @@ jobs:
     with:
       framework: vllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platform: '["linux/amd64","linux/arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -72,7 +72,7 @@ jobs:
     with:
       framework: sglang
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platform: '["linux/amd64","linux/arm64"]'
       cuda_versions: '["12.9", "13.0"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60
@@ -88,7 +88,7 @@ jobs:
     with:
       framework: trtllm
       target: runtime
-      platform: 'linux/amd64,linux/arm64'
+      platform: '["linux/amd64","linux/arm64"]'
       cuda_versions: '["13.1"]'
       builder_name: ${{ needs.init.outputs.builder_name }}
       build_timeout_minutes: 60

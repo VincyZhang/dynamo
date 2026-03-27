@@ -20,7 +20,7 @@ on:
         required: true
         type: string
       platform:
-        description: 'Docker platform(s) to build (e.g. linux/amd64,linux/arm64)'
+        description: 'Docker platforms JSON array (e.g. ["linux/amd64","linux/arm64"])'
         required: false
         type: string
       cuda_versions:
@@ -164,7 +164,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJson(format('["{0}"]', replace(inputs.platform, ',', '","'))) }}
+        platform: ${{ fromJson(inputs.platform) }}
         version_selector: ${{ fromJson(inputs.device == 'xpu' && '[""]' || inputs.cuda_versions) }}
     # This name weirdly shows in the checks overview, but not once you dive into
     # a specific workflow. Keeping it as a short placeholder
