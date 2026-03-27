@@ -12,7 +12,7 @@ permissions:
 jobs:
   lychee:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
 
       - name: Check out repository
@@ -76,7 +76,7 @@ jobs:
   broken-links-check:
     name: Check for broken markdown links
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

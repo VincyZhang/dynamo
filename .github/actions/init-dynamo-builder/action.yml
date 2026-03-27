@@ -86,18 +86,6 @@ inputs:
     description: 'Tolerations for buildkit pods'
     required: false
     default: "key=buildkit-fallback-worker,value=true,operator=Equal,effect=NoSchedule"
-  http_proxy:
-    description: 'HTTP proxy for buildkit kubernetes pods'
-    required: false
-    default: ''
-  https_proxy:
-    description: 'HTTPS proxy for buildkit kubernetes pods'
-    required: false
-    default: ''
-  dns:
-    description: 'DNS nameserver for buildkit kubernetes pods'
-    required: false
-    default: ''
   use_runner_docker_builder:
     description: 'When true and no remote workers are configured, skip Kubernetes builder creation and reuse the runner docker builder.'
     required: false
@@ -126,8 +114,5 @@ runs:
         requests_memory: ${{ inputs.requests_memory }}
         limits_memory: ${{ inputs.limits_memory }}
         tolerations: ${{ inputs.tolerations }}
-        http_proxy: ${{ inputs.http_proxy }}
-        https_proxy: ${{ inputs.https_proxy }}
-        dns: ${{ inputs.dns }}
         use_runner_docker_builder: ${{ inputs.use_runner_docker_builder }}
 

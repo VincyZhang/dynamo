@@ -145,16 +145,6 @@ runs:
           EXTRA_ARGS+=" --build-arg SCCACHE_BUCKET=${SCCACHE_S3_BUCKET}"
           EXTRA_ARGS+=" --build-arg SCCACHE_REGION=${AWS_DEFAULT_REGION}"
         fi
-        EFFECTIVE_HTTP_PROXY="${HTTP_PROXY:-${http_proxy:-}}"
-        EFFECTIVE_HTTPS_PROXY="${HTTPS_PROXY:-${https_proxy:-}}"
-        if [ -n "$EFFECTIVE_HTTP_PROXY" ]; then
-          EXTRA_ARGS+=" --build-arg HTTP_PROXY=${EFFECTIVE_HTTP_PROXY}"
-          EXTRA_ARGS+=" --build-arg http_proxy=${EFFECTIVE_HTTP_PROXY}"
-        fi
-        if [ -n "$EFFECTIVE_HTTPS_PROXY" ]; then
-          EXTRA_ARGS+=" --build-arg HTTPS_PROXY=${EFFECTIVE_HTTPS_PROXY}"
-          EXTRA_ARGS+=" --build-arg https_proxy=${EFFECTIVE_HTTPS_PROXY}"
-        fi
         if [ "${{ inputs.push_image }}" == "true" ]; then
           EXTRA_ARGS+=" --push"
         elif [ "${{ inputs.no_load }}" == "false" ]; then

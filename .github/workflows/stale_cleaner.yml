@@ -24,7 +24,7 @@ permissions:
 jobs:
   stale:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - uses: actions/stale@v9
         with:

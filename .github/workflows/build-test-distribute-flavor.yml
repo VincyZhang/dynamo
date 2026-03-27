@@ -152,16 +152,6 @@ on:
         required: false
         type: string
         default: ''
-      http_proxy:
-        description: 'HTTP proxy for network-restricted environments (passed to build-flavor and init-dynamo-builder)'
-        required: false
-        type: string
-        default: ''
-      https_proxy:
-        description: 'HTTPS proxy for network-restricted environments (passed to build-flavor and init-dynamo-builder)'
-        required: false
-        type: string
-        default: ''
     secrets:
       AWS_DEFAULT_REGION:
         required: false
@@ -228,8 +218,6 @@ jobs:
           build_only: ${{ inputs.build_only }}
           sanitized_ref_name: ${{ inputs.sanitized_ref_name }}
           show_summary: ${{ inputs.push_image && inputs.show_summary }}
-          http_proxy: ${{ inputs.http_proxy }}
-          https_proxy: ${{ inputs.https_proxy }}
 
 
 

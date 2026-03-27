@@ -25,7 +25,7 @@ env:
 jobs:
   changed-files:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     outputs:
       core: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || steps.changes.outputs.core == 'true' }}
       planner: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || steps.changes.outputs.planner == 'true' }}
@@ -48,7 +48,7 @@ jobs:
 
   dynamo-status-check:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     needs: [changed-files, build, rust-checks, mypy, test-parallel, test-sequential]
     if: always()
     steps:
@@ -77,8 +77,6 @@ jobs:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
           arch: amd64
-          http_proxy: ${{ vars.HTTP_PROXY }}
-          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
         uses: ./.github/actions/docker-login
@@ -153,7 +151,7 @@ jobs:
   rust-checks:
     needs: [changed-files, build]
     if: needs.changed-files.outputs.core == 'true'
-    runs-on: arc-prod-blue
+    runs-on: ubuntu-latest
     name: Rust Checks
     timeout-minutes: 30
     env:
@@ -193,7 +191,7 @@ jobs:
   mypy:
     needs: [changed-files, build]
     if: needs.changed-files.outputs.core == 'true' || needs.changed-files.outputs.planner == 'true' || needs.changed-files.outputs.frontend == 'true'
-    runs-on: arc-prod-blue
+    runs-on: ubuntu-latest
     name: Mypy
     timeout-minutes: 15
     env:

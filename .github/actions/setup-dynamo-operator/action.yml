@@ -48,18 +48,6 @@ inputs:
     description: 'Use local ~/.kube/config instead of kubeconfig_base64'
     required: false
     default: 'false'
-  http_proxy:
-    description: 'HTTP proxy URL'
-    required: false
-    default: ''
-  https_proxy:
-    description: 'HTTPS proxy URL'
-    required: false
-    default: ''
-  no_proxy:
-    description: 'Comma-separated list of hosts to bypass proxy (local machine IP is appended automatically)'
-    required: false
-    default: 'localhost,127.0.0.1'
 
 outputs:
   namespace:
@@ -113,20 +101,6 @@ runs:
           chmod 600 ${{ github.workspace }}/.kubeconfig-host
           echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig-host" >> $GITHUB_ENV
         fi
-
-    - name: Setup proxy environment
-      shell: bash
-      run: |
-        LOCAL_IP=$(hostname -I | awk '{print $1}')
-        BASE_NO_PROXY="${{ inputs.no_proxy }}"
-        FULL_NO_PROXY="${BASE_NO_PROXY},${LOCAL_IP}"
-        echo "HTTP_PROXY=${{ inputs.http_proxy }}" >> $GITHUB_ENV
-        echo "HTTPS_PROXY=${{ inputs.https_proxy }}" >> $GITHUB_ENV
-        echo "http_proxy=${{ inputs.http_proxy }}" >> $GITHUB_ENV
-        echo "https_proxy=${{ inputs.https_proxy }}" >> $GITHUB_ENV
-        echo "NO_PROXY=${FULL_NO_PROXY}" >> $GITHUB_ENV
-        echo "no_proxy=${FULL_NO_PROXY}" >> $GITHUB_ENV
-        echo "Proxy set: HTTP=${{ inputs.http_proxy }}, NO_PROXY=${FULL_NO_PROXY}"
 
     - name: Install vCluster CLI
       uses: ./.github/actions/install-vcluster-cli

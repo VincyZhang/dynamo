@@ -148,16 +148,6 @@ on:
         required: false
         type: string
         default: ''
-      http_proxy:
-        description: 'HTTP proxy for network-restricted environments'
-        required: false
-        type: string
-        default: ''
-      https_proxy:
-        description: 'HTTPS proxy for network-restricted environments'
-        required: false
-        type: string
-        default: ''
     secrets:
       AWS_DEFAULT_REGION:
         required: false
@@ -221,6 +211,4 @@ jobs:
       build_only: ${{ inputs.build_only }}
       sanitized_ref_name: ${{ inputs.sanitized_ref_name }}
       image_base: ${{ inputs.image_base }}
-      http_proxy: ${{ inputs.http_proxy }}
-      https_proxy: ${{ inputs.https_proxy }}
     secrets: inherit

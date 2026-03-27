@@ -63,18 +63,6 @@ inputs:
     description: 'Tolerations for buildkit pods'
     required: false
     default: "key=buildkit-fallback-worker,value=true,operator=Equal,effect=NoSchedule"
-  http_proxy:
-    description: 'HTTP proxy for buildkit kubernetes pods; falls back to runner HTTP_PROXY if unset'
-    required: false
-    default: ''
-  https_proxy:
-    description: 'HTTPS proxy for buildkit kubernetes pods; falls back to runner HTTPS_PROXY if unset'
-    required: false
-    default: ''
-  dns:
-    description: 'DNS nameserver for buildkit kubernetes pods (e.g. 8.8.8.8 or 127.0.0.11); helps resolve external domains'
-    required: false
-    default: ''
   skip_bootstrap:
     description: 'Skip the bootstrap step (only create the builder)'
     required: false

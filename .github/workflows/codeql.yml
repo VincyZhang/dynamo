@@ -7,7 +7,7 @@ jobs:
   codeql:
     name: Analyze Codebase
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     permissions:
       actions: read
       contents: read

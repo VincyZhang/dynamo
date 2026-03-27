@@ -62,7 +62,7 @@ jobs:
   # Detect changed files for conditional job execution
   changed-files:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     # Skip for tag pushes - version release doesn't need changed-files check
     if: github.ref_type != 'tag'
     outputs:
@@ -90,7 +90,7 @@ jobs:
       needs.changed-files.outputs.docs == 'true' &&
       (github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/pull-request/'))
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -114,7 +114,7 @@ jobs:
       needs.changed-files.outputs.docs == 'true' &&
       (github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/pull-request/'))
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -144,7 +144,7 @@ jobs:
       (needs.changed-files.outputs.docs == 'true' || github.event_name == 'workflow_dispatch') &&
       (github.event.inputs.tag == '' || github.event.inputs.tag == null)
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - name: Determine context
         id: ctx
@@ -368,7 +368,7 @@ jobs:
       github.ref_type == 'tag' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != null)
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - name: Determine version tag
         id: version

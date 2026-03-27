@@ -87,7 +87,7 @@ jobs:
   ############################## SLACK NOTIFICATION ##############################
   notify-slack:
     name: Notify Slack
-    runs-on: arc-prod-blue
+    runs-on: ubuntu-latest
     if: always() && failure()
     needs: [ vllm-pipeline, sglang-pipeline, trtllm-pipeline ]
     permissions:

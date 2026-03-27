@@ -151,11 +151,6 @@ runs:
         chmod 777 "${TEST_RESULTS_DIR}"
         echo "📁 Test results will be saved to: ${TEST_RESULTS_DIR}"
 
-        # Resolve proxy values from either upper-case or lower-case env names.
-        HTTP_PROXY_VALUE="${HTTP_PROXY:-${http_proxy:-}}"
-        HTTPS_PROXY_VALUE="${HTTPS_PROXY:-${https_proxy:-}}"
-        NO_PROXY_VALUE="${NO_PROXY:-${no_proxy:-}}"
-
         # Container cache paths (backed by host mount: $HOME/.cache -> /home/dynamo/.cache)
         CONTAINER_CACHE_ROOT="/home/dynamo/.cache"
         CONTAINER_HF_HOME="${CONTAINER_CACHE_ROOT}/huggingface"
@@ -178,18 +173,6 @@ runs:
         fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
         DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
-        if [[ -n "${HTTP_PROXY_VALUE:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY_VALUE}")
-          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY_VALUE}")
-        fi
-        if [[ -n "${HTTPS_PROXY_VALUE:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY_VALUE}")
-          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY_VALUE}")
-        fi
-        if [[ -n "${NO_PROXY_VALUE:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY_VALUE}")
-          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY_VALUE}")
-        fi
 
         DOCKER_EXTRA_FLAGS=(
           --privileged
@@ -328,11 +311,6 @@ runs:
         echo "📁 Test results will be saved to: ${TEST_RESULTS_DIR}"
         echo "▶️ Executing: $PYTEST_CMD"
 
-        # Resolve proxy values from either upper-case or lower-case env names.
-        HTTP_PROXY_VALUE="${HTTP_PROXY:-${http_proxy:-}}"
-        HTTPS_PROXY_VALUE="${HTTPS_PROXY:-${https_proxy:-}}"
-        NO_PROXY_VALUE="${NO_PROXY:-${no_proxy:-}}"
-
         # Container cache paths (backed by host mount: $HOME/.cache -> /home/dynamo/.cache)
         CONTAINER_CACHE_ROOT="/home/dynamo/.cache"
         CONTAINER_HF_HOME="${CONTAINER_CACHE_ROOT}/huggingface"
@@ -355,18 +333,6 @@ runs:
         fi
         DOCKER_ENV_FLAGS+=(--env "VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}")
         DOCKER_ENV_FLAGS+=(--env "VLLM_LOGGING_LEVEL=DEBUG")
-        if [[ -n "${HTTP_PROXY_VALUE:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTP_PROXY=${HTTP_PROXY_VALUE}")
-          DOCKER_ENV_FLAGS+=(--env "http_proxy=${HTTP_PROXY_VALUE}")
-        fi
-        if [[ -n "${HTTPS_PROXY_VALUE:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "HTTPS_PROXY=${HTTPS_PROXY_VALUE}")
-          DOCKER_ENV_FLAGS+=(--env "https_proxy=${HTTPS_PROXY_VALUE}")
-        fi
-        if [[ -n "${NO_PROXY_VALUE:-}" ]]; then
-          DOCKER_ENV_FLAGS+=(--env "NO_PROXY=${NO_PROXY_VALUE}")
-          DOCKER_ENV_FLAGS+=(--env "no_proxy=${NO_PROXY_VALUE}")
-        fi
 
         DOCKER_EXTRA_FLAGS=(
           --privileged

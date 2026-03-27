@@ -222,8 +222,6 @@ jobs:
           builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
           flavor: general
           all_arch: 'true'
-          http_proxy: ${{ vars.HTTP_PROXY }}
-          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -236,12 +234,12 @@ jobs:
         shell: bash
         working-directory: ./deploy/operator
         run: |
-          docker buildx build --platform linux/arm64 --target linter --progress=plain --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ .
+          docker buildx build --platform linux/arm64 --target linter --progress=plain .
       - name: Tester
         shell: bash
         working-directory: ./deploy/operator
         run: |
-          docker buildx build --platform linux/arm64 --target tester --progress=plain --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ .
+          docker buildx build --platform linux/arm64 --target tester --progress=plain .
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
@@ -292,7 +290,6 @@ jobs:
           fi
           docker buildx build --push ${NO_CACHE_FLAG} \
               --platform linux/amd64,linux/arm64 \
-              --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### 🐳 Operator Container Images" >> $GITHUB_STEP_SUMMARY
@@ -441,8 +438,6 @@ jobs:
         builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
         buildkit_worker_addresses: '' # k8s builder
         skip_bootstrap: true
-        http_proxy: ${{ vars.HTTP_PROXY }}
-        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |

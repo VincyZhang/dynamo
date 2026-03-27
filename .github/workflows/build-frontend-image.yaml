@@ -92,8 +92,6 @@ jobs:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
           all_arch: 'true'
-          http_proxy: ${{ vars.HTTP_PROXY }}
-          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -123,7 +121,6 @@ jobs:
           make -C deploy/inference-gateway/epp image-multiarch-push \
             IMAGE_REPO="${EPP_IMAGE_REPO}" \
             GIT_TAG="${EPP_IMAGE_TAG}" \
-            DOCKER_PROXY="${ECR_HOSTNAME}/dockerhub/" \
             EXTRA_BUILD_ARGS="${CACHE_ARGS}"
       - name: Generate Dockerfile
         shell: bash
@@ -226,7 +223,7 @@ jobs:
 
   frontend-status-check:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     needs: [changed-files, build-frontend-image]
     if: always()
     steps:
@@ -249,8 +246,6 @@ jobs:
         builder_name: ${{ needs.changed-files.outputs.builder_name }}
         buildkit_worker_addresses: '' # k8s builder
         skip_bootstrap: true
-        http_proxy: ${{ vars.HTTP_PROXY }}
-        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |

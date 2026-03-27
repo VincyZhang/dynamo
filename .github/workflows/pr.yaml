@@ -64,7 +64,7 @@ jobs:
 
   backend-status-check:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     needs: [changed-files, vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, operator]  # THIS list determines blocking jobs
     if: always()
     steps:
@@ -74,7 +74,7 @@ jobs:
 
   deploy-status-check:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
     if: false
     steps:
@@ -107,8 +107,6 @@ jobs:
           builder_name: ${{ needs.changed-files.outputs.builder_name }}
           flavor: general
           all_arch: 'true'
-          http_proxy: ${{ vars.HTTP_PROXY }}
-          https_proxy: ${{ vars.HTTPS_PROXY }}
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -121,12 +119,12 @@ jobs:
         shell: bash
         working-directory: ./deploy/operator
         run: |
-          docker buildx build --platform linux/arm64 --target linter --progress=plain --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ .
+          docker buildx build --platform linux/arm64 --target linter --progress=plain .
       - name: Tester
         shell: bash
         working-directory: ./deploy/operator
         run: |
-          docker buildx build --platform linux/arm64 --target tester --progress=plain --build-arg DOCKER_PROXY=${ECR_HOSTNAME}/dockerhub/ .
+          docker buildx build --platform linux/arm64 --target tester --progress=plain .
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
@@ -168,10 +166,6 @@ jobs:
           fi
           docker buildx build --push ${NO_CACHE_FLAG} \
               --platform linux/amd64,linux/arm64 \
-              --build-arg DOCKER_PROXY=${{ env.LOCAL_REGISTRY_HOST }}/dockerhub/ \
-              --build-arg HTTPS_PROXY=${{ vars.HTTPS_PROXY }} \
-              --build-arg HTTPS_PROXY=${{ vars.HTTPS_PROXY }} \
-              --build-arg NO_PROXY=${{ vars.NO_PROXY }} \
               ${TAGGING_FLAGS} -f Dockerfile .
 
           echo "### 🐳 Operator Container Images" >> $GITHUB_STEP_SUMMARY
@@ -236,8 +230,6 @@ jobs:
       run_multi_gpu_tests: false
       copy_to_acr: false
       image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
-      http_proxy: ${{ vars.HTTP_PROXY }}
-      https_proxy: ${{ vars.HTTPS_PROXY }}
     secrets: inherit
 
   # ============================================================================
@@ -470,8 +462,6 @@ jobs:
         builder_name: ${{ needs.changed-files.outputs.builder_name }}
         buildkit_worker_addresses: '' # k8s builder
         skip_bootstrap: true
-        http_proxy: ${{ vars.HTTP_PROXY }}
-        https_proxy: ${{ vars.HTTPS_PROXY }}
     - name: Builder Cleanup in case of k8s builder
       shell: bash
       run: |

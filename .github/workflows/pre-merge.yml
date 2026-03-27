@@ -30,7 +30,7 @@ concurrency:
 jobs:
   changed-files:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     outputs:
       rust: ${{ steps.changes.outputs.rust }}
     steps:
@@ -46,7 +46,7 @@ jobs:
 
   pre-merge-status-check:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     needs: [changed-files, pre-commit, rust-tests, rust-clippy]
     if: always()
     steps:
@@ -56,7 +56,7 @@ jobs:
 
   pre-commit:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     permissions:
       contents: read
     steps:

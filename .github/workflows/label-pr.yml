@@ -22,7 +22,7 @@ on:
 jobs:
   label:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write

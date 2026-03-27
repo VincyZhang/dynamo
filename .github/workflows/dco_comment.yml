@@ -11,7 +11,7 @@ permissions:
 jobs:
   dco-comment:
     runs-on:
-      group: arc-prod-blue
+      group: ubuntu-latest
     steps:
       - name: Get DCO status
         id: dco
