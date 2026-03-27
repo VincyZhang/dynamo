@@ -67,20 +67,16 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Docker Buildx
-      id: setup-buildx
-      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
-      with:
-        driver: docker
-        install: true
+    - name: Verify Docker Buildx availability
+      shell: bash
+      run: |
+        docker buildx version
+
     - name: Use runner docker builder
       if: inputs.buildkit_worker_addresses == '' && inputs.use_runner_docker_builder == 'true'
       shell: bash
       run: |
-        RESOLVED_BUILDER="${{ steps.setup-buildx.outputs.name }}"
-        if [ -z "$RESOLVED_BUILDER" ]; then
-          RESOLVED_BUILDER="default"
-        fi
+        RESOLVED_BUILDER="default"
         echo "Using runner docker builder: ${RESOLVED_BUILDER}"
         docker buildx use "$RESOLVED_BUILDER"
         echo "BUILDX_BUILDER_NAME=${RESOLVED_BUILDER}" >> "$GITHUB_ENV"
