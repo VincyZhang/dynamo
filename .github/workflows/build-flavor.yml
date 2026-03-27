@@ -17,6 +17,7 @@ on:
       platform:
         description: 'Docker platform(s) to build (e.g. linux/amd64,linux/arm64)'
         required: false
+        type: string
       cuda_versions:
         description: 'CUDA versions to build (JSON array, e.g., ["12.9", "13.0"])'
         required: true
