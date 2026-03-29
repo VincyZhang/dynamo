@@ -223,11 +223,6 @@ jobs:
       FRAMEWORK: ${{ inputs.framework }}
     steps:
       - name: Checkout repository
-        runs-on: ${{ inputs.device == 'xpu' && 'xpu' || (inputs.platform == 'linux/amd64' && 'prod-tester-amd-gpu-v1' || 'xpu') }}
-    env:
-      FRAMEWORK: ${{ inputs.framework }}
-    steps:
-      - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
       - name: Calculate target tag
         id: calculate-target-tag
@@ -421,10 +416,6 @@ jobs:
     needs: [build]
     name: Compliance ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
     runs-on: ${{ inputs.platform == 'linux/amd64' && 'xpu' }}
-    secrets:
-      azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-      azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-      hf_token: ${{ secrets.HF_TOKEN }}
     steps:
       - name: Calculate image URI
         id: images
