@@ -257,6 +257,7 @@ jobs:
           azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
           azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
       - name: Pull relevant images
+        if: false
         shell: bash
         run: |
           source ./.github/scripts/retry_docker.sh
@@ -335,7 +336,6 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
-          start_minio: 'false' # XPU tests do not use LoRA/S3, skip MinIO
 
   # ============================================================================
   # MULTI-GPU TESTS

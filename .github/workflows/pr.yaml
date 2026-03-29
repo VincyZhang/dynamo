@@ -227,6 +227,7 @@ jobs:
       single_xpu_test_timeout_minutes: 35
       run_multi_gpu_tests: false
       copy_to_acr: false
+      push_image: false
       image_base: amr-registry.caas.intel.com/aiops/catalog/intel-vllm
     secrets: inherit
 

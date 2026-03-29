@@ -24,10 +24,6 @@ inputs:
     description: 'Run pytest in dry-run mode (collect tests only, do not execute)'
     required: false
     default: 'false'
-  start_minio:
-    description: 'Start MinIO service for LoRA tests (true/false)'
-    required: false
-    default: 'true'
   hf_token:
     required: false
   parallel_mode:
@@ -61,7 +57,6 @@ runs:
         echo "🏗️  Platform architecture: ${PLATFORM_ARCH}"
 
     - name: Start MinIO Service
-      if: inputs.start_minio == 'true'
       shell: bash
       env:
         MINIO_CONTAINER_NAME: dynamo-minio-test
@@ -415,7 +410,7 @@ runs:
         exit ${TEST_EXIT_CODE}
 
     - name: Cleanup MinIO Service
-      if: always() && inputs.start_minio == 'true'
+      if: always()
       shell: bash
       run: |
         echo "🧹 Cleaning up MinIO container..."
