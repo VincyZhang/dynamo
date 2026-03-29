@@ -144,20 +144,7 @@ runs:
         chmod 777 "${TEST_RESULTS_DIR}"
         echo "📁 Test results will be saved to: ${TEST_RESULTS_DIR}"
 
-        # Container cache paths (backed by host mount: $HOME/.cache -> /home/dynamo/.cache)
-        CONTAINER_CACHE_ROOT="/home/dynamo/.cache"
-        CONTAINER_HF_HOME="${CONTAINER_CACHE_ROOT}/huggingface"
-        CONTAINER_HF_HUB_CACHE="${CONTAINER_HF_HOME}/hub"
-        CONTAINER_TRANSFORMERS_CACHE="${CONTAINER_HF_HOME}/transformers"
-        CONTAINER_HF_DATASETS_CACHE="${CONTAINER_HF_HOME}/datasets"
-
         DOCKER_ENV_FLAGS=()
-        DOCKER_ENV_FLAGS+=(--env "XDG_CACHE_HOME=${CONTAINER_CACHE_ROOT}")
-        DOCKER_ENV_FLAGS+=(--env "HF_HOME=${CONTAINER_HF_HOME}")
-        DOCKER_ENV_FLAGS+=(--env "HF_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
-        DOCKER_ENV_FLAGS+=(--env "HUGGINGFACE_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
-        DOCKER_ENV_FLAGS+=(--env "TRANSFORMERS_CACHE=${CONTAINER_TRANSFORMERS_CACHE}")
-        DOCKER_ENV_FLAGS+=(--env "HF_DATASETS_CACHE=${CONTAINER_HF_DATASETS_CACHE}")
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
@@ -174,10 +161,7 @@ runs:
         fi
 
         # Mount optional host paths when present to support XPU/RDMA test binds.
-        mkdir -p "$HOME/.cache"
-        DOCKER_MOUNT_FLAGS=(
-          -v "$HOME/.cache:/home/dynamo/.cache"
-        )
+        DOCKER_MOUNT_FLAGS=()
         if [[ -d /dev/dri/by-path ]]; then
           DOCKER_MOUNT_FLAGS+=( -v "/dev/dri/by-path:/dev/dri/by-path" )
         fi
@@ -189,6 +173,11 @@ runs:
         fi
         if [[ -d /sys/class/infiniband_verbs ]]; then
           DOCKER_MOUNT_FLAGS+=( -v "/sys/class/infiniband_verbs:/sys/class/infiniband_verbs" )
+        fi
+
+        if [[ "${VLLM_TARGET_DEVICE}" == "xpu" && "${{ inputs.dry_run }}" != "true" ]]; then
+          PREP_CMD='python -c "from tests.conftest import download_models; download_models(model_list=[\"Qwen/Qwen2-VL-2B-Instruct\",\"Qwen/Qwen2.5-VL-7B-Instruct\",\"TinyLlama/TinyLlama-1.1B-Chat-v1.0\",\"Qwen/Qwen3-0.6B\"])"'
+          PYTEST_CMD="${PREP_CMD} && ${PYTEST_CMD}"
         fi
 
         echo "🐳 Docker run command (runner v1):"
@@ -299,20 +288,7 @@ runs:
         echo "📁 Test results will be saved to: ${TEST_RESULTS_DIR}"
         echo "▶️ Executing: $PYTEST_CMD"
 
-        # Container cache paths (backed by host mount: $HOME/.cache -> /home/dynamo/.cache)
-        CONTAINER_CACHE_ROOT="/home/dynamo/.cache"
-        CONTAINER_HF_HOME="${CONTAINER_CACHE_ROOT}/huggingface"
-        CONTAINER_HF_HUB_CACHE="${CONTAINER_HF_HOME}/hub"
-        CONTAINER_TRANSFORMERS_CACHE="${CONTAINER_HF_HOME}/transformers"
-        CONTAINER_HF_DATASETS_CACHE="${CONTAINER_HF_HOME}/datasets"
-
         DOCKER_ENV_FLAGS=()
-        DOCKER_ENV_FLAGS+=(--env "XDG_CACHE_HOME=${CONTAINER_CACHE_ROOT}")
-        DOCKER_ENV_FLAGS+=(--env "HF_HOME=${CONTAINER_HF_HOME}")
-        DOCKER_ENV_FLAGS+=(--env "HF_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
-        DOCKER_ENV_FLAGS+=(--env "HUGGINGFACE_HUB_CACHE=${CONTAINER_HF_HUB_CACHE}")
-        DOCKER_ENV_FLAGS+=(--env "TRANSFORMERS_CACHE=${CONTAINER_TRANSFORMERS_CACHE}")
-        DOCKER_ENV_FLAGS+=(--env "HF_DATASETS_CACHE=${CONTAINER_HF_DATASETS_CACHE}")
         if [[ -n "${HF_TOKEN:-}" ]]; then
           DOCKER_ENV_FLAGS+=(--env "HF_TOKEN=${HF_TOKEN}")
         fi
@@ -328,10 +304,7 @@ runs:
           DOCKER_EXTRA_FLAGS+=(--group-add "$(stat -c '%g' /dev/dri/renderD128)")
         fi
 
-        mkdir -p "$HOME/.cache"
-        DOCKER_MOUNT_FLAGS=(
-          -v "$HOME/.cache:/home/dynamo/.cache"
-        )
+        DOCKER_MOUNT_FLAGS=()
         if [[ -d /dev/dri/by-path ]]; then
           DOCKER_MOUNT_FLAGS+=( -v "/dev/dri/by-path:/dev/dri/by-path" )
         fi
@@ -343,6 +316,11 @@ runs:
         fi
         if [[ -d /sys/class/infiniband_verbs ]]; then
           DOCKER_MOUNT_FLAGS+=( -v "/sys/class/infiniband_verbs:/sys/class/infiniband_verbs" )
+        fi
+
+        if [[ "${VLLM_TARGET_DEVICE}" == "xpu" && "${{ inputs.dry_run }}" != "true" ]]; then
+          PREP_CMD='python -c "from tests.conftest import download_models; download_models(model_list=[\"Qwen/Qwen2-VL-2B-Instruct\",\"Qwen/Qwen2.5-VL-7B-Instruct\",\"TinyLlama/TinyLlama-1.1B-Chat-v1.0\",\"Qwen/Qwen3-0.6B\"])"'
+          PYTEST_CMD="${PREP_CMD} && ${PYTEST_CMD}"
         fi
 
         echo "🐳 Docker run command (dind sidecar):"
