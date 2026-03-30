@@ -49,12 +49,6 @@ class DynamoWorkerProcess(ManagedProcess):
         # TODO: Replace hardcoded port with allocate_ports() for xdist-safe parallel execution
         env["DYN_SYSTEM_PORT"] = "9345"
 
-        # Set ETCD endpoints for discovery
-        runtime_services = request.getfixturevalue("runtime_services_dynamic_ports")
-        if runtime_services and runtime_services[1] is not None:
-            etcd_process = runtime_services[1]
-            env["ETCD_ENDPOINTS"] = f"http://127.0.0.1:{etcd_process.port}"
-
         # TODO: Have the managed process take a command name explicitly to distinguish
         #       between processes started with the same command.
         log_dir = f"{request.node.name}_{worker_id}"
@@ -158,12 +152,6 @@ def test_vllm_health_check_active(request, runtime_services_dynamic_ports):
     logger.info("Starting frontend...")
     # Prepare environment variables for frontend
     extra_env = {}
-    if runtime_services_dynamic_ports:
-        nats_process, etcd_process = runtime_services_dynamic_ports
-        if nats_process:
-            extra_env["NATS_SERVER"] = f"nats://127.0.0.1:{nats_process.port}"
-        if etcd_process:
-            extra_env["ETCD_ENDPOINTS"] = f"http://127.0.0.1:{etcd_process.port}"
 
     with DynamoFrontendProcess(request, extra_env=extra_env if extra_env else None):
         logger.info("Frontend started.")
@@ -226,12 +214,6 @@ def test_vllm_health_check_passive(
     logger.info("Starting frontend...")
     # Prepare environment variables for frontend
     extra_env = {}
-    if runtime_services_dynamic_ports:
-        nats_process, etcd_process = runtime_services_dynamic_ports
-        if nats_process:
-            extra_env["NATS_SERVER"] = f"nats://127.0.0.1:{nats_process.port}"
-        if etcd_process:
-            extra_env["ETCD_ENDPOINTS"] = f"http://127.0.0.1:{etcd_process.port}"
 
     with DynamoFrontendProcess(request, extra_env=extra_env if extra_env else None):
         logger.info("Frontend started.")
