@@ -46,7 +46,6 @@ class DynamoWorkerProcess(ManagedProcess):
         self,
         request,
         etcd_endpoints: list,
-        request_plane: str = "tcp",
         mode: WorkerMode = WorkerMode.AGGREGATED,
     ):
         command = [
@@ -83,7 +82,6 @@ class DynamoWorkerProcess(ManagedProcess):
         # Set debug logging and ETCD endpoints
         env = os.environ.copy()
         env["DYN_LOG"] = "debug"
-        env["DYN_REQUEST_PLANE"] = request_plane
         env["ETCD_ENDPOINTS"] = ",".join(etcd_endpoints)
         env["DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS"] = '["generate"]'
         env["DYN_SYSTEM_PORT"] = port
@@ -163,8 +161,7 @@ class DynamoWorkerProcess(ManagedProcess):
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.nightly
 @pytest.mark.timeout(600)
-@pytest.mark.parametrize("request_plane", ["nats", "tcp"], indirect=True)
-def test_etcd_ha_failover_vllm_aggregated(request, request_plane, predownload_models):
+def test_etcd_ha_failover_vllm_aggregated(request, predownload_models):
     """
     Test ETCD High Availability with repeated node failures and recoveries.
 
@@ -198,7 +195,7 @@ def test_etcd_ha_failover_vllm_aggregated(request, request_plane, predownload_mo
                 logger.info("Frontend started successfully")
 
                 # Step 4: Start a vLLM worker
-                with DynamoWorkerProcess(request, etcd_endpoints, request_plane):
+                with DynamoWorkerProcess(request, etcd_endpoints):
                     logger.info("Worker started successfully")
 
                     # Step 5: Send initial inference request to verify system is working
@@ -236,9 +233,8 @@ def test_etcd_ha_failover_vllm_aggregated(request, request_plane, predownload_mo
 @pytest.mark.nightly
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.timeout(600)
-@pytest.mark.parametrize("request_plane", ["nats", "tcp"], indirect=True)
 def test_etcd_ha_failover_vllm_disaggregated(
-    request, request_plane, predownload_models, set_ucx_tls_no_mm
+    request, predownload_models, set_ucx_tls_no_mm
 ):
     """
     Test ETCD High Availability with repeated node failures and recoveries in disaggregated mode.
@@ -276,7 +272,6 @@ def test_etcd_ha_failover_vllm_disaggregated(
                 with DynamoWorkerProcess(
                     request,
                     etcd_endpoints,
-                    request_plane,
                     mode=WorkerMode.PREFILL,
                 ):
                     logger.info("Prefill worker started successfully")
@@ -285,7 +280,6 @@ def test_etcd_ha_failover_vllm_disaggregated(
                     with DynamoWorkerProcess(
                         request,
                         etcd_endpoints,
-                        request_plane,
                         mode=WorkerMode.DECODE,
                     ):
                         logger.info("Decode worker started successfully")
@@ -325,8 +319,7 @@ def test_etcd_ha_failover_vllm_disaggregated(
 @pytest.mark.nightly
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.timeout(600)
-@pytest.mark.parametrize("request_plane", ["nats", "tcp"], indirect=True)
-def test_etcd_non_ha_shutdown_vllm_aggregated(request, request_plane, predownload_models):
+def test_etcd_non_ha_shutdown_vllm_aggregated(request, predownload_models):
     """
     Test that frontend and worker shut down when single ETCD node is terminated.
 
@@ -354,7 +347,7 @@ def test_etcd_non_ha_shutdown_vllm_aggregated(request, request_plane, predownloa
                 logger.info("Frontend started successfully")
 
                 # Step 4: Start a vLLM worker
-                with DynamoWorkerProcess(request, etcd_endpoints, request_plane) as worker:
+                with DynamoWorkerProcess(request, etcd_endpoints) as worker:
                     logger.info("Worker started successfully")
 
                     # Step 5: Send inference request to verify system is working
@@ -382,9 +375,8 @@ def test_etcd_non_ha_shutdown_vllm_aggregated(request, request_plane, predownloa
 @pytest.mark.nightly
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.timeout(600)
-@pytest.mark.parametrize("request_plane", ["nats", "tcp"], indirect=True)
 def test_etcd_non_ha_shutdown_vllm_disaggregated(
-    request, request_plane, predownload_models, set_ucx_tls_no_mm
+    request, predownload_models, set_ucx_tls_no_mm
 ):
     """
     Test that frontend and workers shut down when single ETCD node is terminated in disaggregated mode.
@@ -416,7 +408,6 @@ def test_etcd_non_ha_shutdown_vllm_disaggregated(
                 with DynamoWorkerProcess(
                     request,
                     etcd_endpoints,
-                    request_plane,
                     mode=WorkerMode.PREFILL,
                 ) as prefill_worker:
                     logger.info("Prefill worker started successfully")
@@ -425,7 +416,6 @@ def test_etcd_non_ha_shutdown_vllm_disaggregated(
                     with DynamoWorkerProcess(
                         request,
                         etcd_endpoints,
-                        request_plane,
                         mode=WorkerMode.DECODE,
                     ) as decode_worker:
                         logger.info("Decode worker started successfully")

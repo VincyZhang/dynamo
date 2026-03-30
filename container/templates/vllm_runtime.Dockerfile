@@ -31,19 +31,9 @@ ENV VIRTUAL_ENV=/opt/dynamo/venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
 {% if device == "xpu" %}
-RUN set -eux; \
-        mkdir -p /usr/share/keyrings; \
-        if wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor > /usr/share/keyrings/oneapi-archive-keyring.gpg; then \
-            true; \
-        else \
-            export GNUPGHOME="$(mktemp -d)"; \
-            gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys BAC6F0C353D04109; \
-            gpg --batch --export BAC6F0C353D04109 | gpg --dearmor > /usr/share/keyrings/oneapi-archive-keyring.gpg; \
-            rm -rf "$GNUPGHOME"; \
-        fi; \
-        chmod 644 /usr/share/keyrings/oneapi-archive-keyring.gpg; \
-        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list; \
-        add-apt-repository -y ppa:kobuk-team/intel-graphics
+RUN wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null && \
+    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
+    add-apt-repository -y ppa:kobuk-team/intel-graphics
 {% endif %}
 
 {% if device == "cuda" %}
@@ -226,11 +216,6 @@ ARG SITE_PACKAGES=${VIRTUAL_ENV}/lib/python${PYTHON_VERSION}/site-packages
 #
 # Layer sizes (uncompressed): nvidia=4.5GB, flashinfer_jit_cache=4.1GB, torch=2.1GB,
 #                             vllm=1.2GB, triton=592MB, flashinfer_cubin=437MB
-# Remaining packages and venv structure (bin/, include/, share/, etc.)
-# Keep this as a plain COPY for compatibility with Docker versions that do not support COPY --exclude.
-COPY --chmod=775 --chown=dynamo:0 --from=framework ${VIRTUAL_ENV} ${VIRTUAL_ENV}
-
-# Copy large packages after full venv copy so they remain present and are chunked into separate layers.
 {% if device == "cuda" %}
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/nvidia ${SITE_PACKAGES}/nvidia
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/flashinfer_jit_cache ${SITE_PACKAGES}/flashinfer_jit_cache
@@ -244,6 +229,18 @@ COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/triton ${SIT
 {% if device == "cuda" %}
 COPY --chmod=775 --chown=dynamo:0 --from=framework ${SITE_PACKAGES}/flashinfer_cubin ${SITE_PACKAGES}/flashinfer_cubin
 {% endif %}
+# Remaining packages and venv structure (bin/, include/, share/, etc.)
+COPY --chmod=775 --chown=dynamo:0 --from=framework \
+    --exclude=lib/python*/site-packages/nvidia \
+    --exclude=lib/python*/site-packages/flashinfer_jit_cache \
+    --exclude=lib/python*/site-packages/torch \
+    --exclude=lib/python*/site-packages/vllm \
+{%- if platform == "amd64" %}
+    --exclude=lib/python*/site-packages/vllm_omni \
+{%- endif %}
+    --exclude=lib/python*/site-packages/triton \
+    --exclude=lib/python*/site-packages/flashinfer_cubin \
+    ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # Copy vllm with correct ownership (read-only, no group-write needed)
 COPY --chown=dynamo:0 --from=framework /opt/vllm /opt/vllm
@@ -339,7 +336,7 @@ RUN if [ "${ENABLE_MODELEXPRESS_P2P}" = "true" ]; then \
 {% endif %}
 
 # Install runtime dependencies (common + vllm-specific + planner + benchmarks).
-# Test and dev dependencies are NOT installed here ΓÇö they go in the test and dev images.
+# Test and dev dependencies are NOT installed here — they go in the test and dev images.
 RUN --mount=type=bind,source=./container/deps/requirements.common.txt,target=/tmp/requirements.common.txt \
     --mount=type=bind,source=./container/deps/requirements.vllm.txt,target=/tmp/requirements.vllm.txt \
     --mount=type=bind,source=./container/deps/requirements.planner.txt,target=/tmp/requirements.planner.txt \
