@@ -168,7 +168,7 @@ jobs:
   build:
     if: inputs.build_image
     name: Build ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
-    runs-on: xpu
+    runs-on: ${{ inputs.device == 'xpu' && 'xpu' || 'prod-builder-v3' }}
     outputs:
       target_tag_plain: ${{ steps.build.outputs.target_tag_plain }}
       test_tag_plain: ${{ steps.build.outputs.test_tag_plain }}
@@ -288,6 +288,36 @@ jobs:
             exit ${SANITY_CHECK_EXIT_CODE}
           else
             echo "✅ Sanity check passed"
+          fi
+      
+      - name: Compute compliance arches
+        id: compliance-arches
+        shell: bash
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          # Convert comma-separated Docker platform string to JSON array
+          # "linux/amd64,linux/arm64" -> ["linux/amd64","linux/arm64"]
+          # "linux/amd64"             -> ["linux/amd64"]
+          JSON=$(printf '%s\n' ${PLATFORM//,/ } | jq -Rsc '[splits("\n") | select(length>0)]')
+          echo "arches=${JSON}" >> $GITHUB_OUTPUT
+      - name: Compute test runners
+        id: test-runners
+        shell: bash
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          DEVICE="${{ inputs.device }}"
+          # Emit a JSON array of {arch, runner} objects for platforms actually being built
+          # "linux/amd64,linux/arm64" -> both runners
+          # "linux/amd64"             -> amd64 runner only (covers EFA and other single-arch)
+          # "linux/arm64"             -> arm64 runner only
+          if [[ "$DEVICE" == "xpu" ]]; then
+            echo 'runners=[{"arch":"amd64","runner":"xpu"}]' >> $GITHUB_OUTPUT
+          elif [[ "$PLATFORM" == *"amd64"* && "$PLATFORM" == *"arm64"* ]]; then
+            echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"},{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
+          elif [[ "$PLATFORM" == *"arm64"* ]]; then
+            echo 'runners=[{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
+          else
+            echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"}]' >> $GITHUB_OUTPUT
           fi
       # Run CPU-only tests first (parallelized for speed)
       # These are unit tests marked with gpu_0 that don't require GPU hardware
