@@ -336,7 +336,7 @@ vllm_configs = {
             "--model",
             "Qwen/Qwen3-VL-8B-Instruct",
             "--max-model-len",
-            "10000",
+            "8192",
             "--dyn-tool-call-parser",
             "hermes",
         ],
