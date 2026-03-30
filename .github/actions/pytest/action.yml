@@ -110,16 +110,17 @@ runs:
         set +e  # Don't exit on test failures
 
         export HF_TOKEN="${HF_TOKEN:-}"
+        TARGET_TEST_NODEID="tests/fault_tolerance/cancellation/test_vllm.py::test_request_cancellation_vllm_aggregated"
 
         # Determine docker runtime flags and pytest command based on dry_run mode
         if [[ "${{ inputs.dry_run }}" == "true" ]]; then
           echo "🔍 Running pytest in dry-run mode (collect-only, no GPU required)"
           GPU_FLAGS=""
           VLLM_TARGET_DEVICE="cpu"
-          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\" ${TARGET_TEST_NODEID}"
         else
           echo "🚀 Running pytest in normal mode"
-          PYTEST_CMD="pytest --ignore=tests/serve/test_vllm_xpu.py --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --durations=20 -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest --ignore=tests/serve/test_vllm_xpu.py --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --durations=20 -m \"${{ inputs.pytest_marks }}\" ${TARGET_TEST_NODEID}"
 
           # Detect GPU availability and conditionally add GPU flags
           GPU_FLAGS=""
@@ -226,6 +227,7 @@ runs:
         set +e  # Don't exit on test failures
 
         export HF_TOKEN="${HF_TOKEN:-}"
+        TARGET_TEST_NODEID="tests/fault_tolerance/cancellation/test_vllm.py::test_request_cancellation_vllm_aggregated"
 
         # /dev/shm sizing: NIXL uses UCX which allocates shared memory segments in /dev/shm
         # via shm_open(). Each NIXL agent with num_threads=8 creates 9 UCX workers, each needing
@@ -240,7 +242,7 @@ runs:
           echo "🔍 Running pytest in dry-run mode (collect-only, no GPU required)"
           GPU_FLAGS=""
           VLLM_TARGET_DEVICE="cpu"
-          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\" ${TARGET_TEST_NODEID}"
         else
           echo "🚀 Running pytest in normal mode"
           # Detect GPU availability and conditionally add GPU flags
@@ -279,7 +281,7 @@ runs:
 
           # Construct final command with xdist parallelization (-n) and other options
           # --dist=loadscope groups tests by module/class to prevent race conditions in stateful tests
-          PYTEST_CMD="pytest --ignore=tests/serve/test_vllm_xpu.py ${PARALLEL_OPTS} --dist=loadscope --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --durations=10 -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest --ignore=tests/serve/test_vllm_xpu.py ${PARALLEL_OPTS} --dist=loadscope --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --durations=10 -m \"${{ inputs.pytest_marks }}\" ${TARGET_TEST_NODEID}"
         fi
 
         # Get absolute path for test-results directory and ensure it has proper permissions

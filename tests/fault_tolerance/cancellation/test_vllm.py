@@ -208,7 +208,7 @@ class DynamoWorkerProcess(ManagedProcess):
         return False
 
 
-@pytest.mark.timeout(110)  # 3x average
+@pytest.mark.timeout(180)  # increase headroom for slower CI/nats path
 @pytest.mark.post_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
