@@ -28,7 +28,6 @@ class DynamoFrontendProcess(BaseDynamoFrontendProcess):
             # health check can inject extra requests and cause intermittent failures.
             "DYN_HEALTH_CHECK_ENABLED": "false",
         }
-
         super().__init__(
             request,
             frontend_port=0,  # allocate a free port (xdist-safe)

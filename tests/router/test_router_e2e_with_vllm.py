@@ -39,7 +39,6 @@ pytestmark = [
     pytest.mark.model(MODEL_NAME),
 ]
 SPEEDUP_RATIO = 10.0
-NUM_REQUESTS = 10
 
 BLOCK_SIZE = get_default_vllm_block_size()
 

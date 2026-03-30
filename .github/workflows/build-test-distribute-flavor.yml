@@ -179,6 +179,35 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
         with:
           lfs: true
+      - name: Compute compliance arches
+        id: compliance-arches
+        shell: bash
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          # Convert comma-separated Docker platform string to JSON array
+          # "linux/amd64,linux/arm64" -> ["linux/amd64","linux/arm64"]
+          # "linux/amd64"             -> ["linux/amd64"]
+          JSON=$(printf '%s\n' ${PLATFORM//,/ } | jq -Rsc '[splits("\n") | select(length>0)]')
+          echo "arches=${JSON}" >> $GITHUB_OUTPUT
+      - name: Compute test runners
+        id: test-runners
+        shell: bash
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          DEVICE="${{ inputs.device }}"
+          # Emit a JSON array of {arch, runner} objects for platforms actually being built
+          # "linux/amd64,linux/arm64" -> both runners
+          # "linux/amd64"             -> amd64 runner only (covers EFA and other single-arch)
+          # "linux/arm64"             -> arm64 runner only
+          if [[ "$DEVICE" == "xpu" ]]; then
+            echo 'runners=[{"arch":"amd64","runner":"xpu"}]' >> $GITHUB_OUTPUT
+          elif [[ "$PLATFORM" == *"amd64"* && "$PLATFORM" == *"arm64"* ]]; then
+            echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"},{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
+          elif [[ "$PLATFORM" == *"arm64"* ]]; then
+            echo 'runners=[{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
+          else
+            echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"}]' >> $GITHUB_OUTPUT
+          fi
       - name: Build
         id: build
         uses: ./.github/actions/build-flavor
@@ -290,35 +319,6 @@ jobs:
             echo "✅ Sanity check passed"
           fi
       
-      - name: Compute compliance arches
-        id: compliance-arches
-        shell: bash
-        run: |
-          PLATFORM="${{ inputs.platform }}"
-          # Convert comma-separated Docker platform string to JSON array
-          # "linux/amd64,linux/arm64" -> ["linux/amd64","linux/arm64"]
-          # "linux/amd64"             -> ["linux/amd64"]
-          JSON=$(printf '%s\n' ${PLATFORM//,/ } | jq -Rsc '[splits("\n") | select(length>0)]')
-          echo "arches=${JSON}" >> $GITHUB_OUTPUT
-      - name: Compute test runners
-        id: test-runners
-        shell: bash
-        run: |
-          PLATFORM="${{ inputs.platform }}"
-          DEVICE="${{ inputs.device }}"
-          # Emit a JSON array of {arch, runner} objects for platforms actually being built
-          # "linux/amd64,linux/arm64" -> both runners
-          # "linux/amd64"             -> amd64 runner only (covers EFA and other single-arch)
-          # "linux/arm64"             -> arm64 runner only
-          if [[ "$DEVICE" == "xpu" ]]; then
-            echo 'runners=[{"arch":"amd64","runner":"xpu"}]' >> $GITHUB_OUTPUT
-          elif [[ "$PLATFORM" == *"amd64"* && "$PLATFORM" == *"arm64"* ]]; then
-            echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"},{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
-          elif [[ "$PLATFORM" == *"arm64"* ]]; then
-            echo 'runners=[{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
-          else
-            echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"}]' >> $GITHUB_OUTPUT
-          fi
       # Run CPU-only tests first (parallelized for speed)
       # These are unit tests marked with gpu_0 that don't require GPU hardware
       - name: Run CPU-only tests (parallelized)
