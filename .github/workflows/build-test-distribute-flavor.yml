@@ -7,7 +7,7 @@ on:
   workflow_call:
     inputs:
       framework:
-        description: 'Framework name (vllm, sglang, trtllm)'
+        description: 'Framework name (e.g. dynamo, vllm, sglang, trtllm)'
         required: true
         type: string
       device:
@@ -15,6 +15,11 @@ on:
         required: false
         type: string
         default: 'cuda'
+      builder_flavor:
+        description: 'Optional BuildKit routing flavor override (vllm, sglang, trtllm, general)'
+        required: false
+        type: string
+        default: ''
       target:
         description: 'Target stage for Docker rendering'
         required: true
@@ -25,8 +30,14 @@ on:
         type: string
       cuda_version:
         description: 'CUDA version to build (e.g., 12.9, 13.0)'
-        required: true
+        required: false
         type: string
+        default: ''
+      cpu_only:
+        description: 'Build and test this target as a CPU-only image variant'
+        required: false
+        type: boolean
+        default: false
       build_timeout_minutes:
         description: 'Timeout in minutes for the build step'
         required: false
@@ -142,6 +153,11 @@ on:
         required: false
         type: string
         default: ''
+      fresh_builder:
+        description: 'Always create a fresh K8s BuildKit builder (skip remote worker routing)'
+        required: false
+        type: boolean
+        default: false
     secrets:
       AWS_DEFAULT_REGION:
         required: false
@@ -169,9 +185,13 @@ jobs:
     if: inputs.build_image
     name: Build ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
     runs-on: ${{ inputs.device == 'xpu' && 'xpu' || 'prod-builder-v3' }}
+    name: Build ${{ inputs.cpu_only && 'cpu' || format('cuda{0}', inputs.cuda_version) }}
+    timeout-minutes: ${{ inputs.build_timeout_minutes }}
     outputs:
       target_tag_plain: ${{ steps.build.outputs.target_tag_plain }}
       test_tag_plain: ${{ steps.build.outputs.test_tag_plain }}
+      image_variant_label: ${{ steps.build.outputs.image_variant_label }}
+      image_tag_suffix: ${{ steps.build.outputs.image_tag_suffix }}
       compliance_arches: ${{ steps.compliance-arches.outputs.arches }}
       test_runners: ${{ steps.test-runners.outputs.runners }}
     env:
@@ -216,9 +236,11 @@ jobs:
         with:
           framework: ${{ inputs.framework }}
           device: ${{ inputs.device }}
+          builder_flavor: ${{ inputs.builder_flavor }}
           target: ${{ inputs.target }}
           platform: ${{ inputs.platform }}
           cuda_version: ${{ inputs.cuda_version }}
+          cpu_only: ${{ inputs.cpu_only }}
           builder_name: ${{ inputs.builder_name }}
           aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
           aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -235,6 +257,7 @@ jobs:
           no_load: ${{ inputs.no_load }}
           no_cache: ${{ inputs.no_cache }}
           make_efa: ${{ inputs.make_efa }}
+          fresh_builder: ${{ inputs.fresh_builder }}
           extra_tags: ${{ inputs.extra_tags }}
           show_summary: ${{ inputs.push_image && inputs.show_summary }}
 
@@ -248,7 +271,7 @@ jobs:
         ( inputs.run_cpu_only_tests || inputs.run_single_gpu_tests || inputs.run_single_xpu_tests ) &&
         inputs.build_image
     needs: [build]
-    name: Test ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
+    name: Test ${{ inputs.cpu_only && 'cpu' || inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }} (${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
@@ -313,9 +336,13 @@ jobs:
           # Run the sanity check script inside the container
           # The script is located in /workspace/deploy/sanity_check.py in runtime containers
           export WORKSPACE=/workspace
+          SANITY_FLAGS="--runtime-check --no-gpu-check"
+          if [[ "${{ inputs.target }}" == "planner" ]]; then
+            SANITY_FLAGS="${SANITY_FLAGS} --no-framework-check"
+          fi
 
           set +e
-          docker run --rm "${{ steps.calculate-target-tag.outputs.runtime_image }}" python ${WORKSPACE}/deploy/sanity_check.py --runtime-check --no-gpu-check
+          docker run --rm "${{ steps.calculate-target-tag.outputs.runtime_image }}" python ${WORKSPACE}/deploy/sanity_check.py ${SANITY_FLAGS}
           SANITY_CHECK_EXIT_CODE=$?
           set -e
           if [ ${SANITY_CHECK_EXIT_CODE} -ne 0 ]; then
@@ -383,7 +410,7 @@ jobs:
         inputs.build_image &&
         ( inputs.platform != 'linux/arm64' )
     needs: [build]
-    name: Multi-gpu test ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
+    name: Multi-gpu test ${{ inputs.cpu_only && 'cpu' || inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
     runs-on: prod-tester-amd-gpu-4-v1
     env:
       FRAMEWORK: ${{ inputs.framework }}
@@ -449,8 +476,12 @@ jobs:
   compliance:
     if: inputs.build_image && inputs.push_image && inputs.device != 'xpu'
     needs: [build]
-    name: Compliance ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
-    runs-on: ${{ inputs.platform == 'linux/amd64' && 'xpu' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.build.outputs.compliance_arches) }}
+    name: Compliance ${{ inputs.cpu_only && 'cpu' || inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}-${{ matrix.arch }}
+    runs-on: prod-builder-v3
     steps:
       - name: Calculate image URI
         id: images
@@ -473,9 +504,10 @@ jobs:
         uses: ./.github/actions/compliance-scan
         with:
           image: ${{ steps.images.outputs.runtime_image }}
-          artifact_name: compliance-${{ inputs.framework }}-${{ inputs.target }}${{ inputs.make_efa && '-efa' || '' }}-cuda${{ steps.images.outputs.cuda_major }}
-          arch: ${{ inputs.platform }}
+          artifact_name: compliance-${{ inputs.framework }}-${{ inputs.target }}${{ inputs.make_efa && '-efa' || '' }}-${{ steps.images.outputs.image_variant_label }}-${{ steps.images.outputs.arch_suffix }}
+          arch: ${{ matrix.arch }}
           framework: ${{ inputs.framework }}
+          target: ${{ inputs.target }}
           cuda_version: ${{ inputs.cuda_version }}
 
 
@@ -490,26 +522,13 @@ jobs:
       inputs.copy_to_acr &&
       needs.build.result == 'success' &&
       (needs.test.result == 'success' || needs.test.result == 'skipped')
-    name: copy-to-acr ${{ inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
-    runs-on: xpu
+    name: copy-to-acr ${{ inputs.cpu_only && 'cpu' || inputs.device == 'cuda' && format('cuda{0}', inputs.cuda_version) || inputs.device }}
+    runs-on: prod-default-small-v2
     outputs:
       target_tag_plain: ${{ needs.build.outputs.target_tag_plain }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
-
-      - name: Calculate target tag
-        id: calculate-target-tag
-        shell: bash
-        run: |
-          CUDA_VERSION_RAW=${{ inputs.cuda_version }}
-          CUDA_VERSION=${CUDA_VERSION_RAW%%.*}
-          TAG_SUFFIX="-${{ inputs.device }}"
-          if [ "${{ inputs.device }}" == "cuda" ]; then
-            TAG_SUFFIX="-cuda${CUDA_VERSION}"
-          fi
-          echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
-          echo "tag_suffix=${TAG_SUFFIX}" >> $GITHUB_OUTPUT
 
       - name: Copy image to target registry
         timeout-minutes: ${{ inputs.copy_timeout_minutes }}
