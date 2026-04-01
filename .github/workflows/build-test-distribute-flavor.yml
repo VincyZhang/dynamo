@@ -172,6 +172,8 @@ jobs:
     outputs:
       target_tag_plain: ${{ steps.build.outputs.target_tag_plain }}
       test_tag_plain: ${{ steps.build.outputs.test_tag_plain }}
+      compliance_arches: ${{ steps.compliance-arches.outputs.arches }}
+      test_runners: ${{ steps.test-runners.outputs.runners }}
     env:
       FRAMEWORK: ${{ inputs.framework }}
     steps:
@@ -250,9 +252,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - arch: amd64
-            runner: xpu
+        include: ${{ fromJson(needs.build.outputs.test_runners) }}
     runs-on: ${{ inputs.device == 'xpu' && 'xpu' || (matrix.arch == 'amd64' && 'prod-tester-amd-gpu-v1' || 'xpu') }}
     env:
       FRAMEWORK: ${{ inputs.framework }}
@@ -368,7 +368,6 @@ jobs:
           framework: ${{ inputs.framework }}
           test_type: "pre_merge_gpu"
           platform_arch: ${{ matrix.arch }}
-          enable_mypy: 'false' # already covered by CPU tests
           hf_token: ${{ secrets.HF_TOKEN }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
