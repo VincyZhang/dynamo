@@ -35,7 +35,6 @@ class DynamoFrontendProcess(BaseDynamoFrontendProcess):
     ):
         extra_env = {
             "DYN_LOG": "debug",
-            "DYN_REQUEST_PLANE": "tcp",
             "ETCD_ENDPOINTS": ",".join(etcd_endpoints),
         }
         # WARNING: terminate_all_matching_process_names=True is NOT pytest-xdist safe!

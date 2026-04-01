@@ -139,7 +139,7 @@ def send_completion_request(
 @pytest.mark.nightly
 @pytest.mark.timeout(160)  # 3x average (~50s)
 @pytest.mark.skip(reason="Flaky, temporarily disabled")
-def test_vllm_health_check_active(request):
+def test_vllm_health_check_active(request, runtime_services):
     """
     End-to-end test for worker fault tolerance with migration support.
 
