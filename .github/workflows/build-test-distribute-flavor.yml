@@ -250,7 +250,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.build.outputs.test_runners) }}
+        include:
+          - arch: amd64
+            runner: xpu
     runs-on: ${{ inputs.device == 'xpu' && 'xpu' || (matrix.arch == 'amd64' && 'prod-tester-amd-gpu-v1' || 'xpu') }}
     env:
       FRAMEWORK: ${{ inputs.framework }}
