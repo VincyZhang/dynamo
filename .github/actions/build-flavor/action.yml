@@ -145,6 +145,12 @@ runs:
           IMAGE_VARIANT_LABEL="cpu"
           IMAGE_TAG_SUFFIX="-cpu"
           BUILDER_CUDA_VERSION=""
+        elif [[ "${{ inputs.device }}" == "xpu" ]]; then
+          CUDA_VERSION_RAW=""
+          CUDA_VERSION=""
+          IMAGE_VARIANT_LABEL="xpu"
+          IMAGE_TAG_SUFFIX="-xpu"
+          BUILDER_CUDA_VERSION=""
         else
           CUDA_VERSION_RAW="${{ inputs.cuda_version }}"
           if [[ -z "$CUDA_VERSION_RAW" ]]; then
@@ -156,7 +162,6 @@ runs:
           IMAGE_TAG_SUFFIX="-cuda${CUDA_VERSION}"
           BUILDER_CUDA_VERSION="${CUDA_VERSION_RAW}"
         fi
-        DEVICE=${{ inputs.device }}
         REGISTRY=${{ inputs.registry }}
         EFA_SUFFIX=""
         if [ "${{ inputs.make_efa }}" == "true" ]; then
@@ -165,21 +170,13 @@ runs:
         TARGET_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}"
         TEST_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}-test"
         
-        # Device-aware tag suffix (cuda vs xpu vs cpu)
-        if [[ "${DEVICE}" == "cuda" ]]; then
-          DEVICE_SUFFIX="cuda${CUDA_VERSION}"
-        else
-          DEVICE_SUFFIX="${DEVICE}"
-        fi
-        
-        DEFAULT_TARGET_IMAGE_URI="${REGISTRY}/aiops/catalog/intel-vllm:${TARGET_TAG_PLAIN}-${DEVICE_SUFFIX}"
-        TEST_IMAGE_URI="${REGISTRY}/aiops/catalog/intel-vllm:${TEST_TAG_PLAIN}-${DEVICE_SUFFIX}"
+        DEFAULT_TARGET_IMAGE_URI="${REGISTRY}/aiops/catalog/intel-vllm:${TARGET_TAG_PLAIN}${IMAGE_TAG_SUFFIX}"
+        TEST_IMAGE_URI="${REGISTRY}/aiops/catalog/intel-vllm:${TEST_TAG_PLAIN}${IMAGE_TAG_SUFFIX}"
         echo "default_target_image_uri=${DEFAULT_TARGET_IMAGE_URI}" >> $GITHUB_OUTPUT
         echo "test_image_uri=${TEST_IMAGE_URI}" >> $GITHUB_OUTPUT
         echo "target_tag_plain=${TARGET_TAG_PLAIN}" >> $GITHUB_OUTPUT
         echo "test_tag_plain=${TEST_TAG_PLAIN}" >> $GITHUB_OUTPUT
         echo "cuda_version_plain=${CUDA_VERSION}" >> $GITHUB_OUTPUT
-        echo "device_suffix=${DEVICE_SUFFIX}" >> $GITHUB_OUTPUT
         echo "effective_cuda_version=${CUDA_VERSION_RAW}" >> $GITHUB_OUTPUT
         echo "builder_cuda_version=${BUILDER_CUDA_VERSION}" >> $GITHUB_OUTPUT
         echo "image_variant_label=${IMAGE_VARIANT_LABEL}" >> $GITHUB_OUTPUT
@@ -197,8 +194,6 @@ runs:
       shell: bash
       env:
         EXTRA_TAGS: ${{ inputs.extra_tags }}
-        CUDA_VERSION: ${{ inputs.cuda_version }}
-        DEVICE: ${{ inputs.device }}
         REGISTRY: ${{ inputs.registry }}
         IMAGE_TAG_SUFFIX: ${{ steps.calculate-target-tag.outputs.image_tag_suffix }}
       run: |
@@ -206,18 +201,11 @@ runs:
         ACR_REGISTRY="${{ inputs.azure_acr_hostname }}"
         AMR_REGISTRY="${REGISTRY}"
         
-        # Device-aware tag suffix (cuda vs xpu vs cpu)
-        if [[ "${DEVICE}" == "cuda" ]]; then
-          DEVICE_SUFFIX="cuda${CUDA_VERSION_MAJOR}"
-        else
-          DEVICE_SUFFIX="${DEVICE}"
-        fi
-        
         RESULT=""
         if [ -n "$EXTRA_TAGS" ]; then
           while IFS= read -r tag; do
             if [ -n "$tag" ]; then
-              RESULT+="${AMR_REGISTRY}/aiops/catalog/intel-vllm:${tag}-${DEVICE_SUFFIX}"$'\n'
+              RESULT+="${AMR_REGISTRY}/aiops/catalog/intel-vllm:${tag}${IMAGE_TAG_SUFFIX}"$'\n'
             fi
           done <<< "$EXTRA_TAGS"
         fi
@@ -297,17 +285,9 @@ runs:
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
-        DEVICE: ${{ inputs.device }}
+        IMAGE_TAG_SUFFIX: ${{ steps.calculate-target-tag.outputs.image_tag_suffix }}
       run: |
-        DEVICE_SUFFIX=""
-        if [[ "${DEVICE}" == "cuda" ]]; then
-          CUDA_MAJOR=${{ steps.calculate-target-tag.outputs.cuda_version_plain }}
-          DEVICE_SUFFIX="-cuda${CUDA_MAJOR}"
-        else
-          DEVICE_SUFFIX="-${DEVICE}"
-        fi
-        
-        CACHE_TAG="test-${{ inputs.framework }}${DEVICE_SUFFIX}-cache"
+        CACHE_TAG="test-${{ inputs.framework }}${IMAGE_TAG_SUFFIX}-cache"
         CACHE_ARGS=""
 
         add_cache_from_if_exists() {
