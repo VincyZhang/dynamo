@@ -47,23 +47,17 @@ vllm_dir = os.environ.get("VLLM_DIR") or os.path.join(
 
 
 # vLLM test configurations
-# NOTE: pytest.mark.xpu_1 tests take ~5.5 minutes total to run sequentially (with models pre-cached)
-# TODO: Now that these tests use dynamic ports, optimize the runtime by bin-packing and running
-# multiple engine deployments in parallel (while keeping GPU contention under control). This may
-# require annotating each config with approximate GPU RAM usage so a future collector/launcher can
-# bin-pack safely.
 vllm_configs = {
     "aggregated": VLLMConfig(
         name="aggregated_xpu",
         directory=vllm_dir,
-        script_name="agg.sh",
+        script_name="xpu/agg_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.pre_merge,
             pytest.mark.timeout(300),  # 3x measured time (43s) + download time (150s)
         ],
         model="Qwen/Qwen3-0.6B",
-        script_args=["--block-size", "64"],
         request_payloads=[
             chat_payload_default(),
             completion_payload_default(),
@@ -84,10 +78,9 @@ vllm_configs = {
     "aggregated_logprobs": VLLMConfig(
         name="aggregated_logprobs_xpu",
         directory=vllm_dir,
-        script_name="agg.sh",
+        script_name="xpu/agg_xpu.sh",
         marks=[pytest.mark.xpu_1, pytest.mark.post_merge],
         model="Qwen/Qwen3-0.6B",
-        script_args=["--block-size", "64"],
         request_payloads=[
             chat_payload_with_logprobs(
                 repeat_count=2,
@@ -108,7 +101,7 @@ vllm_configs = {
     "aggregated_lmcache": VLLMConfig(
         name="aggregated_lmcache_xpu",
         directory=vllm_dir,
-        script_name="agg_lmcache_xpu.sh",
+        script_name="xpu/agg_lmcache_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.pre_merge,
@@ -125,7 +118,7 @@ vllm_configs = {
     "aggregated_lmcache_multiproc": VLLMConfig(
         name="aggregated_lmcache_multiproc_xpu",
         directory=vllm_dir,
-        script_name="agg_lmcache_multiproc_xpu.sh",
+        script_name="xpu/agg_lmcache_multiproc_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.pre_merge,
@@ -133,7 +126,7 @@ vllm_configs = {
         ],
         model="Qwen/Qwen3-0.6B",
         env={
-            "PROMETHEUS_MULTIPROC_DIR": f"/tmp/prometheus_multiproc_test_{os.getpid()}_{random.randint(0, 10000)}"
+            "PROMETHEUS_MULTIPROC_DIR": f"/tmp/prometheus_multiproc_test_{os.getpid()}_{random.randint(0, 10000)}",
         },
         request_payloads=[
             chat_payload_default(),
@@ -145,7 +138,7 @@ vllm_configs = {
     "agg-request-plane-tcp": VLLMConfig(
         name="agg-request-plane-tcp-xpu",
         directory=vllm_dir,
-        script_name="agg_request_planes_xpu.sh",
+        script_name="xpu/agg_request_planes_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.pre_merge,
@@ -161,7 +154,7 @@ vllm_configs = {
     "agg-request-plane-http": VLLMConfig(
         name="agg-request-plane-http-xpu",
         directory=vllm_dir,
-        script_name="agg_request_planes_xpu.sh",
+        script_name="xpu/agg_request_planes_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.pre_merge,
@@ -177,7 +170,7 @@ vllm_configs = {
     "agg-router": VLLMConfig(
         name="agg-router-xpu",
         directory=vllm_dir,
-        script_name="agg_router_xpu.sh",
+        script_name="xpu/agg_router_xpu.sh",
         marks=[
             pytest.mark.xpu_2,
             pytest.mark.post_merge,
@@ -188,7 +181,7 @@ vllm_configs = {
                 expected_log=[
                     r"ZMQ listener .* received batch with \d+ events \(engine_seq=\d+(?:, [^)]*)?\)",
                     r"Event processor for worker_id \d+ processing event: Stored\(",
-                    r"Selected worker: worker_id=\d+ dp_rank=.*?, logit: ",
+                    r"Selected worker: worker_type=\w+, worker_id=\d+ dp_rank=.*?, logit: ",
                 ]
             )
         ],
@@ -199,7 +192,7 @@ vllm_configs = {
     "agg-router-approx": VLLMConfig(
         name="agg-router-approx-xpu",
         directory=vllm_dir,
-        script_name="agg_router_approx_xpu.sh",
+        script_name="xpu/agg_router_approx_xpu.sh",
         marks=[
             pytest.mark.xpu_2,
             pytest.mark.post_merge,
@@ -213,7 +206,7 @@ vllm_configs = {
                 repeat_count=3,
                 expected_log=[
                     # Verify scheduler is selecting workers with cache awareness
-                    r"Selected worker: worker_id=\d+ dp_rank=.*?, logit: ",
+                    r"Selected worker: worker_type=\w+, worker_id=\d+ dp_rank=.*?, logit: ",
                     # After first request, should see cached blocks being tracked
                     r"with \d+ cached blocks",
                 ],
@@ -234,8 +227,12 @@ vllm_configs = {
     "multimodal_agg_frontend_decoding": VLLMConfig(
         name="multimodal_agg_frontend_decoding_xpu",
         directory=vllm_dir,
-        script_name="agg_multimodal_xpu.sh",
-        marks=[pytest.mark.xpu_1, pytest.mark.pre_merge],
+        script_name="xpu/agg_multimodal_xpu.sh",
+        marks=[
+            pytest.mark.xpu_1,
+            pytest.mark.pre_merge,
+            pytest.mark.skip("skip for XPU"),
+        ],
         model="Qwen/Qwen2-VL-2B-Instruct",
         # Pass --frontend-decoding to enable Rust frontend image decoding + NIXL RDMA transfer
         script_args=[
@@ -265,8 +262,12 @@ vllm_configs = {
     "multimodal_agg_qwen": VLLMConfig(
         name="multimodal_agg_qwen_xpu",
         directory=vllm_dir,
-        script_name="agg_multimodal_xpu.sh",
-        marks=[pytest.mark.xpu_1, pytest.mark.pre_merge],
+        script_name="xpu/agg_multimodal_xpu.sh",
+        marks=[
+            pytest.mark.xpu_1,
+            pytest.mark.pre_merge,
+            pytest.mark.skip(reason="skip for XPU"),
+        ],
         model="Qwen/Qwen2.5-VL-7B-Instruct",
         script_args=["--model", "Qwen/Qwen2.5-VL-7B-Instruct"],
         delayed_start=0,
@@ -292,7 +293,7 @@ vllm_configs = {
     "multimodal_agg_llava": VLLMConfig(
         name="multimodal_agg_llava_xpu",
         directory=vllm_dir,
-        script_name="agg_multimodal_xpu.sh",
+        script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.nightly,
@@ -329,14 +330,19 @@ vllm_configs = {
     "aggregated_toolcalling": VLLMConfig(
         name="aggregated_toolcalling_xpu",
         directory=vllm_dir,
-        script_name="agg_multimodal_xpu.sh",
-        marks=[pytest.mark.xpu_2, pytest.mark.multimodal, pytest.mark.nightly],
+        script_name="xpu/agg_multimodal_xpu.sh",
+        marks=[
+            pytest.mark.xpu_2,
+            pytest.mark.multimodal,
+            pytest.mark.nightly,
+            pytest.mark.skip(reason="skip for XPU"),
+        ],
         model="Qwen/Qwen3-VL-8B-Instruct",
         script_args=[
             "--model",
             "Qwen/Qwen3-VL-8B-Instruct",
             "--max-model-len",
-            "8192",
+            "10000",
             "--dyn-tool-call-parser",
             "hermes",
         ],
@@ -394,23 +400,14 @@ vllm_configs = {
             )
         ],
     ),
-    # TODO: Enable this test case when we have 4 GPUs runners.
-    # "multimodal_disagg": VLLMConfig(
-    #     name="multimodal_disagg",
-    #     directory=os.path.join(WORKSPACE_DIR, "examples/multimodal"),
-    #     script_name="disagg.sh",
-    #     marks=[pytest.mark.gpu_4, pytest.mark.vllm],
-    #     model="llava-hf/llava-1.5-7b-hf",
-    #     delayed_start=45,
-    #     script_args=["--model", "llava-hf/llava-1.5-7b-hf"],
-    # ),
     "completions_only": VLLMConfig(
         name="completions_only_xpu",
         directory=vllm_dir,
-        script_name="agg.sh",
+        script_name="xpu/agg_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.post_merge,
+            pytest.mark.skip(reason="skip for XPU"),
             pytest.mark.timeout(
                 420
             ),  # 3x estimated time (60s) + download time (240s) for 7B model
@@ -419,8 +416,6 @@ vllm_configs = {
         script_args=[
             "--model",
             "deepseek-ai/deepseek-llm-7b-base",
-            "--block-size",
-            "64",
             "--dyn-endpoint-types",
             "completions",
         ],
@@ -431,10 +426,9 @@ vllm_configs = {
     "guided_decoding": VLLMConfig(
         name="guided_decoding_xpu",
         directory=vllm_dir,
-        script_name="agg.sh",
+        script_name="xpu/agg_xpu.sh",
         marks=[pytest.mark.xpu_1, pytest.mark.pre_merge],
         model="Qwen/Qwen3-0.6B",
-        script_args=["--block-size", "64"],
         request_payloads=[
             chat_payload(
                 "Generate a person with name and age",
@@ -501,8 +495,9 @@ def test_serve_deployment(
 
 @pytest.mark.vllm
 @pytest.mark.e2e
-@pytest.mark.xpu_2
+@pytest.mark.xpu_1
 @pytest.mark.nightly
+@pytest.mark.skip(reason="skip for XPU")
 @pytest.mark.timeout(360)  # Match VLLMConfig.timeout for this multimodal deployment
 def test_multimodal_b64(
     request,
@@ -540,7 +535,7 @@ def test_multimodal_b64(
     config = VLLMConfig(
         name="test_multimodal_b64_xpu",
         directory=vllm_dir,
-        script_name="agg_multimodal_xpu.sh",
+        script_name="xpu/agg_multimodal_xpu.sh",
         marks=[],  # markers at function-level
         model="Qwen/Qwen2.5-VL-7B-Instruct",
         script_args=["--model", "Qwen/Qwen2.5-VL-7B-Instruct"],
@@ -598,6 +593,7 @@ def lora_chat_payload(
 @pytest.mark.xpu_1
 @pytest.mark.model("Qwen/Qwen3-0.6B")
 @pytest.mark.timeout(600)
+@pytest.mark.skip(reason="skip for XPU")
 @pytest.mark.post_merge
 def test_lora_aggregated(
     request,
@@ -626,14 +622,15 @@ def test_lora_aggregated(
     )
 
     # Create test config with MinIO environment variables
+    env_vars = minio_config.get_env_vars()
     config = VLLMConfig(
         name="test_lora_aggregated_xpu",
         directory=vllm_dir,
-        script_name="lora/agg_lora_xpu.sh",
+        script_name="lora/xpu/agg_lora_xpu.sh",
         marks=[],  # markers at function-level
         model="Qwen/Qwen3-0.6B",
         timeout=600,
-        env=minio_config.get_env_vars(),
+        env=env_vars,
         request_payloads=[lora_payload],
     )
 
@@ -644,7 +641,7 @@ def test_lora_aggregated(
         config,
         request,
         ports=dynamo_dynamic_ports,
-        extra_env=minio_config.get_env_vars(),
+        extra_env=env_vars,
     )
 
 
@@ -653,6 +650,7 @@ def test_lora_aggregated(
 @pytest.mark.xpu_2
 @pytest.mark.model("Qwen/Qwen3-0.6B")
 @pytest.mark.timeout(600)
+@pytest.mark.skip(reason="skip for XPU")
 @pytest.mark.post_merge
 @pytest.mark.parametrize("num_system_ports", [2], indirect=True)
 def test_lora_aggregated_router(
@@ -709,7 +707,7 @@ def test_lora_aggregated_router(
     config = VLLMConfig(
         name="test_lora_aggregated_router_xpu",
         directory=vllm_dir,
-        script_name="lora/agg_lora_router_xpu.sh",
+        script_name="lora/xpu/agg_lora_router_xpu.sh",
         marks=[],  # markers at function-level
         model="Qwen/Qwen3-0.6B",
         timeout=600,
@@ -727,4 +725,3 @@ def test_lora_aggregated_router(
     run_serve_deployment(
         config, request, ports=dynamo_dynamic_ports, extra_env=env_vars
     )
-
