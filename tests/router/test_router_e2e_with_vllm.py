@@ -20,7 +20,11 @@ from tests.router.e2e_harness import (
 )
 from tests.router.helper import generate_random_suffix
 from tests.utils.constants import DefaultPort
-from tests.utils.device import get_device_visibility_env_var
+from tests.utils.device import (
+    get_default_vllm_block_size,
+    get_device_visibility_env_var,
+    get_gpu_memory_utilization,
+)
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.port_utils import allocate_ports, deallocate_ports
 
@@ -35,21 +39,22 @@ pytestmark = [
     pytest.mark.model(MODEL_NAME),
 ]
 SPEEDUP_RATIO = 10.0
-BLOCK_SIZE = 16
+BLOCK_SIZE = get_default_vllm_block_size()  # 64 on XPU (fmha requirement), 16 on CUDA
+_GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=True)
 
 # Shared vLLM configuration for all tests
 # gpu_memory_utilization limits actual VRAM allocation (required for multi-worker on same GPU)
 VLLM_ARGS: Dict[str, Any] = {
     "block_size": BLOCK_SIZE,
     "model": MODEL_NAME,
-    "gpu_memory_utilization": 0.4,  # Limit VRAM allocation per worker
+    "gpu_memory_utilization": _GPU_MEM_UTIL,
     "max_model_len": 1024,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }
 
 VLLM_ARGS_NO_BLOCK_SIZE: Dict[str, Any] = {
     "model": MODEL_NAME,
-    "gpu_memory_utilization": 0.4,  # Limit VRAM allocation per worker
+    "gpu_memory_utilization": _GPU_MEM_UTIL,
     "max_model_len": 1024,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }

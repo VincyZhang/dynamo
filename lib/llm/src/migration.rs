@@ -95,6 +95,8 @@ impl
 
 struct RetryManager {
     context: Arc<dyn AsyncEngineContext>,
+    base_request_id: String,
+    stream_attempt: u32,
     request: PreprocessedRequest,
     next_generate: ServerStreamingEngine<PreprocessedRequest, Annotated<BackendOutput>>,
     next_stream: Option<ManyOut<Annotated<BackendOutput>>>,
@@ -114,6 +116,8 @@ impl RetryManager {
     ) -> Result<Self> {
         let mut slf = Self {
             context,
+            base_request_id: String::new(),
+            stream_attempt: 0,
             request: preprocessed_request,
             next_generate: next,
             next_stream: None,
@@ -121,6 +125,7 @@ impl RetryManager {
             model_name,
             metrics,
         };
+        slf.base_request_id = slf.context.id().to_string();
         slf.new_stream().await?;
         Ok(slf)
     }
@@ -158,7 +163,17 @@ impl RetryManager {
         let mut response_stream: Option<Result<ManyOut<Annotated<BackendOutput>>>> = None;
         while self.retries_left > 0 {
             self.retries_left -= 1;
-            let request = Context::with_id(self.request.clone(), self.context.id().to_string());
+            // Recreating the backend stream with the same request_id can trip vLLM
+            // KV-cache assertions if old request state is still retained briefly.
+            // Keep the first attempt ID unchanged for compatibility, and suffix retries.
+            let request_id = if self.stream_attempt == 0 {
+                self.base_request_id.clone()
+            } else {
+                format!("{}-m{}", self.base_request_id, self.stream_attempt)
+            };
+            self.stream_attempt += 1;
+
+            let request = Context::with_id(self.request.clone(), request_id);
             self.context.link_child(request.context());
             if self.context.is_stopped() || self.context.is_killed() {
                 tracing::debug!("Abort creating new stream after context is stopped or killed");
