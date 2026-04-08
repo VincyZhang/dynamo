@@ -236,7 +236,7 @@ def test_request_cancellation_vllm_aggregated(
     """
 
     def wait_for_stable_frontend(
-        frontend_port: int, stable_seconds: int = 1, timeout_seconds: int = 60
+        frontend_port: int, stable_seconds: int = 3, timeout_seconds: int = 60
     ):
         """Wait for frontend to reach stable state without errors."""
         import requests
@@ -338,7 +338,7 @@ def test_request_cancellation_vllm_aggregated(
                 )
 
 
-@pytest.mark.timeout(150)  # 3x average
+@pytest.mark.timeout(360)  # exceed worker startup timeout (300s) with test-body headroom
 @pytest.mark.nightly
 @pytest.mark.gpu_2
 @pytest.mark.xpu_2
@@ -438,7 +438,7 @@ def test_request_cancellation_vllm_decode_cancel(
                 )
 
 
-@pytest.mark.timeout(150)  # 3x average
+@pytest.mark.timeout(360)  # exceed worker startup timeout (300s) with test-body headroom
 @pytest.mark.nightly
 @pytest.mark.gpu_2
 @pytest.mark.xpu_2

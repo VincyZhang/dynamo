@@ -29,6 +29,7 @@ from tests.router.helper import (
 )
 from tests.utils.constants import DefaultPort
 from tests.utils.device import (
+    build_nixl_kv_transfer_config_json,
     get_default_vllm_block_size,
     get_device_visibility_env_var,
     get_gpu_memory_utilization,
@@ -45,7 +46,6 @@ pytestmark = [
     pytest.mark.router,
     pytest.mark.vllm,
     pytest.mark.model(MODEL_NAME),
-    pytest.mark.skip(reason="Temporarily ignored on add_xpu_ci"),
 ]
 SPEEDUP_RATIO = 10.0
 BLOCK_SIZE = get_default_vllm_block_size()  # 64 on XPU (fmha requirement), 16 on CUDA
@@ -207,7 +207,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
                 command.extend(
                     [
                         "--kv-transfer-config",
-                        '{"kv_connector":"NixlConnector","kv_role":"kv_both"}',
+                        build_nixl_kv_transfer_config_json(),
                     ]
                 )
 
@@ -601,6 +601,7 @@ def test_router_decisions_vllm_dp(
 
 
 @pytest.mark.gpu_2
+@pytest.mark.xpu_2
 @pytest.mark.nightly
 @pytest.mark.timeout(600)
 @pytest.mark.parametrize("request_plane", ["nats"], indirect=True)
