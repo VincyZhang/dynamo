@@ -102,6 +102,12 @@ inputs:
     required: false
     default: 'false'
 outputs:
+  default_target_image_uri:
+    description: 'Full runtime image URI'
+    value: ${{ steps.calculate-target-tag.outputs.default_target_image_uri }}
+  test_image_uri:
+    description: 'Full test image URI'
+    value: ${{ steps.calculate-target-tag.outputs.test_image_uri }}
   target_tag_plain:
     description: 'Target tag (without registry prefix)'
     value: ${{ steps.calculate-target-tag.outputs.target_tag_plain }}
