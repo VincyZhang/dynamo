@@ -187,10 +187,7 @@ jobs:
     runs-on: ${{ inputs.device == 'xpu' && 'xpu' || 'prod-builder-v3' }}
     timeout-minutes: ${{ inputs.build_timeout_minutes }}
     outputs:
-      runtime_image_uri: ${{ steps.build.outputs.default_target_image_uri }}
-      test_image_uri: ${{ steps.build.outputs.test_image_uri }}
       target_tag_plain: ${{ steps.build.outputs.target_tag_plain }}
-      test_tag_plain: ${{ steps.build.outputs.test_tag_plain }}
       image_variant_label: ${{ steps.build.outputs.image_variant_label }}
       image_tag_suffix: ${{ steps.build.outputs.image_tag_suffix }}
       compliance_arches: ${{ steps.compliance-arches.outputs.arches }}
@@ -287,8 +284,8 @@ jobs:
         id: calculate-target-tag
         shell: bash
         run: |
-          RUNTIME_IMAGE="${{ needs.build.outputs.runtime_image_uri }}"
-          TEST_IMAGE="${{ needs.build.outputs.test_image_uri }}"
+          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
+          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}-test${{ needs.build.outputs.image_tag_suffix }}
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       #- name: Docker Login
@@ -380,9 +377,9 @@ jobs:
         id: calculate-target-tag
         shell: bash
         run: |
-          RUNTIME_IMAGE="${{ needs.build.outputs.runtime_image_uri }}"
+          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
-          TEST_IMAGE="${{ needs.build.outputs.test_image_uri }}"
+          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}-test${{ needs.build.outputs.image_tag_suffix }}
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       #- name: Docker Login
       #  uses: ./.github/actions/docker-login
@@ -446,7 +443,7 @@ jobs:
         shell: bash
         run: |
           echo "image_variant_label=${{ needs.build.outputs.image_variant_label }}" >> $GITHUB_OUTPUT
-          RUNTIME_IMAGE="${{ needs.build.outputs.runtime_image_uri }}"
+          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           # Sanitize arch for artifact name: linux/amd64 -> amd64 (artifact names can't contain /)
           ARCH="${{ matrix.arch }}"
