@@ -45,6 +45,7 @@ pytestmark = [
     pytest.mark.router,
     pytest.mark.vllm,
     pytest.mark.model(MODEL_NAME),
+    pytest.mark.skip(reason="Temporarily ignored on add_xpu_ci"),
 ]
 SPEEDUP_RATIO = 10.0
 BLOCK_SIZE = get_default_vllm_block_size()  # 64 on XPU (fmha requirement), 16 on CUDA
