@@ -86,7 +86,6 @@ jobs:
 
   operator:
     needs: changed-files
-    #if: needs.changed-files.outputs.operator == 'true'
     if: false
     name: Operator
     runs-on: xpu

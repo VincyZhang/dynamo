@@ -121,14 +121,14 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Docker Login
-      uses: ./.github/actions/docker-login
-      with:
-        aws_default_region: ${{ inputs.aws_default_region }}
-        aws_account_id: ${{ inputs.aws_account_id }}
-        azure_acr_hostname: ${{ inputs.azure_acr_hostname }}
-        azure_acr_user: ${{ inputs.azure_acr_user }}
-        azure_acr_password: ${{ inputs.azure_acr_password }}
+    #- name: Docker Login
+    #  uses: ./.github/actions/docker-login
+    #  with:
+    #    aws_default_region: ${{ inputs.aws_default_region }}
+    #    aws_account_id: ${{ inputs.aws_account_id }}
+    #    azure_acr_hostname: ${{ inputs.azure_acr_hostname }}
+    #    azure_acr_user: ${{ inputs.azure_acr_user }}
+    #    azure_acr_password: ${{ inputs.azure_acr_password }}
     - name: Calculate target tag
       id: calculate-target-tag
       shell: bash

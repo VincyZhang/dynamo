@@ -289,25 +289,25 @@ jobs:
           TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.test_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
-      - name: Docker Login
-        uses: ./.github/actions/docker-login
-        with:
-          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
-          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-      - name: Pull relevant images
-        shell: bash
-        run: |
-          source ./.github/scripts/retry_docker.sh
-          start_time=$(date +%s)
-          retry_pull ${{ steps.calculate-target-tag.outputs.runtime_image }}
-          retry_pull ${{ steps.calculate-target-tag.outputs.test_image }}
-          retry_pull quay.io/minio/minio
-          end_time=$(date +%s)
-          duration=$((end_time - start_time))
-          echo "⏱️ Image pull duration: ${duration}s"
+      #- name: Docker Login
+      #  uses: ./.github/actions/docker-login
+      #  with:
+      #    aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+      #    aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      #    azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+      #    azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+      #    azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+      #- name: Pull relevant images
+      #  shell: bash
+      #  run: |
+      #    source ./.github/scripts/retry_docker.sh
+      #    start_time=$(date +%s)
+      #    retry_pull ${{ steps.calculate-target-tag.outputs.runtime_image }}
+      #    retry_pull ${{ steps.calculate-target-tag.outputs.test_image }}
+      #    retry_pull quay.io/minio/minio
+      #    end_time=$(date +%s)
+      #    duration=$((end_time - start_time))
+      #    echo "⏱️ Image pull duration: ${duration}s"
 
       # Run CPU-only tests first (parallelized for speed)
       # These are unit tests marked with gpu_0 that don't require GPU hardware
@@ -382,24 +382,24 @@ jobs:
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.test_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
-      - name: Docker Login
-        uses: ./.github/actions/docker-login
-        with:
-          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
-          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-      - name: Pull relevant images
-        shell: bash
-        run: |
-          source ./.github/scripts/retry_docker.sh
-          start_time=$(date +%s)
-          retry_pull ${{ steps.calculate-target-tag.outputs.test_image }}
-          retry_pull quay.io/minio/minio
-          end_time=$(date +%s)
-          duration=$((end_time - start_time))
-          echo "⏱️ Image pull duration: ${duration}s"
+      #- name: Docker Login
+      #  uses: ./.github/actions/docker-login
+      #  with:
+      #    aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+      #    aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      #    azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+      #    azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+      #    azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+      #- name: Pull relevant images
+      #  shell: bash
+      #  run: |
+      #    source ./.github/scripts/retry_docker.sh
+      #    start_time=$(date +%s)
+      #    retry_pull ${{ steps.calculate-target-tag.outputs.test_image }}
+      #    retry_pull quay.io/minio/minio
+      #    end_time=$(date +%s)
+      #    duration=$((end_time - start_time))
+      #    echo "⏱️ Image pull duration: ${duration}s"
       # Run GPU tests sequentially (only on amd64 runners with GPU)
       # These are e2e tests marked with gpu_2 or gpu_4 that require GPU hardware
       - name: Run GPU tests (sequential)
@@ -431,14 +431,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
-      - name: Docker Login
-        uses: ./.github/actions/docker-login
-        with:
-          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
-          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+      #- name: Docker Login
+      #  uses: ./.github/actions/docker-login
+      #  with:
+      #    aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+      #    aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      #    azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+      #    azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+      #    azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
       - name: Calculate image URI and arch suffix
         id: images
         shell: bash
@@ -479,19 +479,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
 
-      - name: Copy image to target registry
-        timeout-minutes: ${{ inputs.copy_timeout_minutes }}
-        uses: ./.github/actions/skopeo-copy
-        with:
-          source_registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
-          source_image: ai-dynamo/dynamo
-          source_tag: ${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
-          target_registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          target_image: ai-dynamo/dynamo
-          target_tag: ${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
-          source_aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
-          source_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          target_azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          target_azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-          target_azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-          override_arch: amd64 # We are using AMD64 images only on the rest of the clusters.
+      #- name: Copy image to target registry
+      #  timeout-minutes: ${{ inputs.copy_timeout_minutes }}
+      #  uses: ./.github/actions/skopeo-copy
+      #  with:
+      #    source_registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+      #    source_image: ai-dynamo/dynamo
+      #    source_tag: ${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
+      #    target_registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
+      #    target_image: ai-dynamo/dynamo
+      #    target_tag: ${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
+      #    source_aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+      #    source_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      #    target_azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+      #    target_azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+      #    target_azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+      #    override_arch: amd64 # We are using AMD64 images only on the rest of the clusters.
