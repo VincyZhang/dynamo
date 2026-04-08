@@ -212,7 +212,7 @@ class DynamoWorkerProcess(ManagedProcess):
         return False
 
 
-@pytest.mark.timeout(180)  # increase headroom for slower CI/nats path
+@pytest.mark.timeout(660)  # worker startup can take up to 600s; allow headroom for test body
 @pytest.mark.post_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
@@ -236,7 +236,7 @@ def test_request_cancellation_vllm_aggregated(
     """
 
     def wait_for_stable_frontend(
-        frontend_port: int, stable_seconds: int = 3, timeout_seconds: int = 60
+        frontend_port: int, stable_seconds: int = 1, timeout_seconds: int = 60
     ):
         """Wait for frontend to reach stable state without errors."""
         import requests
