@@ -124,8 +124,7 @@ runs:
           PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
         else
           echo "🚀 Running pytest in normal mode"
-          # --durations=0: show ALL test/setup/teardown durations (0 = no limit)
-          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --durations=0 -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 -m \"${{ inputs.pytest_marks }}\""
 
           # Detect GPU availability and conditionally add GPU flags
           GPU_FLAGS=""
@@ -178,6 +177,10 @@ runs:
         if [[ -d /sys/class/infiniband_verbs ]]; then
           DOCKER_MOUNT_FLAGS+=( -v "/sys/class/infiniband_verbs:/sys/class/infiniband_verbs" )
         fi
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_FRAMEWORK=${{ inputs.framework }}")
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_PLATFORM=${{ inputs.platform_arch }}")
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_TYPE=${{ inputs.test_type }}")
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_WORKFLOW=${GITHUB_WORKFLOW}")
 
         # if [[ "${VLLM_TARGET_DEVICE}" == "xpu" && "${{ inputs.dry_run }}" != "true" ]]; then
         #   PREP_CMD='python -c "from tests.conftest import download_models; download_models(model_list=[\"Qwen/Qwen2-VL-2B-Instruct\",\"Qwen/Qwen2.5-VL-7B-Instruct\",\"TinyLlama/TinyLlama-1.1B-Chat-v1.0\",\"Qwen/Qwen3-0.6B\"])"'
@@ -287,8 +290,7 @@ runs:
 
           # Construct final command with xdist parallelization (-n) and other options
           # --dist=loadscope groups tests by module/class to prevent race conditions in stateful tests
-          # --durations=0: show ALL test/setup/teardown durations (0 = no limit)
-          PYTEST_CMD="pytest ${PARALLEL_OPTS} --dist=loadscope --continue-on-collection-errors -v --tb=short --log-cli-level=DEBUG --log-level=DEBUG --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --durations=0 -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest ${PARALLEL_OPTS} --dist=loadscope --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=10 -m \"${{ inputs.pytest_marks }}\""
         fi
 
         # Get absolute path for test-results directory and ensure it has proper permissions
@@ -312,6 +314,10 @@ runs:
         if [[ -e /dev/dri/renderD128 ]]; then
           DOCKER_EXTRA_FLAGS+=(--group-add "$(stat -c '%g' /dev/dri/renderD128)")
         fi
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_FRAMEWORK=${{ inputs.framework }}")
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_PLATFORM=${{ inputs.platform_arch }}")
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_TYPE=${{ inputs.test_type }}")
+        DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_WORKFLOW=${GITHUB_WORKFLOW}")
 
         DOCKER_MOUNT_FLAGS=()
         if [[ -d /dev/dri/by-path ]]; then
@@ -446,11 +452,19 @@ runs:
         docker ps -a --filter "name=test_" 2>/dev/null | tail -n +2 | wc -l | xargs echo "Total:"
 
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4 #v6
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       if: always()  # Always upload test results, even if tests failed
       continue-on-error: true
       with:
         name: test-results-${{ inputs.framework }}-${{ env.STR_TEST_TYPE }}-${{ env.PLATFORM_ARCH }}-${{ github.run_id }}-${{ job.check_run_id }}
         path: test-results/pytest_test_report_${{ inputs.framework }}_${{ env.STR_TEST_TYPE }}_${{ inputs.platform_arch }}_${{ github.run_id }}_${{ job.check_run_id }}.xml
         retention-days: 7
-        compression-level: 0
+
+    - name: Upload Allure Results
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      if: always()
+      with:
+        name: allure-results-${{ inputs.framework }}-${{ env.STR_TEST_TYPE }}-${{ env.PLATFORM_ARCH }}-${{ github.run_id }}-${{ job.check_run_id }}
+        path: test-results/allure-results/
+        retention-days: 7
+        if-no-files-found: ignore
