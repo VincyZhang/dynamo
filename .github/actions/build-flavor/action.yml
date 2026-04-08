@@ -269,7 +269,7 @@ runs:
           DYNAMO_COMMIT_SHA=${{ github.sha }}
           ${{ inputs.extra_build_args }}
     - name: Refresh BuildKit builder
-      if: ${{ inputs.target != 'dev' }}
+      if: ${{ inputs.target != 'dev' && inputs.device != 'xpu' }}
       uses: ./.github/actions/builder-refresher
       with:
         builder_name: ${{ inputs.builder_name }}
