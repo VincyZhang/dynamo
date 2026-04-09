@@ -30,8 +30,50 @@ spec:
       replicas: 1
       resources:
         limits:
-          gpu: "1"
+          gpu: "1"          # NVIDIA GPU
 ```
+
+> [!NOTE]
+> **Intel XPU users:** Intel XPU does not use `resources.limits.gpu`. Instead, use
+> Kubernetes [Dynamic Resource Allocation (DRA)](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/)
+> with a `ResourceClaimTemplate`. Replace the `resources` block with the following:
+>
+> **1. Create a `ResourceClaimTemplate` (once per namespace):**
+> ```yaml
+> apiVersion: resource.k8s.io/v1
+> kind: ResourceClaimTemplate
+> metadata:
+>   name: gpu-template
+> spec:
+>   spec:
+>     devices:
+>       requests:
+>         - name: gpu
+>           exactly:
+>             deviceClassName: gpu.intel.com
+>             count: 1
+> ```
+>
+> **2. Reference it in the worker service (instead of `resources.limits.gpu`):**
+> ```yaml
+> decode:
+>   componentType: worker
+>   replicas: 1
+>   extraPodSpec:
+>     resourceClaims:
+>       - name: gpu
+>         resourceClaimTemplateName: gpu-template
+>     mainContainer:
+>       resources:
+>         claims:
+>           - name: gpu
+>       env:
+>         - name: VLLM_TARGET_DEVICE
+>           value: xpu
+> ```
+>
+> For a complete working example, see
+> [`examples/backends/vllm/deploy/agg_xpu_dra.yaml`](../../examples/backends/vllm/deploy/agg_xpu_dra.yaml).
 
 **Key identifiers:**
 - **DGD name**: `sglang-agg`

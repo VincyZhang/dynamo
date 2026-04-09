@@ -542,7 +542,7 @@ spec:
       dynamoNamespace: my-app
       extraPodSpec:
         mainContainer:
-          image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:latest
+          image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:latest  # Use your XPU vLLM image for Intel XPU
 
     Worker:
       # This modelRef creates the link to DynamoModel
@@ -553,10 +553,10 @@ spec:
       replicas: 2
       resources:
         limits:
-          gpu: "1"
+          gpu: "1"          # NVIDIA GPU; for Intel XPU, use DRA ResourceClaimTemplate instead
       extraPodSpec:
         mainContainer:
-          image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:latest
+          image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:latest  # Use your XPU vLLM image for Intel XPU
           args:
             - --model
             - Qwen/Qwen3-0.6B
