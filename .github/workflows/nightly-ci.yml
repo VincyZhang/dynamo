@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  schedule:
-    - cron: '0 8 * * *' # Every day at 12:00 AM PST (08:00 UTC)
   workflow_dispatch:  # Allow manual triggering for testing
 
 permissions:
@@ -78,14 +76,12 @@ jobs:
   # ============================================================================
   vllm-xpu-pipeline:
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
-    needs: [create-fresh-builder]
     with:
       framework: vllm
       device: xpu
       target: runtime
-      fresh_builder: true
       platform: 'linux/amd64'
-      builder_name: ${{ needs.create-fresh-builder.outputs.builder_name }}
+      builder_name: 'unused-xpu-uses-runner-docker'
       build_timeout_minutes: 180
       run_cpu_only_tests: false
       run_single_gpu_tests: false
