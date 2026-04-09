@@ -185,6 +185,7 @@ def _run_sleep_wake_test(
 @pytest.mark.vllm
 @pytest.mark.e2e
 @pytest.mark.gpu_1
+@pytest.mark.xpu_1
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.timeout(300)
 def test_gms_basic_sleep_wake_vllm(

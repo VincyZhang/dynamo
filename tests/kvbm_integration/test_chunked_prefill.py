@@ -43,6 +43,7 @@ pytestmark = [
     pytest.mark.kvbm,
     pytest.mark.e2e,
     pytest.mark.gpu_1,
+    pytest.mark.xpu_1,
     pytest.mark.vllm,
     pytest.mark.pre_merge,
 ]

@@ -45,6 +45,7 @@ pytestmark = [
     pytest.mark.vllm,
     pytest.mark.nightly,
     pytest.mark.gpu_1,
+    pytest.mark.xpu_1,
     pytest.mark.model(TEST_MODEL),
 ]
 

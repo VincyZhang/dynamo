@@ -105,6 +105,7 @@ class TestLocalEmbeddingTransfer:
 
     @pytest.mark.asyncio
     @pytest.mark.gpu_1
+    @pytest.mark.xpu_1
     async def test_gpu_benchmark(self):
         sender = LocalEmbeddingSender()
         receiver = LocalEmbeddingReceiver()
@@ -113,6 +114,7 @@ class TestLocalEmbeddingTransfer:
 
 @pytest.mark.asyncio
 @pytest.mark.gpu_1  # NIXL init requires proper CUDA environment
+@pytest.mark.xpu_1
 class TestNixlWriteEmbeddingTransfer:
     async def test_correctness(self):
         sender = NixlWriteEmbeddingSender()
@@ -135,6 +137,7 @@ class TestNixlWriteEmbeddingTransfer:
 
 @pytest.mark.asyncio
 @pytest.mark.gpu_1  # NIXL init requires proper CUDA environment
+@pytest.mark.xpu_1
 class TestNixlReadEmbeddingTransfer:
     async def test_correctness(self):
         sender = NixlReadEmbeddingSender()

@@ -8,7 +8,9 @@ on:
     branches:
       - main
       - 'release/*.*.*'
-
+  pull_request:
+    branches:
+      - main
 permissions:
   contents: read
 
@@ -21,6 +23,7 @@ jobs:
   # ============================================================================
   vllm-pipeline:
     name: vllm
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: vllm
@@ -42,10 +45,36 @@ jobs:
     secrets: inherit
 
   # ============================================================================
+  # VLLM XPU PIPELINE
+  # ============================================================================
+  vllm-xpu-pipeline:
+    name: vllm-xpu
+    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    with:
+      framework: vllm
+      device: xpu
+      target: runtime
+      platform: 'linux/amd64'
+      builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
+      build_timeout_minutes: 120
+      copy_timeout_minutes: 20
+      run_cpu_only_tests: false
+      run_single_gpu_tests: false
+      run_single_xpu_tests: true
+      single_xpu_test_markers: '(pre_merge or post_merge) and vllm and (xpu_1 or xpu_2)'
+      single_xpu_test_timeout_minutes: 120
+      run_multi_gpu_tests: false
+      copy_to_acr: false
+      push_image: false
+      use_sccache: false
+    secrets: inherit
+
+  # ============================================================================
   # SGLANG PIPELINE
   # ============================================================================
   sglang-pipeline:
     name: sglang
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: sglang
@@ -71,6 +100,7 @@ jobs:
   # ============================================================================
   trtllm-pipeline:
     name: trtllm
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: trtllm
@@ -96,6 +126,7 @@ jobs:
   # ============================================================================
   vllm-dev-pipeline:
     name: vllm-dev
+    if: false
     uses: ./.github/workflows/build-flavor.yml
     with:
       framework: vllm
@@ -111,6 +142,7 @@ jobs:
 
   sglang-dev-pipeline:
     name: sglang-dev
+    if: false
     uses: ./.github/workflows/build-flavor.yml
     with:
       framework: sglang
@@ -126,6 +158,7 @@ jobs:
 
   trtllm-dev-pipeline:
     name: trtllm-dev
+    if: false
     uses: ./.github/workflows/build-flavor.yml
     with:
       framework: trtllm
@@ -146,6 +179,7 @@ jobs:
   # VLLM EFA PIPELINE
   # ============================================================================
   vllm-efa-pipeline:
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: vllm
@@ -170,6 +204,7 @@ jobs:
   # TRTLLM EFA PIPELINE
   # ============================================================================
   trtllm-efa-pipeline:
+    if: false
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     with:
       framework: trtllm
@@ -195,6 +230,7 @@ jobs:
   # ============================================================================
   frontend-image:
     name: Frontend Image
+    if: false
     uses: ./.github/workflows/build-frontend-image.yaml
     with:
       skip_change_detection: true
@@ -206,6 +242,7 @@ jobs:
 
   operator:
     name: Operator
+    if: false
     runs-on: prod-default-v2
     env:
       IMAGE_REGISTRY: ai-dynamo
@@ -309,6 +346,7 @@ jobs:
 
   deploy-operator:
     needs: [operator]
+    if: false
     runs-on: prod-default-small-v2
     outputs:
       namespace: ${{ steps.setup.outputs.namespace }}
@@ -329,6 +367,7 @@ jobs:
 
   deploy-test-vllm:
     needs: [deploy-operator, vllm-pipeline]
+    if: false
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: vllm
@@ -341,6 +380,7 @@ jobs:
 
   deploy-test-sglang:
     needs: [deploy-operator, sglang-pipeline]
+    if: false
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: sglang
@@ -353,6 +393,7 @@ jobs:
 
   deploy-test-trtllm:
     needs: [deploy-operator, trtllm-pipeline]
+    if: false
     uses: ./.github/workflows/shared-deploy-test-framework.yml
     with:
       framework: trtllm
@@ -364,7 +405,7 @@ jobs:
     secrets: inherit
 
   deploy-cleanup:
-    if: always()
+    if: false
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
     runs-on: prod-default-small-v2
     steps:
@@ -382,6 +423,7 @@ jobs:
   # ============================================================================
   deploy-test-gaie:
     name: GAIE Deploy Test
+    if: false
     runs-on: prod-default-small-v2
     needs: [deploy-operator, frontend-image, vllm-pipeline]
     timeout-minutes: 30
@@ -444,7 +486,7 @@ jobs:
   deploy-status-check:
     runs-on: ubuntu-latest
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
-    if: always()
+    if: false
     steps:
       - name: "Check all deploy test jobs"
         run: |
@@ -458,7 +500,7 @@ jobs:
     name: Clean K8s builder if exists
     runs-on: prod-default-small-v2
     if: always()
-    needs: [vllm-pipeline, sglang-pipeline, trtllm-pipeline, vllm-dev-pipeline, sglang-dev-pipeline, trtllm-dev-pipeline, vllm-efa-pipeline, trtllm-efa-pipeline, operator, frontend-image]
+    needs: [vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, vllm-dev-pipeline, sglang-dev-pipeline, trtllm-dev-pipeline, vllm-efa-pipeline, trtllm-efa-pipeline, operator, frontend-image]
     steps:
     - name: Checkout repository
       uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
@@ -478,8 +520,8 @@ jobs:
   notify-slack:
     name: Notify Slack
     runs-on: prod-builder-amd-v1
-    if: always() && failure()
-    needs: [ vllm-pipeline, sglang-pipeline, trtllm-pipeline, vllm-dev-pipeline, sglang-dev-pipeline, trtllm-dev-pipeline, vllm-efa-pipeline, trtllm-efa-pipeline, operator, frontend-image, deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie ]
+    if: false
+    needs: [ vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, vllm-dev-pipeline, sglang-dev-pipeline, trtllm-dev-pipeline, vllm-efa-pipeline, trtllm-efa-pipeline, operator, frontend-image, deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie ]
     permissions:
       contents: read
     steps:

@@ -235,6 +235,7 @@ def _run_external_weight_mgr_test(
 @pytest.mark.vllm
 @pytest.mark.e2e
 @pytest.mark.gpu_1
+@pytest.mark.xpu_1
 @pytest.mark.model(FAULT_TOLERANCE_MODEL_NAME)
 @pytest.mark.timeout(600)
 def test_external_weight_mgr_vllm(

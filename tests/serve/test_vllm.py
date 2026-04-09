@@ -70,6 +70,7 @@ vllm_configs = {
         script_name="agg.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -103,6 +104,7 @@ vllm_configs = {
         script_name="agg.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -135,6 +137,7 @@ vllm_configs = {
         marks=[
             pytest.mark.lmcache,
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -161,6 +164,7 @@ vllm_configs = {
         marks=[
             pytest.mark.lmcache,
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -189,6 +193,7 @@ vllm_configs = {
         script_name="agg_request_planes.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -211,6 +216,7 @@ vllm_configs = {
         script_name="agg_request_planes.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -233,6 +239,7 @@ vllm_configs = {
         script_name="agg_router.sh",
         marks=[
             pytest.mark.gpu_2,
+            pytest.mark.xpu_2,
             pytest.mark.pre_merge,
             pytest.mark.skip(reason="DYN-2263"),
         ],  # TODO: profile to get max_vram and timeout
@@ -256,6 +263,7 @@ vllm_configs = {
         script_name="agg_router_approx.sh",
         marks=[
             pytest.mark.gpu_2,
+            pytest.mark.xpu_2,
             pytest.mark.pre_merge,
             pytest.mark.skip(reason="DYN-2264"),
         ],  # TODO: profile to get max_vram and timeout
@@ -291,6 +299,7 @@ vllm_configs = {
         script_name="disagg.sh",
         marks=[
             pytest.mark.gpu_2,
+            pytest.mark.xpu_2,
             pytest.mark.pre_merge,
         ],  # TODO: profile to get max_vram and timeout
         model="Qwen/Qwen3-0.6B",
@@ -305,6 +314,7 @@ vllm_configs = {
         script_name="dsr1_dep.sh",
         marks=[
             pytest.mark.gpu_2,
+            pytest.mark.xpu_2,
             pytest.mark.vllm,
             pytest.mark.h100,
             pytest.mark.nightly,
@@ -337,6 +347,7 @@ vllm_configs = {
         script_name="disagg_multimodal_e_pd.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             # No profiled_vram_gib / requested_vllm_kv_cache_bytes: single-GPU mode
             # uses hardcoded fractions (encode=0.1, PD=0.7) that scale with GPU size.
             pytest.mark.timeout(340),  # ~5x observed 68.4s; 2B model loads slower on CI
@@ -372,6 +383,7 @@ vllm_configs = {
         # post_merge because needs real NIXL not stub
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(9.6),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_710_490_000
@@ -421,6 +433,7 @@ vllm_configs = {
         script_name="disagg_multimodal_epd.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             # No profiled_vram_gib / requested_vllm_kv_cache_bytes: single-GPU mode
             # uses hardcoded fractions via DYN_*_GPU_MEM that scale with GPU size.
             pytest.mark.pre_merge,
@@ -453,6 +466,7 @@ vllm_configs = {
         script_name="agg_multimodal.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(19.9),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 922_354_000
@@ -490,6 +504,7 @@ vllm_configs = {
         script_name="agg_multimodal.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(14.9),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 922_354_000
@@ -535,6 +550,7 @@ vllm_configs = {
         script_name="agg_multimodal.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.pre_merge,
         ],  # TODO: profile to get max_vram and timeout
         model="Qwen/Qwen3-VL-2B-Instruct",
@@ -563,6 +579,7 @@ vllm_configs = {
         script_name="disagg_multimodal_epd.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.pre_merge,
         ],  # TODO: profile to get max_vram and timeout
         model="Qwen/Qwen3-VL-2B-Instruct",
@@ -593,6 +610,7 @@ vllm_configs = {
         script_name="audio_agg.sh",
         marks=[
             pytest.mark.gpu_2,  # encode worker loads Qwen2Audio on GPU (~19 GiB)
+            pytest.mark.xpu_2,
             pytest.mark.nightly,
             pytest.mark.timeout(600),
         ],
@@ -741,6 +759,7 @@ vllm_configs = {
         script_name="agg.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(18.3),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 4_074_898_000
@@ -767,6 +786,7 @@ vllm_configs = {
         script_name="multi_node_tp_headless.sh",
         marks=[
             pytest.mark.gpu_2,
+            pytest.mark.xpu_2,
             pytest.mark.pre_merge,
             # TODO: profile to get max_vram
             pytest.mark.timeout(300),
@@ -783,6 +803,7 @@ vllm_configs = {
         script_name="agg.sh",
         marks=[
             pytest.mark.gpu_1,
+            pytest.mark.xpu_1,
             pytest.mark.profiled_vram_gib(3.8),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
@@ -858,6 +879,7 @@ def test_serve_deployment(
 @pytest.mark.vllm
 @pytest.mark.e2e
 @pytest.mark.gpu_2
+@pytest.mark.xpu_2
 @pytest.mark.nightly
 @pytest.mark.timeout(360)  # Match VLLMConfig.timeout for this multimodal deployment
 def test_multimodal_b64(
@@ -914,6 +936,7 @@ def test_multimodal_b64(
 @pytest.mark.vllm
 @pytest.mark.e2e
 @pytest.mark.gpu_1
+@pytest.mark.xpu_1
 @pytest.mark.pre_merge
 @pytest.mark.timeout(220)
 def test_multimodal_b64_frontend_decoding(
@@ -1011,6 +1034,7 @@ def lora_chat_payload(
 @pytest.mark.vllm
 @pytest.mark.e2e
 @pytest.mark.gpu_1
+@pytest.mark.xpu_1
 @pytest.mark.model("Qwen/Qwen3-0.6B")
 @pytest.mark.timeout(600)
 @pytest.mark.post_merge
@@ -1067,6 +1091,7 @@ def test_lora_aggregated(
 @pytest.mark.vllm
 @pytest.mark.e2e
 @pytest.mark.gpu_2
+@pytest.mark.xpu_2
 @pytest.mark.model("Qwen/Qwen3-0.6B")
 @pytest.mark.timeout(600)
 @pytest.mark.pre_merge

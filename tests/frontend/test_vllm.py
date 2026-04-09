@@ -31,6 +31,7 @@ TEST_MODEL = GPT_OSS
 pytestmark = [
     pytest.mark.vllm,
     pytest.mark.gpu_1,
+    pytest.mark.xpu_1,
     pytest.mark.e2e,
     pytest.mark.model(TEST_MODEL),
 ]
