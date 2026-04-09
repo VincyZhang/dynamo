@@ -111,7 +111,7 @@ class VLLMWorkerProcess(ManagedProcess):
                 VLLM_MM_MODEL,
                 "--enable-multimodal",
                 "--gpu-memory-utilization",
-                "0.85",
+                "0.70",
                 "--max-model-len",
                 "8192",
                 "--served-model-name",
