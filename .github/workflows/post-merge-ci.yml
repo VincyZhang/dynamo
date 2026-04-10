@@ -368,7 +368,7 @@ jobs:
   deploy-test-vllm:
     needs: [deploy-operator, vllm-pipeline]
     if: false
-    uses: ./.github/workflows/shared-deploy-test-framework.yml
+    uses: ./.github/workflows/shared-deploy-test.yml
     with:
       framework: vllm
       profiles: '["agg", "agg_router", "disagg", "disagg_router"]'
@@ -381,7 +381,7 @@ jobs:
   deploy-test-sglang:
     needs: [deploy-operator, sglang-pipeline]
     if: false
-    uses: ./.github/workflows/shared-deploy-test-framework.yml
+    uses: ./.github/workflows/shared-deploy-test.yml
     with:
       framework: sglang
       profiles: '["agg", "agg_router"]'
@@ -394,7 +394,7 @@ jobs:
   deploy-test-trtllm:
     needs: [deploy-operator, trtllm-pipeline]
     if: false
-    uses: ./.github/workflows/shared-deploy-test-framework.yml
+    uses: ./.github/workflows/shared-deploy-test.yml
     with:
       framework: trtllm
       profiles: '["agg", "agg_router"]'
