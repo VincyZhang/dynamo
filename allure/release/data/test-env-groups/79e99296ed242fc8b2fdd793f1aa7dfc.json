@@ -1,0 +1,1 @@
+{"id":"79e99296ed242fc8b2fdd793f1aa7dfc","fullName":"tests.fault_tolerance.migration.test_vllm#test_request_migration_vllm_aggregated","name":"test_request_migration_vllm_aggregated[migration_enabled-worker_failure-chat-stream-tcp]","status":"passed","testResultsByEnv":{"vllm-amd64":"8efc665709302e267f4c1d16d9953072","default":"6404c859a3f4d098fa4bfa33b7ded7d1"}}

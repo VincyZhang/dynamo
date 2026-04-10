@@ -1,0 +1,1 @@
+{"id":"0c242abcc0459506b65c411296ef5c72","fullName":"components.src.dynamo.vllm.tests.test_vllm_unit.TestVllmOmniOptionalDependency#test_dynamo_vllm_main_importable_without_vllm_omni","name":"test_dynamo_vllm_main_importable_without_vllm_omni","status":"passed","testResultsByEnv":{"default":"aaa7ef02a17ba8ca082c9254d55284b7"}}

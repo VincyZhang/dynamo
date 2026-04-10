@@ -1,0 +1,600 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","62912","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-chat-stream-nats]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","66959","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-chat-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-chat-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that combining legacy flags with explicit --disaggregation-mode raises ValueError.","3","test_conflicting_legacy_and_new_flags_raises","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","67064","test_serve_deployment[agg-router]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"","1","test_encode[False]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"
+    Test LoRA inference with aggregated vLLM deployment using KV router.
+
+    This test:
+    1. Uses MinIO fixture to provide S3-compatible storage with uploaded LoRA
+    2. Starts multiple vLLM workers with LoRA support and KV router
+    3. Loads the LoRA adapter on both workers via system API
+    4. Runs inference with the LoRA model, verifying KV cache routing
+    ","34090","test_lora_aggregated_router[2]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"","0","test_aggregated[False]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"All strategies fail → RuntimeError with VLLM_NIXL_SIDE_CHANNEL_HOST in message.","1","test_all_fail_raises_runtime_error","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestGetHostIp","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-completion-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"","1","test_prefill[False]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"
+    Validate that chunked prefill blocks are offloaded.
+
+    Test flow:
+    1. Send prompt large enough to trigger multiple chunks
+    2. Verify total offloaded blocks matches expected for full prefill
+    3. Reset cache and re-request to verify onboarding works
+    4. Verify determinism across offload/onboard cycle
+    ","0","test_chunked_prefill_offload[llm_server_kvbm0]","tests.kvbm_integration","2026-04-10","broken","2026-04-10","","test_chunked_prefill","",""
+"Test that build_headless_namespace produces a Namespace with fields
+    required by vLLM's run_headless(), including the api_server_count fallback.","19","test_headless_namespace_has_required_fields","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Single->double->triple identical image requests follow prefix-overlap semantics.","5672","test_vllm_mm_overlap_staircase_single_to_double_to_triple_identical_image","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","299774","test_serve_deployment[multi_node_tp_headless]","tests.serve","2026-04-10","failed","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","96354","test_serve_deployment[multimodal_agg_frontend_decoding]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"Test that invalid --endpoint format raises ValueError.","4","test_endpoint_invalid_format_raises","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that --is-prefill-worker still works but emits DeprecationWarning.","4","test_legacy_is_prefill_worker_emits_deprecation","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","38088","test_serve_deployment[aggregated_logprobs]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-completion-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"","42683","test_router_decisions_vllm_multiple_workers[tcp]","tests.router","2026-04-10","passed","2026-04-10","","test_router_e2e_with_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","72226","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-chat-stream-nats]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"","0","test_prefill_grid_count","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkGrid","test_vllm_unit","",""
+"Test that --disaggregation-mode agg --is-decode-worker raises ValueError.","3","test_explicit_default_mode_with_legacy_flag_raises","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"For repeated same single-image request: low first overlap, then increase, then stable.","3566","test_vllm_mm_overlap_repeated_single_image","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-completion-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-chat-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that environment variables in paths are expanded by Python code.","4","test_custom_jinja_template_env_var_expansion","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that --model-express-url takes precedence over MODEL_EXPRESS_URL.","4","test_model_express_url_cli_overrides_env[mx-source]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","0","test_benchmark_config_from_dict","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkConfig","test_vllm_unit","",""
+"For repeated same 3-HTTP-image request: low first overlap, then increase, then stable.","6166","test_vllm_mm_overlap_repeated_http_images","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-completion-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    Test offload → cache reset → onboard cycle with determinism verification.
+
+    Validates that:
+    - Initial request triggers offload to CPU cache
+    - Cache reset clears GPU cache
+    - Repeated request triggers onboard from CPU to GPU
+    - Responses are deterministic across the cycle
+    ","0","test_offload_and_onboard[llm_server_kvbm0]","tests.kvbm_integration","2026-04-10","broken","2026-04-10","","test_kvbm","",""
+"Pre-set env var → verify not overwritten.","0","test_preserves_existing_env_var","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestEnsureSideChannelHost","test_vllm_unit","",""
+"
+    Test LoRA inference with aggregated vLLM deployment using KV router.
+
+    This test:
+    1. Uses MinIO fixture to provide S3-compatible storage with uploaded LoRA
+    2. Starts multiple vLLM workers with LoRA support and KV router
+    3. Loads the LoRA adapter on both workers via system API
+    4. Runs inference with the LoRA model, verifying KV cache routing
+    ","0","test_lora_aggregated_router[2]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm_xpu","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","73809","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-chat-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","105806","test_serve_deployment[agg-request-plane-tcp]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"","0","test_decode_grid_skips_large_ctx","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkGrid","test_vllm_unit","",""
+"","0","test_accepts_private_ipv4","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","61926","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-chat-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"","0","test_rejects_loopback_v4","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"Test that DYN_CONNECTOR env var raises error for vLLM backend.","4","test_env_var_dyn_connector_raises_error","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","37127","test_serve_deployment[guided_decoding]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","129448","test_serve_deployment[aggregated_lmcache_multiproc]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"","1","test_aggregated[True]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","37890","test_serve_deployment[guided_decoding]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-completion-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that model_express_url is None when load format is not mx-*.","4","test_model_express_url_none_for_default_load_format","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-completion-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"","0","test_decode[False]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"For repeated same 3-image request: low first overlap, then increase, then stable.","6467","test_vllm_mm_overlap_repeated_three_images","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-completion-stream-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","71252","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-chat-stream-nats]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"All strategies fail, no env var → RuntimeError.","1","test_raises_when_detection_fails_and_no_env","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestEnsureSideChannelHost","test_vllm_unit","",""
+"","1","test_encode[True]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"Test _connector_to_kv_transfer_json wraps multiple connectors in PdConnector.","0","test_connector_to_kv_transfer_json_multi","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that default disaggregation mode is AGGREGATED.","4","test_disaggregation_mode_default","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","85837","test_vllm_indexers_sync[nats_core]","tests.router","2026-04-10","passed","2026-04-10","","test_router_e2e_with_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","0","test_serve_deployment[agg-router-approx]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm_xpu","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","67880","test_serve_deployment[multimodal_video_agg]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"","1","test_passes_snapshot_engine","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","122352","test_serve_deployment[aggregated_lmcache]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"IPv4 strategies fail, IPv6 UDP returns fd00::1 → returns fd00::1.","1","test_ipv6_fallback","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestGetHostIp","test_vllm_unit","",""
+"For repeated same two-identical-image request: low first overlap, then increase, then stable.","3705","test_vllm_mm_overlap_repeated_two_identical_images","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","129807","test_serve_deployment[aggregated_lmcache_multiproc]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    Test multimodal inference with base64 images through frontend decoding path.
+
+    This exercises the Rust frontend image decode + NIXL RDMA transfer path
+    with inline base64 data: URIs (not HTTP URLs). Verifies that the
+    strip_inline_data_urls optimization does not break correctness.
+    ","68392","test_multimodal_b64_frontend_decoding","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","74170","test_serve_deployment[multimodal_disagg_qwen]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","119213","test_serve_deployment[agg-request-plane-http]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","107071","test_serve_deployment[aggregated]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-completion-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","35234","test_serve_deployment[disaggregated]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","63258","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-chat-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","103172","test_serve_deployment[agg-request-plane-tcp]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"Trigger the predownload_models fixture to download all required models.
+
+    This test runs before any other tests in the session due to pytest.mark.order(""first"").
+    By downloading models upfront, we ensure that model download time is not counted
+    against individual test timeouts. This prevents tests from failing due to slow
+    network downloads rather than actual test failures.
+
+    The actual download logic is handled by the predownload_models session-scoped fixture
+    defined in conftest.py.
+
+    The parametrization ensures this test is selected by any CI marker expression
+    that matches framework-specific E2E tests (e.g., ""vllm and e2e and gpu_1"").
+    ","1","test_predownload_models[predownload_models_vllm_gpu1]","tests","2026-04-10","passed","2026-04-10","","test_predownload_models","",""
+"Test _connector_to_kv_transfer_json returns valid JSON for a single connector.","0","test_connector_to_kv_transfer_json_single","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that MODEL_EXPRESS_URL env var is used as fallback.","3","test_model_express_url_from_env_var[mx-target]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test LoRA inference with aggregated vLLM deployment.
+
+    This test:
+    1. Uses MinIO fixture to provide S3-compatible storage with uploaded LoRA
+    2. Starts vLLM with LoRA support enabled
+    3. Loads the LoRA adapter via system API
+    4. Runs inference with the LoRA model
+    ","0","test_lora_aggregated","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"getaddrinfo returns 169.254.1.1, UDP returns 10.0.0.5 → returns 10.0.0.5.","1","test_hostname_link_local_falls_through_to_udp","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestGetHostIp","test_vllm_unit","",""
+"","1","test_decode[True]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"Test that missing server URL raises ValueError for mx load formats.","3","test_model_express_url_missing_raises[mx-target]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-completion-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"","0","test_rejects_unspecified","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","59832","test_serve_deployment[multimodal_e_pd_qwen]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"Test that --connector none raises ValueError telling user it's no longer needed.","3","test_connector_none_raises_error","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","96939","test_serve_deployment[multimodal_agg_qwen]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"Test _uses_dynamo_connector for direct, nested-in-PdConnector, and absent cases.","0","test_uses_dynamo_connector_direct_and_nested","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","38723","test_vllm_kv_router_without_block_size_specified_in_vllm_args[tcp]","tests.router","2026-04-10","passed","2026-04-10","","test_router_e2e_with_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","0","test_serve_deployment[agg-router]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    Test onboarding determinism under eviction scenario.
+
+    Validates that:
+    - Multiple onboarding cycles produce deterministic results
+    - Responses are consistent when blocks are onboarded multiple times
+    - Tests onboarded vs onboarded (not initial vs onboarded)
+    ","0","test_onboarding_determinism[llm_server_kvbm0]","tests.kvbm_integration","2026-04-10","broken","2026-04-10","","test_kvbm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-completion-stream-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","0","test_serve_deployment[agg-router-approx]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    Test LoRA inference with aggregated vLLM deployment.
+
+    This test:
+    1. Uses MinIO fixture to provide S3-compatible storage with uploaded LoRA
+    2. Starts vLLM with LoRA support enabled
+    3. Loads the LoRA adapter via system API
+    4. Runs inference with the LoRA model
+    ","0","test_lora_aggregated","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm_xpu","",""
+"","0","test_prefill_grid_dedup","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkGrid","test_vllm_unit","",""
+"","0","test_benchmark_config_kwargs_unpack","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkConfig","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-chat-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-completion-stream-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"","0","test_rejects_link_local_v4","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"","0","test_rejects_loopback_v6","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"
+    End-to-end test for request cancellation functionality in aggregated mode.
+
+    This test verifies that when a request is cancelled by the client,
+    the system properly handles the cancellation and cleans up resources
+    on the worker side in aggregated (single worker) mode. Tests three scenarios:
+    1. Completion request
+    2. Chat completion request (non-streaming)
+    3. Chat completion request (streaming)
+
+    Timing (Last Run: 2025-12-09): ~55s total
+    - Engine initialization: ~15s
+    - Testing 3 scenarios: ~38s (~12s each)
+    - Teardown: ~2s
+    ","49822","test_request_cancellation_vllm_aggregated[tcp]","tests.fault_tolerance.cancellation","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"Test that valid absolute path is stored correctly.","4","test_custom_jinja_template_valid_path","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Trigger the predownload_models fixture to download all required models.
+
+    This test runs before any other tests in the session due to pytest.mark.order(""first"").
+    By downloading models upfront, we ensure that model download time is not counted
+    against individual test timeouts. This prevents tests from failing due to slow
+    network downloads rather than actual test failures.
+
+    The actual download logic is handled by the predownload_models session-scoped fixture
+    defined in conftest.py.
+
+    The parametrization ensures this test is selected by any CI marker expression
+    that matches framework-specific E2E tests (e.g., ""vllm and e2e and gpu_1"").
+    ","0","test_predownload_models[predownload_models_vllm_gpu2]","tests","2026-04-10","passed","2026-04-10","","test_predownload_models","",""
+"","0","test_accepts_private_ipv6","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"","0","test_rejects_link_local_v6","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","0","test_serve_deployment[multimodal_agg_qwen]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm_xpu","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","44797","test_serve_deployment[aggregated_logprobs]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"Test _uses_nixl_connector for direct, nested-in-PdConnector, and absent cases.","0","test_uses_nixl_connector_direct_and_nested","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","134","test_vllm_chat_processor_tokenizes_and_streams_tool_calls","tests.frontend","2026-04-10","passed","2026-04-10","","test_vllm_prepost_integration","",""
+"
+    Test GPU cache eviction mechanics.
+
+    Validates that:
+    - Multiple requests fill GPU cache causing eviction
+    - Evicted blocks can be retrieved from CPU cache via onboarding
+    - Metrics correctly reflect offload and onboard operations
+    ","0","test_gpu_cache_eviction[llm_server_kvbm0]","tests.kvbm_integration","2026-04-10","broken","2026-04-10","","test_kvbm","",""
+"Test --disaggregation-mode decode sets correct state.","3","test_disaggregation_mode_decode","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","0","test_rejects_multicast","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"Test that --model-express-url is stored when load format is mx-source/mx-target.","4","test_model_express_url_from_cli_arg[mx-source]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"HTTP URL and data URI for the same image should produce identical KV cache hashes.","3258","test_vllm_mm_overlap_http_vs_data_uri_same_image","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","65955","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-chat-stream-nats]","tests.fault_tolerance.migration","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"","221","test_benchmark_config_defaults","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkConfig","test_vllm_unit","",""
+"Test that --model-express-url is stored when load format is mx-source/mx-target.","4","test_model_express_url_from_cli_arg[mx-target]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","0","test_rejects_invalid","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestIsRoutable","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-graceful_shutdown-chat-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"getaddrinfo returns routable IPv4 → returns it.","1","test_hostname_resolution_success","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestGetHostIp","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-chat-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-completion-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"No env var set, successful detection populates the side-channel host.","1","test_sets_env_var_on_successful_detection","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestEnsureSideChannelHost","test_vllm_unit","",""
+"Swapping order of three distinct images should result in near-zero overlap.","4325","test_vllm_mm_overlap_swapped_order_less_than_same_order","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"Different images should produce lower overlap than repeated identical images.","2450","test_vllm_mm_overlap_diff_images_less_than_same","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"","1","test_decode_grid_batch_capped","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestBenchmarkGrid","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-completion-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-worker_failure-chat-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that vLLM no longer auto-creates kv_events_config.","4","test_kv_events_disabled_by_default_without_explicit_config","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"dynamo.vllm.main must import cleanly even when vllm_omni is absent.
+
+        Setting sys.modules[""vllm_omni""] = None blocks ALL imports from the
+        vllm_omni package — Python always resolves the top-level package first,
+        so a None sentinel at the root raises ImportError for any submodule import.
+        ","13","test_dynamo_vllm_main_importable_without_vllm_omni","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestVllmOmniOptionalDependency","test_vllm_unit","",""
+"Test that --is-decode-worker still works but emits DeprecationWarning.","5","test_legacy_is_decode_worker_emits_deprecation","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-chat-unary-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-chat-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that MODEL_EXPRESS_URL env var is used as fallback.","5","test_model_express_url_from_env_var[mx-source]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that --endpoint overrides default namespace/component/endpoint.","4","test_endpoint_overrides_defaults","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Text-only routing should increase overlap on repeat and then stabilize.","3435","test_vllm_text_only_overlap_repeated_prompt","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","107151","test_serve_deployment[agg-request-plane-http]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"Test --disaggregation-mode prefill sets correct state.","4","test_disaggregation_mode_prefill","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","70551","test_serve_deployment[multimodal_video_disagg]","tests.serve","2026-04-10","broken","2026-04-10","","test_vllm","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","106198","test_serve_deployment[aggregated]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","0","test_serve_deployment[multimodal_agg_frontend_decoding]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm_xpu","",""
+"","74012","test_vllm_kv_router_basic[tcp]","tests.router","2026-04-10","passed","2026-04-10","","test_router_e2e_with_vllm","",""
+"Test that --connector nixl raises ValueError with --kv-transfer-config hint.","5","test_connector_nixl_raises_error_with_migration_hint","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","0","test_serve_deployment[completions_only]","tests.serve","2026-04-10","skipped","2026-04-10","","test_vllm_xpu","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","165636","test_serve_deployment[completions_only]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-completion-stream-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that invalid file path raises FileNotFoundError.","29","test_custom_jinja_template_invalid_path","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    End-to-end test for request cancellation functionality in aggregated mode.
+
+    This test verifies that when a request is cancelled by the client,
+    the system properly handles the cancellation and cleans up resources
+    on the worker side in aggregated (single worker) mode. Tests three scenarios:
+    1. Completion request
+    2. Chat completion request (non-streaming)
+    3. Chat completion request (streaming)
+
+    Timing (Last Run: 2025-12-09): ~55s total
+    - Engine initialization: ~15s
+    - Testing 3 scenarios: ~38s (~12s each)
+    - Teardown: ~2s
+    ","85421","test_request_cancellation_vllm_aggregated[nats]","tests.fault_tolerance.cancellation","2026-04-10","passed","2026-04-10","","test_vllm","",""
+"Test that --model-express-url takes precedence over MODEL_EXPRESS_URL.","4","test_model_express_url_cli_overrides_env[mx-target]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"","0","test_prefill[True]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestCreate","test_vllm_worker_factory","",""
+"Test that --disaggregation-mode prefill without --kv-transfer-config raises ValueError.","3","test_prefill_worker_without_kv_transfer_config_raises","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that --endpoint overrides even with --disaggregation-mode prefill.","20","test_endpoint_overrides_with_prefill_worker","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"Test that without --endpoint, defaults are preserved.","4","test_endpoint_not_provided_preserves_defaults","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"getaddrinfo returns 127.0.0.1, UDP returns 10.0.0.5 → returns 10.0.0.5.","0","test_hostname_loopback_falls_through_to_udp","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","TestGetHostIp","test_vllm_unit","",""
+"Same images but different prompt should produce lower overlap than repeated same prompt.","2458","test_vllm_mm_overlap_same_images_different_prompt_less_than_same_prompt","tests.mm_router","2026-04-10","failed","2026-04-10","","test_vllm_mm_router_e2e","",""
+"
+    Test dynamo serve deployments with different graph configurations.
+    ","126270","test_serve_deployment[aggregated_lmcache]","tests.serve","2026-04-10","passed","2026-04-10","","test_vllm_xpu","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_enabled-worker_failure-completion-unary-nats]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""
+"Test that missing server URL raises ValueError for mx load formats.","4","test_model_express_url_missing_raises[mx-source]","components.src.dynamo.vllm.tests","2026-04-10","passed","2026-04-10","","test_vllm_unit","",""
+"
+    End-to-end test for aggregated worker request migration.
+
+    Parameters:
+        immediate_kill: True for abrupt kill (SIGKILL), False for graceful shutdown (SIGTERM)
+        migration_limit: > 0 to verify migration succeeds, 0 to verify request fails
+        request_api: ""chat"" for chat completion API, ""completion"" for completion API
+        stream: True for streaming, False for non-streaming
+    ","0","test_request_migration_vllm_aggregated[migration_disabled-graceful_shutdown-completion-stream-tcp]","tests.fault_tolerance.migration","2026-04-10","skipped","2026-04-10","","test_vllm","",""

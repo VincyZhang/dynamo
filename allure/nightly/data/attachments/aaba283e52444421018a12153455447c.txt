@@ -1,0 +1,536 @@
+[BASH] Starting Dynamo frontend...
+[BASH] Starting dynamo.vllm head node (TP=2, nnodes=2, node-rank=0, GPU 0)...
+[BASH] Starting dynamo.vllm headless worker (TP=2, nnodes=2, node-rank=1, GPU 1)...
+[BASH] [2m2026-04-10T04:52:39.509348Z[0m [32m INFO[0m [2mmain.async_main[0m[2m:[0m Request migration disabled (limit: 0)
+[BASH] [2m2026-04-10T04:52:39.629667Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m Initializing KV store discovery backend: Etcd(http://localhost:2429)
+[BASH] [2m2026-04-10T04:52:39.645465Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Initializing NetworkManager with TCP request plane [3mmode[0m[2m=[0mtcp [3mhost[0m[2m=[0m192.168.8.2 [3mport[0m[2m=[0mOS-assigned
+[BASH] DEBUG 04-10 04:52:39 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:39 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:39 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] [2m2026-04-10T04:52:39.768100Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m Starting HTTP(S) service [3mprotocol[0m[2m=[0m"HTTP" [3maddress[0m[2m=[0m"0.0.0.0:8078"
+[BASH] [2m2026-04-10T04:52:40.455547Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:41 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] [2m2026-04-10T04:52:42.461754Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:52:44.468679Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2026-04-10 04:52:44] WARNING __init__.py:60: dynamo.nixl_connect: Failed to load CuPy for GPU acceleration, utilizing numpy to provide CPU based operations.
+[BASH] [2026-04-10 04:52:44] WARNING __init__.py:60: dynamo.nixl_connect: Failed to load CuPy for GPU acceleration, utilizing numpy to provide CPU based operations.
+[BASH] [2m2026-04-10T04:52:44.860354Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m Available plugins for group vllm.general_plugins:
+[BASH] [2m2026-04-10T04:52:44.860630Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] [2m2026-04-10T04:52:44.860653Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] [2m2026-04-10T04:52:44.860668Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] [2m2026-04-10T04:52:44.868347Z[0m [32m INFO[0m [2marg_utils.__post_init__[0m[2m:[0m HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen3-0.6B] to model_path [/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca]
+[BASH] [2m2026-04-10T04:52:44.868612Z[0m [32m INFO[0m [2margs.update_engine_config_with_dynamo[0m[2m:[0m Using kv_events_config for publishing vLLM kv events over zmq: None (use_kv_events=False)
+[BASH] [2m2026-04-10T04:52:44.913232Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m Available plugins for group vllm.general_plugins:
+[BASH] [2m2026-04-10T04:52:44.913544Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] [2m2026-04-10T04:52:44.913567Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] [2m2026-04-10T04:52:44.913584Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] [2m2026-04-10T04:52:44.921175Z[0m [32m INFO[0m [2marg_utils.__post_init__[0m[2m:[0m HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen3-0.6B] to model_path [/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca]
+[BASH] [2m2026-04-10T04:52:44.921432Z[0m [32m INFO[0m [2margs.update_engine_config_with_dynamo[0m[2m:[0m Using kv_events_config for publishing vLLM kv events over zmq: None (use_kv_events=False)
+[BASH] [2m2026-04-10T04:52:45.164738Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-0.6B' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca", skipping download
+[BASH] [2m2026-04-10T04:52:45.164836Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-0.6B' without API validation
+[BASH] [2m2026-04-10T04:52:45.172225Z[0m [2mDEBUG[0m [2mflashinfer.has_flashinfer[0m[2m:[0m FlashInfer unavailable since package was not found
+[BASH] [2m2026-04-10T04:52:45.225103Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-0.6B' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca", skipping download
+[BASH] [2m2026-04-10T04:52:45.225181Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-0.6B' without API validation
+[BASH] [2m2026-04-10T04:52:45.336217Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m Initializing KV store discovery backend: Etcd(http://localhost:2429)
+[BASH] [2m2026-04-10T04:52:45.377913Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Initializing NetworkManager with TCP request plane [3mmode[0m[2m=[0mtcp [3mhost[0m[2m=[0m192.168.8.2 [3mport[0m[2m=[0mOS-assigned
+[BASH] [2m2026-04-10T04:52:45.379077Z[0m [32m INFO[0m [2mdynamo_runtime::system_status_server[0m[2m:[0m [spawn_system_status_server] binding to: 0.0.0.0:8104
+[BASH] [2m2026-04-10T04:52:45.379132Z[0m [32m INFO[0m [2mdynamo_runtime::system_status_server[0m[2m:[0m [spawn_system_status_server] system status server bound to: 0.0.0.0:8104
+[BASH] [2m2026-04-10T04:52:45.379153Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m System status server started successfully on 0.0.0.0:8104
+[BASH] [2m2026-04-10T04:52:45.379362Z[0m [32m INFO[0m [2mgraceful_shutdown.install_signal_handlers[0m[2m:[0m Signal handlers set up for graceful shutdown (discovery unregister + grace period)
+[BASH] [2m2026-04-10T04:52:45.379913Z[0m [33mWARNING[0m [2mprometheus.setup_multiprocess_prometheus[0m[2m:[0m Found PROMETHEUS_MULTIPROC_DIR was set by user. This directory must be wiped between vLLM runs or you will find inaccurate metrics. Unset the variable and vLLM will properly handle cleanup.
+[BASH] [2m2026-04-10T04:52:45.387071Z[0m [2mDEBUG[0m [2mregistry.inspect_model_cls[0m[2m:[0m Loaded model info for class vllm.model_executor.models.qwen3.Qwen3ForCausalLM from cache
+[BASH] [2m2026-04-10T04:52:45.387153Z[0m [2mDEBUG[0m [2mlog_time._wrapper[0m[2m:[0m Registry inspect model class: Elapsed time 0.0003326 secs
+[BASH] [2m2026-04-10T04:52:45.387201Z[0m [32m INFO[0m [2mmodel.__post_init__[0m[2m:[0m Resolved architecture: Qwen3ForCausalLM
+[BASH] [2m2026-04-10T04:52:45.387272Z[0m [32m INFO[0m [2mmodel.get_and_verify_max_len[0m[2m:[0m Using max model len 40960
+[BASH] [2m2026-04-10T04:52:45.388608Z[0m [33mWARNING[0m [2mmodel.get_diff_sampling_param[0m[2m:[0m Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 0.6, 'top_k': 20, 'top_p': 0.95}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+[BASH] [2m2026-04-10T04:52:45.392188Z[0m [32m INFO[0m [2mmodel.__post_init__[0m[2m:[0m Resolved architecture: Qwen3ForCausalLM
+[BASH] [2m2026-04-10T04:52:45.392300Z[0m [32m INFO[0m [2mmodel.get_and_verify_max_len[0m[2m:[0m Using max model len 40960
+[BASH] [2m2026-04-10T04:52:45.392372Z[0m [2mDEBUG[0m [2mmodel.is_chunked_prefill_supported[0m[2m:[0m Generative models support chunked prefill.
+[BASH] [2m2026-04-10T04:52:45.392393Z[0m [2mDEBUG[0m [2mmodel.is_prefix_caching_supported[0m[2m:[0m Generative models support prefix caching.
+[BASH] [2m2026-04-10T04:52:45.392412Z[0m [2mDEBUG[0m [2marg_utils._set_default_chunked_prefill_and_prefix_caching_args[0m[2m:[0m Enabling chunked prefill by default
+[BASH] [2m2026-04-10T04:52:45.446181Z[0m [2mDEBUG[0m [2marg_utils._set_default_max_num_seqs_and_batched_tokens_args[0m[2m:[0m Defaulting max_num_batched_tokens to 2048 for OPENAI_API_SERVER usage context.
+[BASH] [2m2026-04-10T04:52:45.446275Z[0m [2mDEBUG[0m [2marg_utils._set_default_max_num_seqs_and_batched_tokens_args[0m[2m:[0m Defaulting max_num_seqs to 256 for OPENAI_API_SERVER usage context.
+[BASH] [2m2026-04-10T04:52:45.542039Z[0m [32m INFO[0m [2marg_utils.create_engine_config[0m[2m:[0m Inferred data_parallel_rank 0 from node_rank 0
+[BASH] [2m2026-04-10T04:52:45.545943Z[0m [2mDEBUG[0m [2mparallel.__post_init__[0m[2m:[0m Defaulting to use mp for distributed inference
+[BASH] [2m2026-04-10T04:52:45.546033Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] [2m2026-04-10T04:52:45.546055Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce since we are running on multi-node.
+[BASH] [2m2026-04-10T04:52:45.546215Z[0m [32m INFO[0m [2mscheduler.__post_init__[0m[2m:[0m Chunked prefill is enabled with max_num_batched_tokens=2048.
+[BASH] [2m2026-04-10T04:52:45.546448Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] [2m2026-04-10T04:52:45.546471Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce since we are running on multi-node.
+[BASH] [2m2026-04-10T04:52:45.546731Z[0m [32m INFO[0m [2mvllm.__post_init__[0m[2m:[0m Asynchronous scheduling is enabled.
+[BASH] [2m2026-04-10T04:52:45.546760Z[0m [33mWARNING[0m [2mvllm.__post_init__[0m[2m:[0m Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+[BASH] [2m2026-04-10T04:52:45.546781Z[0m [33mWARNING[0m [2mvllm.__post_init__[0m[2m:[0m Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+[BASH] [2m2026-04-10T04:52:45.547359Z[0m [2mDEBUG[0m [2mflashinfer.has_flashinfer[0m[2m:[0m FlashInfer unavailable since package was not found
+[BASH] [2m2026-04-10T04:52:46.159765Z[0m [32m INFO[0m [2mvllm.__post_init__[0m[2m:[0m Cudagraph is disabled under eager mode
+[BASH] [2m2026-04-10T04:52:46.159957Z[0m [33mWARNING[0m [2mxpu.check_and_update_config[0m[2m:[0m XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[BASH] [2m2026-04-10T04:52:46.173342Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m No plugins for group vllm.stat_logger_plugins found.
+[BASH] [2m2026-04-10T04:52:46.173655Z[0m [2mDEBUG[0m [2mregistry.load_renderer_cls[0m[2m:[0m Loading HfRenderer for renderer_mode='hf'
+[BASH] [2m2026-04-10T04:52:46.475769Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:52:46.687691Z[0m [2mDEBUG[0m [2m__init__.get_io_processor[0m[2m:[0m No IOProcessor plugins requested by the model
+[BASH] [2m2026-04-10T04:52:46.821254Z[0m [2mDEBUG[0m [2mregistry.inspect_model_cls[0m[2m:[0m Loaded model info for class vllm.model_executor.models.qwen3.Qwen3ForCausalLM from cache
+[BASH] [2m2026-04-10T04:52:46.821342Z[0m [2mDEBUG[0m [2mlog_time._wrapper[0m[2m:[0m Registry inspect model class: Elapsed time 0.0003028 secs
+[BASH] [2m2026-04-10T04:52:46.821393Z[0m [32m INFO[0m [2mmodel.__post_init__[0m[2m:[0m Resolved architecture: Qwen3ForCausalLM
+[BASH] [2m2026-04-10T04:52:46.821454Z[0m [32m INFO[0m [2mmodel.get_and_verify_max_len[0m[2m:[0m Using max model len 40960
+[BASH] [2m2026-04-10T04:52:46.822513Z[0m [2mDEBUG[0m [2mmodel.is_chunked_prefill_supported[0m[2m:[0m Generative models support chunked prefill.
+[BASH] [2m2026-04-10T04:52:46.822551Z[0m [2mDEBUG[0m [2mmodel.is_prefix_caching_supported[0m[2m:[0m Generative models support prefix caching.
+[BASH] [2m2026-04-10T04:52:46.822572Z[0m [2mDEBUG[0m [2marg_utils._set_default_chunked_prefill_and_prefix_caching_args[0m[2m:[0m Enabling chunked prefill by default
+[BASH] [2m2026-04-10T04:52:46.888886Z[0m [2mDEBUG[0m [2marg_utils._set_default_max_num_seqs_and_batched_tokens_args[0m[2m:[0m Defaulting max_num_batched_tokens to 2048 for OPENAI_API_SERVER usage context.
+[BASH] [2m2026-04-10T04:52:46.888979Z[0m [2mDEBUG[0m [2marg_utils._set_default_max_num_seqs_and_batched_tokens_args[0m[2m:[0m Defaulting max_num_seqs to 256 for OPENAI_API_SERVER usage context.
+[BASH] [2m2026-04-10T04:52:46.986894Z[0m [32m INFO[0m [2marg_utils.create_engine_config[0m[2m:[0m Inferred data_parallel_rank 0 from node_rank 1
+[BASH] [2m2026-04-10T04:52:46.988307Z[0m [2mDEBUG[0m [2mparallel.__post_init__[0m[2m:[0m Defaulting to use mp for distributed inference
+[BASH] [2m2026-04-10T04:52:46.988389Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] [2m2026-04-10T04:52:46.988411Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce since we are running on multi-node.
+[BASH] [2m2026-04-10T04:52:46.988593Z[0m [32m INFO[0m [2mscheduler.__post_init__[0m[2m:[0m Chunked prefill is enabled with max_num_batched_tokens=2048.
+[BASH] [2m2026-04-10T04:52:46.988858Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] [2m2026-04-10T04:52:46.988881Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce since we are running on multi-node.
+[BASH] [2m2026-04-10T04:52:46.989154Z[0m [32m INFO[0m [2mvllm.__post_init__[0m[2m:[0m Asynchronous scheduling is enabled.
+[BASH] [2m2026-04-10T04:52:46.989184Z[0m [33mWARNING[0m [2mvllm.__post_init__[0m[2m:[0m Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+[BASH] [2m2026-04-10T04:52:46.989206Z[0m [33mWARNING[0m [2mvllm.__post_init__[0m[2m:[0m Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+[BASH] [2m2026-04-10T04:52:46.989297Z[0m [32m INFO[0m [2mvllm.__post_init__[0m[2m:[0m Cudagraph is disabled under eager mode
+[BASH] [2m2026-04-10T04:52:46.989366Z[0m [33mWARNING[0m [2mxpu.check_and_update_config[0m[2m:[0m XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[BASH] [2m2026-04-10T04:52:46.989446Z[0m [32m INFO[0m [2mserve.run_headless[0m[2m:[0m Launching vLLM (v0.17.1) headless multiproc executor, with head node address 127.0.0.1:29501 for torch.distributed process group.
+[BASH] [2m2026-04-10T04:52:46.989638Z[0m [33mWARNING[0m [2msystem_utils._maybe_force_spawn[0m[2m:[0m We must use the `spawn` multiprocessing start method. Overriding VLLM_WORKER_MULTIPROC_METHOD to 'spawn'. See https://docs.vllm.ai/en/latest/usage/troubleshooting.html#python-multiprocessing for more information. Reasons: XPU is initialized
+[BASH] [2m2026-04-10T04:52:46.989691Z[0m [33mWARNING[0m [2mmultiproc_executor.set_multiprocessing_worker_envs[0m[2m:[0m Reducing Torch parallelism from 256 threads to 1 to avoid unnecessary CPU contention. Set OMP_NUM_THREADS in the external environment to tune this value as needed.
+[BASH] [2m2026-04-10T04:52:48.482980Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:52:50 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] [2m2026-04-10T04:52:50.490100Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:52:50 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:50 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:51 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] [2m2026-04-10T04:52:52.497569Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:52:53 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[BASH] DEBUG 04-10 04:52:53 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] DEBUG 04-10 04:52:53 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] DEBUG 04-10 04:52:53 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] DEBUG 04-10 04:52:53 [utils/flashinfer.py:55] FlashInfer unavailable since package was not found
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [v1/engine/core.py:1004] Waiting for init message from front-end.
+[BASH] [2m2026-04-10T04:52:54.481692Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m HELLO from local core engine process 0.
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [v1/engine/core.py:1015] Received init message: EngineHandshakeMetadata(addresses=EngineZmqAddresses(inputs=['ipc:///tmp/ca426076-13b0-4c1f-a19e-6b832fd52230'], outputs=['ipc:///tmp/fa8849e6-3837-4b9f-a8e6-335f83bfd7a0'], coordinator_input=None, coordinator_output=None, frontend_stats_publish_address=None), parallel_config={})
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [v1/engine/core.py:812] Has DP Coordinator: False, stats publish address: None
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] (EngineCore_DP0 pid=186035) INFO 04-10 04:52:54 [v1/engine/core.py:101] Initializing a V1 LLM engine (v0.17.1) with config: model='/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca', speculative_config=None, tokenizer='/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=40960, download_dir=None, load_format=auto, tensor_parallel_size=2, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=True, quantization=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=xpu, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Qwen/Qwen3-0.6B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'splitting_ops': [], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+[BASH] (EngineCore_DP0 pid=186035) WARNING 04-10 04:52:54 [v1/executor/multiproc_executor.py:945] Reducing Torch parallelism from 256 threads to 1 to avoid unnecessary CPU contention. Set OMP_NUM_THREADS in the external environment to tune this value as needed.
+[BASH] (EngineCore_DP0 pid=186035) INFO 04-10 04:52:54 [v1/executor/multiproc_executor.py:134] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=192.168.8.2 (local), world_size=2, local_world_size=1
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [distributed/device_communicators/shm_broadcast.py:309] Binding to ipc:///tmp/3d6373d6-f944-4105-81ae-bd0d204b7831
+[BASH] [2m2026-04-10T04:52:54.504575Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] (EngineCore_DP0 pid=186035) DEBUG 04-10 04:52:54 [distributed/device_communicators/shm_broadcast.py:354] vLLM message queue communication handle: Handle(local_reader_ranks=[0], buffer_handle=(1, 16777216, 10, 'psm_0a3b454d'), local_subscribe_addr='ipc:///tmp/3d6373d6-f944-4105-81ae-bd0d204b7831', remote_subscribe_addr='tcp://192.168.8.2:44731', remote_addr_ipv6=False)
+[BASH] DEBUG 04-10 04:52:55 [compilation/decorators.py:202] Inferred dynamic dimensions for forward method of <class 'vllm.model_executor.models.llama.LlamaModel'>: ['input_ids', 'positions', 'intermediate_tensors', 'inputs_embeds']
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800] WorkerProc failed to start.
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800] Traceback (most recent call last):
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 771, in worker_main
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]     worker = WorkerProc(*args, **kwargs)
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]     return func(*args, **kwargs)
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 589, in __init__
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]     self._init_message_queues(input_shm_handle, vllm_config)
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 527, in _init_message_queues
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]     self.rpc_broadcast_mq = get_inner_dp_world_group().create_mq_broadcaster(
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/parallel_state.py", line 1128, in get_inner_dp_world_group
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]     assert _INNER_DP_WORLD is not None, "inner dp world group is not initialized"
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186041) ERROR 04-10 04:52:55 [v1/executor/multiproc_executor.py:800] AssertionError: inner dp world group is not initialized
+[BASH] (Worker pid=186041) INFO 04-10 04:52:55 [v1/executor/multiproc_executor.py:749] Parent process exited, terminating worker
+[BASH] [2m2026-04-10T04:52:56.511840Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] Traceback (most recent call last):
+[BASH]   File "<frozen runpy>", line 198, in _run_module_as_main
+[BASH]   File "<frozen runpy>", line 88, in _run_code
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/__main__.py", line 12, in <module>
+[BASH]     main()
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/main.py", line 725, in main
+[BASH]     uvloop.run(worker())
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 109, in run
+[BASH]     return __asyncio.run(
+[BASH]            ^^^^^^^^^^^^^^
+[BASH]   File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+[BASH]     return runner.run(main)
+[BASH]            ^^^^^^^^^^^^^^^^
+[BASH]   File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+[BASH]     return self._loop.run_until_complete(task)
+[BASH]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 61, in wrapper
+[BASH]     return await main
+[BASH]            ^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/main.py", line 154, in worker
+[BASH]     run_dynamo_headless(config)
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/main.py", line 111, in run_dynamo_headless
+[BASH]     run_headless(args)
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 183, in run_headless
+[BASH]     executor = MultiprocExecutor(vllm_config, monitor_workers=False)
+[BASH]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 100, in __init__
+[BASH]     super().__init__(vllm_config)
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH]     return func(*args, **kwargs)
+[BASH]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 103, in __init__
+[BASH]     self._init_executor()
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 180, in _init_executor
+[BASH]     self.workers = WorkerProc.wait_for_ready(unready_workers)
+[BASH]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 697, in wait_for_ready
+[BASH]     raise e from None
+[BASH] Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+[BASH] DEBUG 04-10 04:52:57 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:57 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] [2m2026-04-10T04:52:58.519139Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:52:58 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:58 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:52:58 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:52:58 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:52:58 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:52:58 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] [2m2026-04-10T04:53:00.526011Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:53:01 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[BASH] DEBUG 04-10 04:53:01 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] DEBUG 04-10 04:53:01 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] DEBUG 04-10 04:53:01 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] DEBUG 04-10 04:53:01 [utils/flashinfer.py:55] FlashInfer unavailable since package was not found
+[BASH] [2m2026-04-10T04:53:02.533253Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] DEBUG 04-10 04:53:02 [compilation/decorators.py:202] Inferred dynamic dimensions for forward method of <class 'vllm.model_executor.models.llama.LlamaModel'>: ['input_ids', 'positions', 'intermediate_tensors', 'inputs_embeds']
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800] WorkerProc failed to start.
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800] Traceback (most recent call last):
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 771, in worker_main
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]     worker = WorkerProc(*args, **kwargs)
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]     return func(*args, **kwargs)
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 589, in __init__
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]     self._init_message_queues(input_shm_handle, vllm_config)
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 527, in _init_message_queues
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]     self.rpc_broadcast_mq = get_inner_dp_world_group().create_mq_broadcaster(
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/parallel_state.py", line 1128, in get_inner_dp_world_group
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]     assert _INNER_DP_WORLD is not None, "inner dp world group is not initialized"
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (Worker pid=186371) ERROR 04-10 04:53:03 [v1/executor/multiproc_executor.py:800] AssertionError: inner dp world group is not initialized
+[BASH] (Worker pid=186371) INFO 04-10 04:53:03 [v1/executor/multiproc_executor.py:749] Parent process exited, terminating worker
+[BASH] [2m2026-04-10T04:53:04.492391Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m Waiting for 1 local, 0 remote core engine proc(s) to start.
+[BASH] [2m2026-04-10T04:53:04.538676Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100] EngineCore failed to start.
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100] Traceback (most recent call last):
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1090, in run_engine_core
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     return func(*args, **kwargs)
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 834, in __init__
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     super().__init__(
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 110, in __init__
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     self.model_executor = executor_class(vllm_config)
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 100, in __init__
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     super().__init__(vllm_config)
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     return func(*args, **kwargs)
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 103, in __init__
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     self._init_executor()
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 180, in _init_executor
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     self.workers = WorkerProc.wait_for_ready(unready_workers)
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 697, in wait_for_ready
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100]     raise e from None
+[BASH] (EngineCore_DP0 pid=186035) ERROR 04-10 04:53:04 [v1/engine/core.py:1100] Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+[BASH] (EngineCore_DP0 pid=186035) Process EngineCore_DP0:
+[BASH] (EngineCore_DP0 pid=186035) Traceback (most recent call last):
+[BASH] (EngineCore_DP0 pid=186035)   File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+[BASH] (EngineCore_DP0 pid=186035)     self.run()
+[BASH] (EngineCore_DP0 pid=186035)   File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+[BASH] (EngineCore_DP0 pid=186035)     self._target(*self._args, **self._kwargs)
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1104, in run_engine_core
+[BASH] (EngineCore_DP0 pid=186035)     raise e
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1090, in run_engine_core
+[BASH] (EngineCore_DP0 pid=186035)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+[BASH] (EngineCore_DP0 pid=186035)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH] (EngineCore_DP0 pid=186035)     return func(*args, **kwargs)
+[BASH] (EngineCore_DP0 pid=186035)            ^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 834, in __init__
+[BASH] (EngineCore_DP0 pid=186035)     super().__init__(
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 110, in __init__
+[BASH] (EngineCore_DP0 pid=186035)     self.model_executor = executor_class(vllm_config)
+[BASH] (EngineCore_DP0 pid=186035)                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 100, in __init__
+[BASH] (EngineCore_DP0 pid=186035)     super().__init__(vllm_config)
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH] (EngineCore_DP0 pid=186035)     return func(*args, **kwargs)
+[BASH] (EngineCore_DP0 pid=186035)            ^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 103, in __init__
+[BASH] (EngineCore_DP0 pid=186035)     self._init_executor()
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 180, in _init_executor
+[BASH] (EngineCore_DP0 pid=186035)     self.workers = WorkerProc.wait_for_ready(unready_workers)
+[BASH] (EngineCore_DP0 pid=186035)                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH] (EngineCore_DP0 pid=186035)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 697, in wait_for_ready
+[BASH] (EngineCore_DP0 pid=186035)     raise e from None
+[BASH] (EngineCore_DP0 pid=186035) Exception: WorkerProc initialization failed due to an exception in a background process. See stack trace for root cause.
+[BASH] Traceback (most recent call last):
+[BASH]   File "<frozen runpy>", line 198, in _run_module_as_main
+[BASH]   File "<frozen runpy>", line 88, in _run_code
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/__main__.py", line 12, in <module>
+[BASH]     main()
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/main.py", line 725, in main
+[BASH]     uvloop.run(worker())
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 109, in run
+[BASH]     return __asyncio.run(
+[BASH]            ^^^^^^^^^^^^^^
+[BASH]   File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+[BASH]     return runner.run(main)
+[BASH]            ^^^^^^^^^^^^^^^^
+[BASH]   File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+[BASH]     return self._loop.run_until_complete(task)
+[BASH]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 61, in wrapper
+[BASH]     return await main
+[BASH]            ^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/main.py", line 177, in worker
+[BASH]     await factory.create(
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/worker_factory.py", line 147, in create
+[BASH]     await self._create_decode_worker(
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/worker_factory.py", line 260, in _create_decode_worker
+[BASH]     ) = self.setup_vllm_engine(config, factory, fpm_worker_id=fpm_worker_id)
+[BASH]         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/main.py", line 574, in setup_vllm_engine
+[BASH]     engine_client = AsyncLLM.from_vllm_config(
+[BASH]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 225, in from_vllm_config
+[BASH]     return cls(
+[BASH]            ^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 154, in __init__
+[BASH]     self.engine_core = EngineCoreClient.make_async_mp_client(
+[BASH]                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH]     return func(*args, **kwargs)
+[BASH]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 127, in make_async_mp_client
+[BASH]     return AsyncMPClient(*client_args)
+[BASH]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[BASH]     return func(*args, **kwargs)
+[BASH]            ^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 911, in __init__
+[BASH]     super().__init__(
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 569, in __init__
+[BASH]     with launch_core_engines(
+[BASH]   File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+[BASH]     next(self.gen)
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 951, in launch_core_engines
+[BASH]     wait_for_engine_startup(
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1010, in wait_for_engine_startup
+[BASH]     raise RuntimeError(
+[BASH] RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+[BASH] [2m2026-04-10T04:53:06.544418Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:08.551294Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:10.557257Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:12.564148Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:14.570538Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:16.577329Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:18.583872Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:20.590404Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:22.597101Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:24.603647Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:26.610284Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:28.618515Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:30.624335Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:32.629147Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:34.634106Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:36.639218Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:38.645560Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:40.652531Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:42.659687Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:44.667173Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:46.673928Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:48.680382Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:50.686501Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:52.693637Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:54.700145Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:56.707198Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:53:58.714718Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:00.721217Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:02.727530Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:04.734080Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:06.740292Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:08.746464Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:10.754077Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:12.761340Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:14.767732Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:16.774268Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:18.780837Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:20.787512Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:22.794633Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:24.802616Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:26.809000Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:28.815780Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:30.822462Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:32.828775Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:34.834722Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:36.842541Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:38.851239Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:40.858113Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:42.864964Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:44.872169Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:46.879463Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:48.886449Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:50.892445Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:52.899159Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:54.905805Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:56.912547Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:54:58.919297Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:00.925611Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:02.932239Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:04.938191Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:06.944504Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:08.951283Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:10.957385Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:12.963965Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:14.970051Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:16.976859Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:18.985060Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:20.991197Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:22.997912Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:25.005613Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:27.013531Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:29.020922Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:31.028567Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m1
+[BASH] [2m2026-04-10T04:55:33.035000Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:35.041403Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:37.047508Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:39.053990Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:41.060606Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:43.067458Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:45.073981Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:47.080744Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:49.087119Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:51.093648Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:53.099729Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:55.106774Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:57.113039Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:55:59.119977Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:01.127351Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:03.134451Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:05.141748Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:07.148599Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:09.155562Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:11.161569Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:13.169082Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:15.175411Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:17.181637Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:19.189001Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:21.195757Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:23.202261Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:25.208133Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:27.215384Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:29.221681Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:31.228096Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:33.234738Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:35.241366Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:37.247738Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:39.254516Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:41.260586Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:43.266780Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:45.274312Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:47.281984Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:49.289246Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:51.295054Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:53.301316Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:55.308395Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:57.315204Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:56:59.321521Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:01.327969Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:03.334297Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:05.340514Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:07.352513Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:09.359522Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:11.365199Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:13.371336Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:15.378004Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:17.384610Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:19.392138Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:21.398604Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:23.405325Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:25.412214Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:27.418839Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:29.425937Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:31.433255Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:33.440468Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:35.447639Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:57:43.721891Z[0m [33m WARN[0m [2mdynamo_runtime::transports::etcd::lease[0m[2m:[0m Keep-alive stream error [3mlease_id[0m[2m=[0m4366975917682036485 [3merror[0m[2m=[0mgrpc request error: code: 'Unknown error', message: "h2 protocol error: error reading a body from connection", source: hyper::Error(Body, Error { kind: Io(Custom { kind: BrokenPipe, error: "stream closed because of a broken pipe" }) })
+[BASH] [2m2026-04-10T04:57:43.722370Z[0m [33m WARN[0m [2mdynamo_runtime::transports::etcd[0m[2m:[0m Error watching stream for prefix 'v1/mdc/' [3merror[0m[2m=[0mgrpc request error: code: 'Unknown error', message: "h2 protocol error: error reading a body from connection", source: hyper::Error(Body, Error { kind: Io(Custom { kind: BrokenPipe, error: "stream closed because of a broken pipe" }) })
+[BASH] [2m2026-04-10T04:57:43.723072Z[0m [33m WARN[0m [2mdynamo_runtime::transports::etcd::lease[0m[2m:[0m Failed to establish keep-alive stream [3mlease_id[0m[2m=[0m4366975917682036485 [3merror[0m[2m=[0mgrpc request error: code: 'The service is currently unavailable', message: "tcp connect error", source: tonic::transport::Error(Transport, ConnectError(ConnectError("tcp connect error", 127.0.0.1:2429, Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })))
+[BASH] [2m2026-04-10T04:57:43.723117Z[0m [33m WARN[0m [2mdynamo_runtime::transports::etcd::connector[0m[2m:[0m Reconnecting to ETCD cluster at: ["http://localhost:2429"]
+[BASH] [2m2026-04-10T04:57:43.723198Z[0m [32m INFO[0m [2mdynamo_runtime::transports::etcd::connector[0m[2m:[0m Successfully reconnected to ETCD cluster
+[BASH] [2m2026-04-10T04:57:43.723570Z[0m [33m WARN[0m [2mdynamo_runtime::transports::etcd::lease[0m[2m:[0m Failed to establish keep-alive stream [3mlease_id[0m[2m=[0m4366975917682036485 [3merror[0m[2m=[0mgrpc request error: code: 'The service is currently unavailable', message: "tcp connect error", source: tonic::transport::Error(Transport, ConnectError(ConnectError("tcp connect error", 127.0.0.1:2429, Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })))
+[BASH] [2m2026-04-10T04:57:43.723590Z[0m [33m WARN[0m [2mdynamo_runtime::transports::etcd::connector[0m[2m:[0m Reconnecting to ETCD cluster at: ["http://localhost:2429"]

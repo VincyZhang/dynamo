@@ -1,0 +1,54 @@
+INFO     NatsServer:managed_process.py:437 Running command: nats-server --trace -p 4284 in /workspace
+INFO     NatsServer:managed_process.py:662 Checking Port: 4284
+INFO     NatsServer:managed_process.py:670 SUCCESS: Check Port: 4284
+INFO     NatsServer:managed_process.py:775 Running custom health check '_nats_ready'
+DEBUG    asyncio:selector_events.py:64 Using selector: EpollSelector
+INFO     NatsServer:managed_process.py:795 SUCCESS: Custom health check '_nats_ready' passed (attempt=1, elapsed=0.0s)
+INFO     EtcdServer:managed_process.py:437 Running command: etcd --listen-client-urls http://0.0.0.0:2424 --advertise-client-urls http://0.0.0.0:2424 --listen-peer-urls http://0.0.0.0:2425 --initial-advertise-peer-urls http://localhost:2425 --initial-cluster default=http://localhost:2425 --data-dir /tmp/etcd_jjq3uuyv in /workspace
+INFO     EtcdServer:managed_process.py:662 Checking Port: 2424
+INFO     EtcdServer:managed_process.py:670 SUCCESS: Check Port: 2424
+INFO     test_serve_deployment[multimodal_video_disagg]:common.py:43 Starting multimodal_video_disagg test_deployment
+INFO     test_serve_deployment[multimodal_video_disagg]:common.py:49 Using model: Qwen/Qwen3-VL-2B-Instruct
+INFO     test_serve_deployment[multimodal_video_disagg]:common.py:50 Script: disagg_multimodal_epd.sh
+INFO     EngineProcess:managed_process.py:437 Running command: bash /workspace/examples/backends/vllm/launch/disagg_multimodal_epd.sh --model Qwen/Qwen3-VL-2B-Instruct --single-gpu in /workspace/examples/backends/vllm
+INFO     EngineProcess:managed_process.py:690 Checking URL http://localhost:8068/v1/models
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8068
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8068 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8068
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8068 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8068
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8068 "GET /v1/models HTTP/1.1" 200 27
+ERROR    EngineProcess:managed_process.py:642 Main server process died with exit code 0 while waiting for health check
+ERROR    EngineProcess:managed_process.py:627 === Last 20 lines from /tmp/dynamo_tests/test_serve_deployment[multimodal_video_disagg]/bash.log.txt ===
+ERROR    EngineProcess:managed_process.py:633 [BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 569, in __init__
+ERROR    EngineProcess:managed_process.py:633 [BASH]     with launch_core_engines(
+ERROR    EngineProcess:managed_process.py:633 [BASH]   File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+ERROR    EngineProcess:managed_process.py:633 [BASH]     next(self.gen)
+ERROR    EngineProcess:managed_process.py:633 [BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 951, in launch_core_engines
+ERROR    EngineProcess:managed_process.py:633 [BASH]     wait_for_engine_startup(
+ERROR    EngineProcess:managed_process.py:633 [BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1010, in wait_for_engine_startup
+ERROR    EngineProcess:managed_process.py:633 [BASH]     raise RuntimeError(
+ERROR    EngineProcess:managed_process.py:633 [BASH] RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.323388Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+ERROR    EngineProcess:managed_process.py:633 [BASH] Cleaning up...
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589032Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589277Z[0m [32m INFO[0m [2mgraceful_shutdown.graceful_shutdown_with_discovery[0m[2m:[0m Received shutdown signal; unregistering endpoints from discovery
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589444Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589556Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589567Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 0
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589574Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.589865Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m HTTP server shutdown requested
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.593941Z[0m [32m INFO[0m [2mdynamo_runtime::component::endpoint[0m[2m:[0m Successfully unregistered endpoint instance from discovery - worker removed from routing pool [3minstance_id[0m[2m=[0m5487809274883163917
+ERROR    EngineProcess:managed_process.py:633 [BASH] [2m2026-04-10T04:49:43.594639Z[0m [32m INFO[0m [2mgraceful_shutdown.graceful_shutdown_with_discovery[0m[2m:[0m Grace period 5.00s before stopping endpoints
+ERROR    EngineProcess:managed_process.py:634 === End of log tail ===
+INFO     EngineProcess:managed_process.py:558 Sending SIGTERM to process group: 170482
+INFO     EngineProcess:managed_process.py:31 Terminating PID: 170484 name: tee
+INFO     EngineProcess:managed_process.py:36 Sending SIGTERM (kill): 170484 tee
+INFO     EngineProcess:managed_process.py:31 Terminating PID: 170483 name: sed
+INFO     EngineProcess:managed_process.py:36 Sending SIGTERM (kill): 170483 sed
+INFO     EtcdServer:managed_process.py:558 Sending SIGTERM to process group: 170470
+INFO     EtcdServer:managed_process.py:31 Terminating PID: 170471 name: sed
+INFO     EtcdServer:managed_process.py:36 Sending SIGTERM (kill): 170471 sed
+INFO     NatsServer:managed_process.py:558 Sending SIGTERM to process group: 170457
+INFO     NatsServer:managed_process.py:31 Terminating PID: 170458 name: sed
+INFO     NatsServer:managed_process.py:36 Sending SIGTERM (kill): 170458 sed

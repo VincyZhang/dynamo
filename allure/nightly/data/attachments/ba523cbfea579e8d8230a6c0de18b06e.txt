@@ -1,0 +1,65 @@
+[2m2026-04-10T04:23:38.562187Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: nats-server --trace -p 4236 -js --store_dir /tmp/nats_f48pjgr9 in /workspace
+[2m2026-04-10T04:23:38.567634Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m Checking Port: 4236
+[2m2026-04-10T04:23:38.668711Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m SUCCESS: Check Port: 4236
+[2m2026-04-10T04:23:38.669210Z[0m [32m INFO[0m [2mmanaged_process._check_func[0m[2m:[0m Running custom health check '_nats_ready'
+[2m2026-04-10T04:23:38.679666Z[0m [32m INFO[0m [2mmanaged_process._check_func[0m[2m:[0m SUCCESS: Custom health check '_nats_ready' passed (attempt=1, elapsed=0.0s)
+[2m2026-04-10T04:23:38.680834Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: etcd --listen-client-urls http://0.0.0.0:2464 --advertise-client-urls http://0.0.0.0:2464 --listen-peer-urls http://0.0.0.0:2465 --initial-advertise-peer-urls http://localhost:2465 --initial-cluster default=http://localhost:2465 --data-dir /tmp/etcd_6s0deh8s in /workspace
+[2m2026-04-10T04:23:38.685306Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m Checking Port: 2464
+[2m2026-04-10T04:23:38.786342Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m SUCCESS: Check Port: 2464
+[2m2026-04-10T04:23:38.790021Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: python3 -m dynamo.vllm --model Qwen/Qwen3-VL-2B-Instruct --enable-multimodal --gpu-memory-utilization 0.70 --max-model-len 8192 --served-model-name Qwen/Qwen3-VL-2B-Instruct__internal --kv-events-config {"publisher":"zmq","topic":"kv-events","endpoint":"tcp://*:10028","enable_kv_cache_events": true} in /workspace
+[2m2026-04-10T04:23:38.796457Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Checking URL http://localhost:10026/health
+[2m2026-04-10T04:23:58.894655Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Still waiting for URL http://localhost:10026/health (status code 503) (attempt=21, elapsed=20.1s)
+[2m2026-04-10T04:24:19.021734Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Still waiting for URL http://localhost:10026/health (status code 503) (attempt=41, elapsed=40.2s)
+[2m2026-04-10T04:24:39.140770Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Still waiting for URL http://localhost:10026/health (status code 503) (attempt=61, elapsed=60.3s)
+[2m2026-04-10T04:24:59.259790Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Still waiting for URL http://localhost:10026/health (status code 503) (attempt=81, elapsed=80.5s)
+[2m2026-04-10T04:25:19.398708Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Still waiting for URL http://localhost:10026/health (status code 503) (attempt=101, elapsed=100.6s)
+[2m2026-04-10T04:25:21.412799Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m SUCCESS: Check URL: http://localhost:10026/health (attempt=103, elapsed=102.6s)
+Response:
+{
+  "status": "ready",
+  "uptime": {
+    "secs": 94,
+    "nanos": 361149700
+  },
+  "endpoints": {
+    "get_perf_metrics": "ready",
+    "generate": "ready",
+    "clear_kv_blocks": "ready",
+    "worker_kv_indexer_query_dp0": "ready"
+  }
+}
+[2m2026-04-10T04:25:31.415485Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: python3 -m examples.backends.vllm.mm_router_worker --model Qwen/Qwen3-VL-2B-Instruct --namespace dynamo --component mm_router --endpoint generate --downstream-component backend --downstream-endpoint generate --block-size 16 in /workspace
+[2m2026-04-10T04:25:31.424587Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Checking URL http://localhost:10027/health
+[2m2026-04-10T04:25:42.473113Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m SUCCESS: Check URL: http://localhost:10027/health (attempt=12, elapsed=11.0s)
+Response:
+{
+  "status": "ready",
+  "uptime": {
+    "secs": 2,
+    "nanos": 423999595
+  },
+  "endpoints": {
+    "generate": "ready"
+  }
+}
+[2m2026-04-10T04:25:45.475536Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: python3 -m dynamo.frontend --http-port 10025 --router-mode round-robin in /workspace
+[2m2026-04-10T04:25:45.482985Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m Checking URL http://localhost:10025/v1/models
+[2m2026-04-10T04:25:50.503297Z[0m [32m INFO[0m [2mmanaged_process._check_url[0m[2m:[0m SUCCESS: Check URL: http://localhost:10025/v1/models (attempt=5, elapsed=4.0s)
+Response:
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "Qwen/Qwen3-VL-2B-Instruct",
+      "object": "model",
+      "created": 1775795149,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "Qwen/Qwen3-VL-2B-Instruct__internal",
+      "object": "model",
+      "created": 1775795149,
+      "owned_by": "nvidia"
+    }
+  ]
+}

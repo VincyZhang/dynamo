@@ -1,0 +1,44 @@
+[2m2026-04-10T04:19:59.970492Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: nats-server --trace -p 4283 in /workspace
+[2m2026-04-10T04:19:59.975302Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m Checking Port: 4283
+[2m2026-04-10T04:20:00.076937Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m SUCCESS: Check Port: 4283
+[2m2026-04-10T04:20:00.078300Z[0m [32m INFO[0m [2mmanaged_process._check_func[0m[2m:[0m Running custom health check '_nats_ready'
+[2m2026-04-10T04:20:00.086954Z[0m [32m INFO[0m [2mmanaged_process._check_func[0m[2m:[0m SUCCESS: Custom health check '_nats_ready' passed (attempt=1, elapsed=0.0s)
+[2m2026-04-10T04:20:00.089208Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: etcd --listen-client-urls http://0.0.0.0:2440 --advertise-client-urls http://0.0.0.0:2440 --listen-peer-urls http://0.0.0.0:2441 --initial-advertise-peer-urls http://localhost:2441 --initial-cluster default=http://localhost:2441 --data-dir /tmp/etcd_arujyv2n in /workspace
+[2m2026-04-10T04:20:00.094339Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m Checking Port: 2440
+[2m2026-04-10T04:20:00.195770Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m SUCCESS: Check Port: 2440
+[2m2026-04-10T04:20:00.206246Z[0m [32m INFO[0m [2mmanaged_process._start_process[0m[2m:[0m Running command: vllm serve --block-size 16 --port 8071 --kv-transfer-config {"kv_connector":"DynamoConnector","kv_role":"kv_both", "kv_connector_module_path": "kvbm.vllm_integration.connector"} Qwen/Qwen3-0.6B --max-model-len 8000 --num-gpu-blocks-override 50 --max-num-batched-tokens 256 in /workspace
+[2m2026-04-10T04:20:00.212418Z[0m [32m INFO[0m [2mmanaged_process._check_port[0m[2m:[0m Checking Port: 8071
+[2m2026-04-10T04:21:28.666195Z[0m [31mERROR[0m [2mmanaged_process._check_process_alive[0m[2m:[0m Main server process died with exit code 1 while waiting for port 8071
+[2m2026-04-10T04:21:28.666715Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m === Last 20 lines from /tmp/dynamo_tests/test_chunked_prefill_offload[llm_server_kvbm0]_vllm/vllm.log.txt ===
+[2m2026-04-10T04:21:28.666775Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[2m2026-04-10T04:21:28.666802Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     return func(*args, **kwargs)
+[2m2026-04-10T04:21:28.666825Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)            ^^^^^^^^^^^^^^^^^^^^^
+[2m2026-04-10T04:21:28.666856Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 127, in make_async_mp_client
+[2m2026-04-10T04:21:28.666884Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     return AsyncMPClient(*client_args)
+[2m2026-04-10T04:21:28.666905Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2m2026-04-10T04:21:28.666926Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[2m2026-04-10T04:21:28.666948Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     return func(*args, **kwargs)
+[2m2026-04-10T04:21:28.666967Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)            ^^^^^^^^^^^^^^^^^^^^^
+[2m2026-04-10T04:21:28.666987Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 911, in __init__
+[2m2026-04-10T04:21:28.667025Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     super().__init__(
+[2m2026-04-10T04:21:28.667045Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 569, in __init__
+[2m2026-04-10T04:21:28.667065Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     with launch_core_engines(
+[2m2026-04-10T04:21:28.667083Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+[2m2026-04-10T04:21:28.667102Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     next(self.gen)
+[2m2026-04-10T04:21:28.667122Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 951, in launch_core_engines
+[2m2026-04-10T04:21:28.667142Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     wait_for_engine_startup(
+[2m2026-04-10T04:21:28.667160Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1010, in wait_for_engine_startup
+[2m2026-04-10T04:21:28.667181Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276)     raise RuntimeError(
+[2m2026-04-10T04:21:28.667201Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m [VLLM] (APIServer pid=63276) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+[2m2026-04-10T04:21:28.667221Z[0m [31mERROR[0m [2mmanaged_process._log_tail_on_error[0m[2m:[0m === End of log tail ===
+[2m2026-04-10T04:21:28.667290Z[0m [32m INFO[0m [2mmanaged_process._terminate_process_group[0m[2m:[0m Sending SIGTERM to process group: 63276
+[2m2026-04-10T04:21:29.370761Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Terminating PID: 63278 name: tee
+[2m2026-04-10T04:21:29.371231Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Sending SIGTERM (kill): 63278 tee
+[2m2026-04-10T04:21:29.372272Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Terminating PID: 63277 name: sed
+[2m2026-04-10T04:21:29.372455Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Sending SIGTERM (kill): 63277 sed
+[2m2026-04-10T04:21:29.973395Z[0m [32m INFO[0m [2mmanaged_process._terminate_process_group[0m[2m:[0m Sending SIGTERM to process group: 63266
+[2m2026-04-10T04:21:30.075495Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Terminating PID: 63267 name: sed
+[2m2026-04-10T04:21:30.075861Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Sending SIGTERM (kill): 63267 sed
+[2m2026-04-10T04:21:30.078350Z[0m [32m INFO[0m [2mmanaged_process._terminate_process_group[0m[2m:[0m Sending SIGTERM to process group: 63253
+[2m2026-04-10T04:21:30.180153Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Terminating PID: 63254 name: sed
+[2m2026-04-10T04:21:30.180490Z[0m [32m INFO[0m [2mmanaged_process.terminate_process[0m[2m:[0m Sending SIGTERM (kill): 63254 sed

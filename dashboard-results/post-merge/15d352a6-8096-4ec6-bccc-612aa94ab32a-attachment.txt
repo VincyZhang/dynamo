@@ -1,0 +1,519 @@
+[BASH] ==========================================
+[BASH] Launching Aggregated Multimodal Serving
+[BASH] ==========================================
+[BASH] Model:       Qwen/Qwen3-VL-2B-Instruct
+[BASH] Frontend:    http://localhost:8030
+[BASH] Backend:     dynamo.vllm --enable-multimodal
+[BASH] Media:       image_url and video_url (model support dependent)
+[BASH] ==========================================
+[BASH] 
+[BASH] Example test command:
+[BASH] 
+[BASH]   curl http://localhost:8030/v1/chat/completions \
+[BASH]     -H 'Content-Type: application/json' \
+[BASH]     -d '{
+[BASH]       "model": "Qwen/Qwen3-VL-2B-Instruct",
+[BASH]       "messages": [{"role": "user", "content": [
+[BASH]         {"type": "text", "text": "Describe the image"},
+[BASH]         {"type": "image_url", "image_url": {"url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/300px-PNG_transparency_demonstration_1.png"}}
+[BASH]       ]}],
+[BASH]       "max_tokens": 50
+[BASH]     }'
+[BASH] 
+[BASH]   # For video-capable models such as Qwen/Qwen3-VL-2B-Instruct:
+[BASH]   curl http://localhost:8030/v1/chat/completions \
+[BASH]     -H 'Content-Type: application/json' \
+[BASH]     -d '{
+[BASH]       "model": "Qwen/Qwen3-VL-2B-Instruct",
+[BASH]       "messages": [{"role": "user", "content": [
+[BASH]         {"type": "text", "text": "Describe the video in detail"},
+[BASH]         {"type": "video_url", "video_url": {"url": "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen3-Omni/demo/draw.mp4"}}
+[BASH]       ]}],
+[BASH]       "max_tokens": 128
+[BASH]     }'
+[BASH] 
+[BASH] ==========================================
+[BASH] [2m2026-04-10T04:47:34.059747Z[0m [32m INFO[0m [2mmain.async_main[0m[2m:[0m Request migration disabled (limit: 0)
+[BASH] [2m2026-04-10T04:47:34.180555Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m Initializing KV store discovery backend: Etcd(http://localhost:2410)
+[BASH] [2m2026-04-10T04:47:34.191317Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Initializing NetworkManager with TCP request plane [3mmode[0m[2m=[0mtcp [3mhost[0m[2m=[0m192.168.8.2 [3mport[0m[2m=[0mOS-assigned
+[BASH] [2m2026-04-10T04:47:34.331594Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m Starting HTTP(S) service [3mprotocol[0m[2m=[0m"HTTP" [3maddress[0m[2m=[0m"0.0.0.0:8030"
+[BASH] DEBUG 04-10 04:47:34 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:47:34 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:47:35 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:47:35 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:47:35 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:47:35 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:47:35 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:47:35 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] [2026-04-10 04:47:39] WARNING __init__.py:60: dynamo.nixl_connect: Failed to load CuPy for GPU acceleration, utilizing numpy to provide CPU based operations.
+[BASH] [2m2026-04-10T04:47:39.369563Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m Available plugins for group vllm.general_plugins:
+[BASH] [2m2026-04-10T04:47:39.369858Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] [2m2026-04-10T04:47:39.369883Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] [2m2026-04-10T04:47:39.369903Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] [2m2026-04-10T04:47:39.377741Z[0m [32m INFO[0m [2marg_utils.__post_init__[0m[2m:[0m HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen3-VL-2B-Instruct] to model_path [/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203]
+[BASH] [2m2026-04-10T04:47:39.378044Z[0m [32m INFO[0m [2margs.update_engine_config_with_dynamo[0m[2m:[0m Using kv_events_config for publishing vLLM kv events over zmq: None (use_kv_events=False)
+[BASH] [2m2026-04-10T04:47:39.676920Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-VL-2B-Instruct' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203", skipping download
+[BASH] [2m2026-04-10T04:47:39.677012Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-VL-2B-Instruct' without API validation
+[BASH] [2m2026-04-10T04:47:39.823875Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m Initializing KV store discovery backend: Etcd(http://localhost:2410)
+[BASH] [2m2026-04-10T04:47:39.837152Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Initializing NetworkManager with TCP request plane [3mmode[0m[2m=[0mtcp [3mhost[0m[2m=[0m192.168.8.2 [3mport[0m[2m=[0mOS-assigned
+[BASH] [2m2026-04-10T04:47:39.837978Z[0m [32m INFO[0m [2mdynamo_runtime::system_status_server[0m[2m:[0m [spawn_system_status_server] binding to: 0.0.0.0:8167
+[BASH] [2m2026-04-10T04:47:39.838027Z[0m [32m INFO[0m [2mdynamo_runtime::system_status_server[0m[2m:[0m [spawn_system_status_server] system status server bound to: 0.0.0.0:8167
+[BASH] [2m2026-04-10T04:47:39.838047Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m System status server started successfully on 0.0.0.0:8167
+[BASH] [2m2026-04-10T04:47:39.838235Z[0m [32m INFO[0m [2mgraceful_shutdown.install_signal_handlers[0m[2m:[0m Signal handlers set up for graceful shutdown (discovery unregister + grace period)
+[BASH] [2m2026-04-10T04:47:39.838723Z[0m [33mWARNING[0m [2mprometheus.setup_multiprocess_prometheus[0m[2m:[0m Found PROMETHEUS_MULTIPROC_DIR was set by user. This directory must be wiped between vLLM runs or you will find inaccurate metrics. Unset the variable and vLLM will properly handle cleanup.
+[BASH] [2m2026-04-10T04:47:39.848211Z[0m [2mDEBUG[0m [2mregistry.inspect_model_cls[0m[2m:[0m Loaded model info for class vllm.model_executor.models.qwen3_vl.Qwen3VLForConditionalGeneration from cache
+[BASH] [2m2026-04-10T04:47:39.848288Z[0m [2mDEBUG[0m [2mlog_time._wrapper[0m[2m:[0m Registry inspect model class: Elapsed time 0.0003849 secs
+[BASH] [2m2026-04-10T04:47:39.848332Z[0m [32m INFO[0m [2mmodel.__post_init__[0m[2m:[0m Resolved architecture: Qwen3VLForConditionalGeneration
+[BASH] [2m2026-04-10T04:47:39.848396Z[0m [32m INFO[0m [2mmodel.get_and_verify_max_len[0m[2m:[0m Using max model len 4096
+[BASH] [2m2026-04-10T04:47:39.849630Z[0m [33mWARNING[0m [2mmodel.get_diff_sampling_param[0m[2m:[0m Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 0.7, 'top_k': 20, 'top_p': 0.8}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+[BASH] [2m2026-04-10T04:47:39.856083Z[0m [32m INFO[0m [2mmodel.__post_init__[0m[2m:[0m Resolved architecture: Qwen3VLForConditionalGeneration
+[BASH] [2m2026-04-10T04:47:39.856194Z[0m [32m INFO[0m [2mmodel.get_and_verify_max_len[0m[2m:[0m Using max model len 4096
+[BASH] [2m2026-04-10T04:47:39.856280Z[0m [2mDEBUG[0m [2mmodel.is_chunked_prefill_supported[0m[2m:[0m Generative models support chunked prefill.
+[BASH] [2m2026-04-10T04:47:39.856301Z[0m [2mDEBUG[0m [2mmodel.is_prefix_caching_supported[0m[2m:[0m Generative models support prefix caching.
+[BASH] [2m2026-04-10T04:47:39.856316Z[0m [2mDEBUG[0m [2marg_utils._set_default_chunked_prefill_and_prefix_caching_args[0m[2m:[0m Enabling chunked prefill by default
+[BASH] [2m2026-04-10T04:47:39.908628Z[0m [2mDEBUG[0m [2marg_utils._set_default_max_num_seqs_and_batched_tokens_args[0m[2m:[0m Defaulting max_num_batched_tokens to 2048 for OPENAI_API_SERVER usage context.
+[BASH] [2m2026-04-10T04:47:39.998830Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] [2m2026-04-10T04:47:39.999245Z[0m [32m INFO[0m [2mscheduler.__post_init__[0m[2m:[0m Chunked prefill is enabled with max_num_batched_tokens=2048.
+[BASH] [2m2026-04-10T04:47:39.999485Z[0m [2mDEBUG[0m [2mparallel._verify_args[0m[2m:[0m Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] [2m2026-04-10T04:47:39.999829Z[0m [32m INFO[0m [2mvllm.__post_init__[0m[2m:[0m Asynchronous scheduling is enabled.
+[BASH] [2m2026-04-10T04:47:40.000429Z[0m [2mDEBUG[0m [2mflashinfer.has_flashinfer[0m[2m:[0m FlashInfer unavailable since package was not found
+[BASH] [2m2026-04-10T04:47:40.573106Z[0m [33mWARNING[0m [2mxpu.check_and_update_config[0m[2m:[0m XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[BASH] [2m2026-04-10T04:47:40.582614Z[0m [2mDEBUG[0m [2m__init__.load_plugins_by_group[0m[2m:[0m No plugins for group vllm.stat_logger_plugins found.
+[BASH] [2m2026-04-10T04:47:40.582797Z[0m [2mDEBUG[0m [2mregistry.load_renderer_cls[0m[2m:[0m Loading HfRenderer for renderer_mode='hf'
+[BASH] [2m2026-04-10T04:47:41.424036Z[0m [2mDEBUG[0m [2mregistry.load_tokenizer_cls[0m[2m:[0m Loading CachedHfTokenizer for tokenizer_mode='hf'
+[BASH] [2m2026-04-10T04:47:41.798837Z[0m [2mDEBUG[0m [2mtorch_utils.set_default_torch_num_threads[0m[2m:[0m OMP_NUM_THREADS is not set; defaulting Torch threads to 1.
+[BASH] [2m2026-04-10T04:47:41.799565Z[0m [2mDEBUG[0m [2m__init__.get_io_processor[0m[2m:[0m No IOProcessor plugins requested by the model
+[BASH] DEBUG 04-10 04:47:48 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:36] Checking if TPU platform is available.
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:47:48 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:47:49 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:47:49 [platforms/__init__.py:155] Checking if CPU platform is available.
+[BASH] DEBUG 04-10 04:47:49 [platforms/__init__.py:133] Checking if XPU platform is available.
+[BASH] DEBUG 04-10 04:47:49 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[BASH] DEBUG 04-10 04:47:49 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[BASH] DEBUG 04-10 04:47:49 [platforms/__init__.py:220] Automatically detected platform xpu.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [v1/engine/core.py:1004] Waiting for init message from front-end.
+[BASH] [2m2026-04-10T04:47:52.127761Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m HELLO from local core engine process 0.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [v1/engine/core.py:1015] Received init message: EngineHandshakeMetadata(addresses=EngineZmqAddresses(inputs=['ipc:///tmp/233d7e5c-d03f-4ad3-a4c3-47e6fea583ce'], outputs=['ipc:///tmp/8b6089d9-cc84-486a-aaa2-f50eadc067dd'], coordinator_input=None, coordinator_output=None, frontend_stats_publish_address=None), parallel_config={})
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [v1/engine/core.py:812] Has DP Coordinator: False, stats publish address: None
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:52 [v1/engine/core.py:101] Initializing a V1 LLM engine (v0.17.1) with config: model='/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203', speculative_config=None, tokenizer='/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=True, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=xpu, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Qwen/Qwen3-VL-2B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 4, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:52 [utils/flashinfer.py:55] FlashInfer unavailable since package was not found
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:53 [compilation/decorators.py:202] Inferred dynamic dimensions for forward method of <class 'vllm.model_executor.models.llama.LlamaModel'>: ['input_ids', 'positions', 'intermediate_tensors', 'inputs_embeds']
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:53 [tokenizers/registry.py:67] Loading CachedHfTokenizer for tokenizer_mode='hf'
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:53 [distributed/parallel_state.py:1349] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://192.168.8.2:54267 backend=xccl
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:53 [distributed/parallel_state.py:1393] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://192.168.8.2:54267 backend=xccl
+[BASH] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:54 [distributed/parallel_state.py:1452] Detected 1 nodes in the distributed environment
+[BASH] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[BASH] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[BASH] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[BASH] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[BASH] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:54 [distributed/parallel_state.py:1715] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:54 [v1/worker/xpu_worker.py:98] worker init memory snapshot: torch_peak=0.0GiB, free_memory=22.71GiB, total_memory=22.71GiB, xpu_memory=0.0GiB, torch_memory=0.0GiB, non_torch_memory=0.0GiB, timestamp=1775796474.4065444, auto_measure=True
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:54 [v1/worker/xpu_worker.py:99] worker requested memory: 20.44GiB
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:54 [v1/sample/logits_processor/__init__.py:63] No logitsprocs plugins installed (group vllm.logits_processors).
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:54 [utils/torch_utils.py:119] OMP_NUM_THREADS is not set; defaulting Torch threads to 1.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:57 [model_executor/offloader/base.py:106] Offloader set to NoopOffloader
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:57 [v1/worker/gpu_model_runner.py:4281] Starting to load model /home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203...
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:58 [platforms/xpu.py:113] Using backend AttentionBackendEnum.FLASH_ATTN for vit attention
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:58 [model_executor/.../attention/mm_encoder_attention.py:215] Using AttentionBackendEnum.FLASH_ATTN for MMEncoderAttention.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [config/parallel.py:825] Disabled the custom all-reduce kernel because it is not supported on current platform.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:58 [config/vllm.py:747] Asynchronous scheduling is enabled.
+[BASH] (EngineCore_DP0 pid=168808) WARNING 04-10 04:47:58 [platforms/xpu.py:180] XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:58 [platforms/xpu.py:57] Setting VLLM_KV_CACHE_LAYOUT to 'NHD' for XPU; only NHD layout is supported by XPU attention kernels.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:58 [platforms/xpu.py:78] Using Flash Attention backend.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:58 [v1/attention/backends/flash_attn.py:587] Using FlashAttention version 2
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [compilation/backends.py:100] Using InductorStandaloneAdaptor
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [compilation/backends.py:100] Using InductorStandaloneAdaptor
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [compilation/backends.py:100] Using InductorStandaloneAdaptor
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [config/compilation.py:1105] enabled custom ops: Counter({'mm_encoder_attn': 24, 'apply_rotary_emb': 24})
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [config/compilation.py:1106] disabled custom ops: Counter({'rms_norm': 113, 'silu_and_mul': 28, 'rotary_embedding': 2, 'apply_rotary_emb': 2, 'conv3d': 1, 'vocab_parallel_embedding': 1, 'logits_processor': 1})
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:47:58 [model_executor/model_loader/base_loader.py:60] Loading weights on xpu ...
+[BASH] (EngineCore_DP0 pid=168808) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+[BASH] (EngineCore_DP0 pid=168808) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  1.01it/s]
+[BASH] (EngineCore_DP0 pid=168808) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  1.01it/s]
+[BASH] (EngineCore_DP0 pid=168808) 
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:47:59 [model_executor/model_loader/default_loader.py:293] Loading weights took 1.03 seconds
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:00 [v1/worker/gpu_model_runner.py:4364] Model loading took 4.24 GiB memory and 2.093025 seconds
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:00 [v1/worker/gpu_model_runner.py:5280] Encoder cache will be initialized with a budget of 16384 tokens, and profiled with 1 image items of the maximum feature size.
+[BASH] [2m2026-04-10T04:48:02.138423Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m Waiting for 1 local, 0 remote core engine proc(s) to start.
+[BASH] [2m2026-04-10T04:48:12.149232Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m Waiting for 1 local, 0 remote core engine proc(s) to start.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:12 [v1/worker/gpu_model_runner.py:4883] ubatch_slices: None, ubatch_slices_padded: None
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:12 [compilation/decorators.py:491] Start compiling function <code object forward at 0x1c9946a0, file "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3_vl.py", line 1244>
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] Traced files (to be considered for compilation cache):
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/__init__.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/builtins.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/itertools.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/nn/modules/container.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/parallel_state.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/custom_op.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/activation.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/attention/attention.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/batch_invariant.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/linear.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/base.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/common.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/utils.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen2.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3_vl.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/parameter.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/platforms/interface.py
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/sequence.py
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:18 [compilation/backends.py:916] Using cache directory: /home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone for vLLM's torch.compile
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:928] torch.compile cache factors: env=efc5d4393043b5dc0077b6f199b7f1cb7889ed9b6900fb3d30d44db221ef80a5 cfg=39db781d73 comp=c428283ebb code=f57e2063769c6b23076e2837d96ce5b4058f7312614b5d18c9c496e688135b49 dir=/home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939] Compile env factors (raw):
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939] {'CMAKE_BUILD_TYPE': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'CUDA_HOME': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'K_SCALE_CONSTANT': 200,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'NVCC_THREADS': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'Q_SCALE_CONSTANT': 200,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_ASCEND_RT_VISIBLE_DEVICES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_HABANA_VISIBLE_MODULES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_NEURON_RT_VISIBLE_CORES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_ONEAPI_DEVICE_SELECTOR': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_RBLN_RT_VISIBLE_DEVICES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_ROCR_VISIBLE_DEVICES': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_TPU_VISIBLE_CHIPS': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VERBOSE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ALLOW_CHUNKED_LOCAL_ATTN_WITH_HYBRID_KV_CACHE': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ALLOW_INSECURE_SERIALIZATION': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ALLOW_LONG_MAX_MODEL_LEN': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ALLOW_RUNTIME_LORA_UPDATING': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ALLREDUCE_USE_FLASHINFER': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ALLREDUCE_USE_SYMM_MEM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_API_KEY': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_BLOCKSCALE_FP8_GEMM_FLASHINFER': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_COMPILE_CACHE_SAVE_FORMAT': 'binary',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_COMPUTE_NANS_IN_LOGITS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CONFIGURE_LOGGING': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CONFIG_ROOT': '/home/dynamo/.config/vllm',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CPU_NUM_OF_RESERVED_CPU': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CPU_OMP_THREADS_BIND': 'auto',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CPU_SGL_KERNEL': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CUDART_SO_PATH': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_CUSTOM_SCOPES_FOR_PROFILING': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DBO_COMM_SMS': 20,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEBUG_MFU_METRICS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEBUG_WORKSPACE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEEPEPLL_NVFP4_DISPATCH': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEEPEP_BUFFER_SIZE_MB': 1024,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEEPEP_HIGH_THROUGHPUT_FORCE_INTRA_NODE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEEPEP_LOW_LATENCY_USE_MNNVL': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DEEP_GEMM_WARMUP': 'relax',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DISABLED_KERNELS': (),
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DISABLE_COMPILE_CACHE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DISABLE_LOG_LOGO': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DISABLE_PYNCCL': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DISABLE_REQUEST_ID_RANDOMIZATION': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DISABLE_SHARED_EXPERTS_STREAM': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DOCKER_BUILD_CONTEXT': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DP_RANK': 0,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DP_RANK_LOCAL': 0,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_DP_SIZE': 1,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ELASTIC_EP_DRAIN_REQUESTS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ELASTIC_EP_SCALE_UP_LAUNCH': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_CUDAGRAPH_GC': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_FUSED_MOE_ACTIVATION_CHUNKING': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_INDUCTOR_COORDINATE_DESCENT_TUNING': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_INDUCTOR_MAX_AUTOTUNE': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_MOE_DP_CHUNK': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_PREGRAD_PASSES': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENABLE_RESPONSES_API_STORE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ENGINE_READY_TIMEOUT_S': 600,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_FLASHINFER_ALLREDUCE_BACKEND': 'trtllm',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_FLASHINFER_ALLREDUCE_FUSION_THRESHOLDS_MB': (),
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_FLASHINFER_MOE_BACKEND': 'latency',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_FLASHINFER_WORKSPACE_BUFFER_SIZE': 413138944,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_FLOAT32_MATMUL_PRECISION': 'highest',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_FUSED_MOE_CHUNK_SIZE': 16384,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_GC_DEBUG': '',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_GPT_OSS_HARMONY_SYSTEM_INSTRUCTIONS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_GPT_OSS_SYSTEM_TOOL_MCP_LABELS': (),
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_HAS_FLASHINFER_CUBIN': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_KV_CACHE_LAYOUT': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_KV_EVENTS_USE_INT_BLOCK_HASHES': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_LOG_BATCHSIZE_INTERVAL': -1.0,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_LOG_MODEL_INSPECTION': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_LOOPBACK_IP': '',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_LORA_DISABLE_PDL': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_LORA_RESOLVER_CACHE_DIR': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_LORA_RESOLVER_HF_REPO_LIST': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MAIN_CUDA_VERSION': '12.9',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MARLIN_INPUT_DTYPE': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MARLIN_USE_ATOMIC_ADD': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MAX_TOKENS_PER_EXPERT_FP4_MOE': 163840,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MLA_DISABLE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MM_HASHER_ALGORITHM': 'blake3',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MOE_DP_CHUNK_SIZE': 256,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MOE_ROUTING_SIMULATION_STRATEGY': '',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MOE_USE_DEEP_GEMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MOONCAKE_ABORT_REQUEST_TIMEOUT': 480,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MOONCAKE_BOOTSTRAP_PORT': 8998,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MORIIO_CONNECTOR_READ_MODE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MORIIO_NUM_WORKERS': 1,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MORIIO_POST_BATCH_SIZE': -1,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MORIIO_QP_PER_TRANSFER': 1,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MQ_MAX_CHUNK_BYTES_MB': 16,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MSGPACK_ZERO_COPY_THRESHOLD': 256,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_MXFP4_USE_MARLIN': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NCCL_INCLUDE_PATH': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NCCL_SO_PATH': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NIXL_ABORT_REQUEST_TIMEOUT': 480,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NIXL_SIDE_CHANNEL_HOST': '192.168.8.2',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NIXL_SIDE_CHANNEL_PORT': 5600,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NVFP4_GEMM_BACKEND': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_NVTX_SCOPES_FOR_PROFILING': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_PATTERN_MATCH_DEBUG': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_PLUGINS': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_PP_LAYER_PARTITION': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_PROCESS_NAME_PREFIX': 'VLLM',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_RAY_BUNDLE_INDICES': '',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_RAY_DP_PACK_STRATEGY': 'strict',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_RAY_EXTRA_ENV_VARS_TO_COPY': '',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_RAY_EXTRA_ENV_VAR_PREFIXES_TO_COPY': '',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_RAY_PER_WORKER_GPUS': 1.0,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_CUSTOM_PAGED_ATTN': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_FP8_MFMA_PAGE_ATTN': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_FP8_PADDING': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_MOE_PADDING': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_QUICK_REDUCE_CAST_BF16_TO_FP16': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_QUICK_REDUCE_MAX_SIZE_BYTES_MB': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_QUICK_REDUCE_QUANTIZATION': 'NONE',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_SHUFFLE_KV_CACHE_LAYOUT': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_SLEEP_MEM_CHUNK_SIZE': 256,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FP4BMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FP4_ASM_GEMM': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FP8BMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_LINEAR': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_MHA': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_MLA': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_MOE': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_PAGED_ATTN': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_RMSNORM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_TRITON_GEMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_TRITON_ROPE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_UNIFIED_ATTENTION': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_ROCM_USE_SKINNY_GEMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_RPC_TIMEOUT': 10000,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_SHARED_EXPERTS_STREAM_TOKEN_THRESHOLD': 256,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_SKIP_P2P_CHECK': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_SKIP_PRECOMPILED_VERSION_SUFFIX': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_SYSTEM_START_DATE': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TARGET_DEVICE': 'xpu',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TEST_FORCE_FP8_MARLIN': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TOOL_JSON_ERROR_AUTOMATIC_RETRY': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TOOL_PARSE_REGEX_TIMEOUT_SECONDS': 1,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TPU_BUCKET_PADDING_GAP': 0,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TPU_MOST_MODEL_LEN': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TPU_USING_PATHWAYS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_TRACE_FUNCTION': 0,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USAGE_SOURCE': 'production',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_AOT_COMPILE': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_BYTECODE_HOOK': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_DEEP_GEMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_DEEP_GEMM_E8M0': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_DEEP_GEMM_TMA_ALIGNED_SCALES': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_EXPERIMENTAL_PARSER_CONTEXT': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FBGEMM': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_FP16': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_FP4': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_FP8': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_INT4': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_MXFP4_BF16': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_MXFP4_MXFP8': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_MXFP4_MXFP8_CUTLASS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_SAMPLER': None,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_FUSED_MOE_GROUPED_TOPK': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_MEGA_AOT_ARTIFACT': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_NCCL_SYMM_MEM': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_NVFP4_CT_EMULATIONS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_OINK_OPS': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_PRECOMPILED': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE': 'auto',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_RAY_WRAPPED_PP_COMM': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_STANDALONE_COMPILE': True,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_TRITON_AWQ': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_USE_V2_MODEL_RUNNER': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_V1_USE_OUTLINES_CACHE': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_WEIGHT_OFFLOADING_DISABLE_UVA': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_XGRAMMAR_CACHE_MB': 512,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_XLA_CACHE_PATH': '/home/dynamo/.cache/vllm/xla_cache',
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_XLA_CHECK_RECOMPILATION': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'VLLM_XLA_USE_SPMD': False,
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939]  'V_SCALE_CONSTANT': 100}
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:18 [compilation/backends.py:939] Vllm config hash: 39db781d73
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:18 [compilation/backends.py:976] Dynamo bytecode transform time: 6.15 s
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:19 [compilation/piecewise_backend.py:100] PiecewiseBackend: compile_ranges: [(1, 2048)]
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:19 [compilation/piecewise_backend.py:104] PiecewiseBackend: compile_sizes: []
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:19 [compilation/backends.py:1080] Computation graph saved to /home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone/computation_graph.py
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:19 [compilation/backends.py:350] Cache the graph of compile range (1, 2048) for later use
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:19 [compilation/backends.py:354] Store the 0-th graph for compile range(1, 2048) from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_0', '/home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_0')
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:20 [compilation/backends.py:354] Store the 1-th graph for compile range(1, 2048) from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_1', '/home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_1')
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:20 [compilation/backends.py:354] Store the 2-th graph for compile range(1, 2048) from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_2', '/home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_2')
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:20 [compilation/backends.py:354] Store the 4-th graph for compile range(1, 2048) from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_4', '/home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_4')
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:21 [compilation/backends.py:354] Store the 28-th graph for compile range(1, 2048) from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_28', '/home/dynamo/.cache/vllm/torch_compile_cache/98e8c2b501/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_28')
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:21 [compilation/backends.py:366] Compiling a graph for compile range (1, 2048) takes 1.26 s
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:21 [compilation/monitor.py:35] torch.compile takes 8.35 s in total
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:21 [compilation/decorators.py:580] saving AOT compiled function to /home/dynamo/.cache/vllm/torch_compile_cache/torch_aot_compile/eefb34c66460faa4c3257d1d543f77473dca8064332d1b1f586c6d9cf7be1f79/rank_0_0/model
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:22 [compilation/decorators.py:588] saved AOT compiled function to /home/dynamo/.cache/vllm/torch_compile_cache/torch_aot_compile/eefb34c66460faa4c3257d1d543f77473dca8064332d1b1f586c6d9cf7be1f79/rank_0_0/model
+[BASH] [2m2026-04-10T04:48:22.159836Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m Waiting for 1 local, 0 remote core engine proc(s) to start.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/worker/gpu_worker.py:412] Initial free memory: 22.71 GiB; Requested memory: 0.900000 (util), 20.44 GiB
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/worker/gpu_worker.py:418] Free memory after profiling: 18.38 GiB (total), 16.11 GiB (within requested)
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/worker/gpu_worker.py:423] Memory profiling takes 22.91 seconds. Total non KV cache memory: 6.12GiB; torch peak memory increase: 1.88GiB; non-torch forward increase memory: 0.0GiB; weights memory: 4.24GiB.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:23 [v1/worker/gpu_worker.py:424] Available KV cache memory: 14.32 GiB
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:23 [v1/core/kv_cache_utils.py:1314] GPU KV cache size: 134,016 tokens
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:23 [v1/core/kv_cache_utils.py:1319] Maximum concurrency for 4,096 tokens per request: 32.72x
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:23 [v1/attention/backends/utils.py:59] `_KV_CACHE_LAYOUT_OVERRIDE` variable detected. Setting KV cache layout to NHD.
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:23 [v1/worker/gpu_worker.py:520] Compile and warming up model for size 2048
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/worker/gpu_model_runner.py:4883] ubatch_slices: None, ubatch_slices_padded: None
+[BASH] (EngineCore_DP0 pid=168808) WARNING 04-10 04:48:23 [v1/worker/gpu_model_runner.py:5326] Skipping CUDA graph capture. To turn on CUDA graph capture, ensure `cudagraph_mode` was not manually set to `NONE`
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/worker/gpu_worker.py:586] Free memory on device (22.71/22.71 GiB) on startup. Desired GPU memory utilization is (0.9, 20.44 GiB). Actual usage is 4.24 GiB for weight, 1.88 GiB for peak activation, 0.0 GiB for non-torch memory, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=15214045799` (14.17 GiB) to fit into requested memory, or `--kv-cache-memory=17652614144` (16.44 GiB) to fully utilize gpu memory. Current kv cache memory in use is 14.32 GiB.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/worker/gpu_model_runner.py:4883] ubatch_slices: None, ubatch_slices_padded: None
+[BASH] (EngineCore_DP0 pid=168808) INFO 04-10 04:48:23 [v1/engine/core.py:282] init engine (profile, create kv cache, warmup model) took 23.56 seconds
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:23 [v1/engine/core.py:193] Batch queue is enabled with size 2
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:24 [utils/gc_utils.py:40] GC Debug Config. enabled:False,top_objects:-1
+[BASH] [2m2026-04-10T04:48:24.186531Z[0m [2mDEBUG[0m [2mutils.wait_for_engine_startup[0m[2m:[0m READY from local core engine process 0.
+[BASH] (EngineCore_DP0 pid=168808) WARNING 04-10 04:48:24 [platforms/xpu.py:180] XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:24 [v1/engine/core.py:1142] EngineCore waiting for work.
+[BASH] [2m2026-04-10T04:48:24.194440Z[0m [2mDEBUG[0m [2mloggers.log_engine_initialized[0m[2m:[0m Engine 000: vllm cache_config_info with initialization after num_gpu_blocks is: 2094
+[BASH] [2m2026-04-10T04:48:24.195100Z[0m [32m INFO[0m [2mmain.setup_vllm_engine[0m[2m:[0m VllmWorker for Qwen/Qwen3-VL-2B-Instruct has been initialized
+[BASH] [2m2026-04-10T04:48:24.195279Z[0m [32m INFO[0m [2mmain.get_engine_cache_info[0m[2m:[0m Cache config values: {'num_gpu_blocks': 2094, 'block_size': 64}
+[BASH] [2m2026-04-10T04:48:24.195342Z[0m [32m INFO[0m [2mmain.get_engine_cache_info[0m[2m:[0m Scheduler config values: {'max_num_seqs': 2, 'max_num_batched_tokens': 2048}
+[BASH] [2m2026-04-10T04:48:24.195638Z[0m [32m INFO[0m [2mengine_monitor.__init__[0m[2m:[0m VllmEngineMonitor initialized and health check task started.
+[BASH] [2m2026-04-10T04:48:24.195765Z[0m [33m WARN[0m [2mhandlers.get_dp_range_for_worker[0m[2m:[0m vLLM selects internal DP load balancing. If you are launching multiple workers for DP deployment, hybrid or external load balancing is recommended.
+[BASH] [2m2026-04-10T04:48:24.197112Z[0m [32m INFO[0m [2mworker_factory._create_decode_worker[0m[2m:[0m Registered engine routes: /engine/sleep, /engine/wake_up, /engine/scale_elastic_ep
+[BASH] [2m2026-04-10T04:48:24.197199Z[0m [32m INFO[0m [2mworker_factory._create_decode_worker[0m[2m:[0m Registering model with endpoint types: chat,completions
+[BASH] [2m2026-04-10T04:48:24.197306Z[0m [32m INFO[0m [2mmain.register_vllm_model[0m[2m:[0m Getting engine runtime configuration metadata from vLLM engine for chat,completions...
+[BASH] [2m2026-04-10T04:48:24.197359Z[0m [32m INFO[0m [2mmain.get_engine_cache_info[0m[2m:[0m Cache config values: {'num_gpu_blocks': 2094, 'block_size': 64}
+[BASH] [2m2026-04-10T04:48:24.197396Z[0m [32m INFO[0m [2mmain.get_engine_cache_info[0m[2m:[0m Scheduler config values: {'max_num_seqs': 2, 'max_num_batched_tokens': 2048}
+[BASH] [2m2026-04-10T04:48:24.197472Z[0m [33m WARN[0m [2mhandlers.get_dp_range_for_worker[0m[2m:[0m vLLM selects internal DP load balancing. If you are launching multiple workers for DP deployment, hybrid or external load balancing is recommended.
+[BASH] [2m2026-04-10T04:48:24.199255Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-VL-2B-Instruct' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203", skipping download
+[BASH] [2m2026-04-10T04:48:24.199309Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-VL-2B-Instruct' without API validation
+[BASH] [2m2026-04-10T04:48:24.200532Z[0m [32m INFO[0m [2mdynamo_runtime::discovery::kv_store[0m[2m:[0m KVStoreDiscovery::register: EventChannel bucket=v1/event_channels, key=dynamo//kv_metrics/bef9d75b7763f09
+[BASH] [2m2026-04-10T04:48:24.204278Z[0m [32m INFO[0m [2mdynamo_runtime::transports::event_plane[0m[2m:[0m EventPublisher registered with discovery [3mtopic[0m[2m=[0mkv_metrics [3mtransport[0m[2m=[0mNats [3minstance_id[0m[2m=[0m860079182765768457
+[BASH] [2m2026-04-10T04:48:24.322448Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-VL-2B-Instruct' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-VL-2B-Instruct/snapshots/89644892e4d85e24eaac8bacfd4f463576704203", skipping download
+[BASH] [2m2026-04-10T04:48:24.322549Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-VL-2B-Instruct' without API validation
+[BASH] [2m2026-04-10T04:48:24.336341Z[0m [32m INFO[0m [2m_core[0m[2m:[0m Registered base model 'Qwen/Qwen3-VL-2B-Instruct' MDC
+[BASH] [2m2026-04-10T04:48:24.338391Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Creating TCP request plane server [3mbind_addr[0m[2m=[0m192.168.8.2:0 [3mport_source[0m[2m=[0m"OS-assigned"
+[BASH] [2m2026-04-10T04:48:24.338433Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Initializing TCP server with dispatcher (concurrency=1500, queue=6000)
+[BASH] [2m2026-04-10T04:48:24.338443Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Started TCP worker dispatcher with concurrency limit 1500
+[BASH] [2m2026-04-10T04:48:24.338474Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Binding TCP server to 192.168.8.2:0
+[BASH] [2m2026-04-10T04:48:24.338551Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m TCP server bound successfully [3mrequested[0m[2m=[0m192.168.8.2:0 [3mactual[0m[2m=[0m192.168.8.2:35091
+[BASH] [2m2026-04-10T04:48:24.338564Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m TCP request plane server started [3mactual_addr[0m[2m=[0m192.168.8.2:35091 [3mactual_port[0m[2m=[0m35091
+[BASH] [2m2026-04-10T04:48:24.338711Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Registered endpoint 'dynamo.backend.get_perf_metrics' with shared TCP server on 192.168.8.2:35091
+[BASH] [2m2026-04-10T04:48:24.339401Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Registered endpoint 'dynamo.backend.generate' with shared TCP server on 192.168.8.2:35091
+[BASH] [2m2026-04-10T04:48:24.339646Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Registered endpoint 'dynamo.backend.clear_kv_blocks' with shared TCP server on 192.168.8.2:35091
+[BASH] [2m2026-04-10T04:48:24.563921Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m chat endpoints enabled
+[BASH] [2m2026-04-10T04:48:24.563973Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m responses endpoints enabled
+[BASH] [2m2026-04-10T04:48:24.563981Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m completion endpoints enabled
+[BASH] [2m2026-04-10T04:48:24.565688Z[0m [33m WARN[0m [2mdynamo_llm::discovery::worker_monitor[0m[2m:[0m KvWorkerMonitor: KV metrics subscriber not available (KV router's EventSubscriber requires NATS), skipping load metrics.
+[BASH] [2m2026-04-10T04:48:24.566236Z[0m [32m INFO[0m [2mdynamo_llm::discovery::watcher[0m[2m:[0m Chat completions is ready
+[BASH] [2m2026-04-10T04:48:24.566412Z[0m [32m INFO[0m [2mdynamo_llm::discovery::watcher[0m[2m:[0m Completions is ready
+[BASH] [2m2026-04-10T04:48:24.566460Z[0m [32m INFO[0m [2mdynamo_llm::discovery::model[0m[2m:[0m Adding worker set to model [3mmodel[0m[2m=[0mQwen/Qwen3-VL-2B-Instruct [3mnamespace[0m[2m=[0mdynamo
+[BASH] [2m2026-04-10T04:48:24.566484Z[0m [32m INFO[0m [2mdynamo_llm::discovery::watcher[0m[2m:[0m added model [3mmodel_name[0m[2m=[0m"Qwen/Qwen3-VL-2B-Instruct" [3mnamespace[0m[2m=[0m"dynamo"
+[BASH] [2m2026-04-10T04:48:30.954458Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[BASH] [2m2026-04-10T04:48:31.965652Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m2
+[BASH] [2m2026-04-10T04:48:32.973637Z[0m [32m INFO[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::metrics[0m[2m:[0m request received [3mrequest_id[0m[2m=[0m0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c [3mmodel[0m[2m=[0mqwen/qwen3-vl-2b-instruct [3mendpoint[0m[2m=[0mchat_completions [3mrequest_type[0m[2m=[0munary [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0m9e3e1724-345e-45a3-8e73-e53cc1df7898 [3mmodel[0m[2m=[0m"qwen/qwen3-vl-2b-instruct"[0m
+[BASH] [2m2026-04-10T04:48:32.977743Z[0m [32m INFO[0m [1mhandle_payload[0m: [2mdynamo_runtime::pipeline::network::ingress::push_handler[0m[2m:[0m request received [3mrequest_id[0m[2m=[0m0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c [2m[3mrequest_id[0m[2m=[0m"0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c" [3mcomponent[0m[2m=[0m"backend" [3mendpoint[0m[2m=[0m"generate" [3mnamespace[0m[2m=[0m"dynamo" [3minstance_id[0m[2m=[0m860079182765768457[0m
+[BASH] [ WARN:0@55.417] global cap.cpp:341 open VIDEOIO(FFMPEG): backend is generally available but can't be used to capture by read data stream
+[BASH] [2m2026-04-10T04:48:32.986075Z[0m [31mERROR[0m [2mvideo_loader.load_video[0m[2m:[0m Error loading video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4: Could not open video stream
+[BASH] [2m2026-04-10T04:48:32.986317Z[0m [31mERROR[0m [2mvideo_loader.load_video_batch[0m[2m:[0m Failed to load video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4...: Failed to load video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4: Could not open video stream
+[BASH] Traceback (most recent call last):
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/handlers.py", line 1573, in generate
+[BASH]     async for chunk in generator:
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/handlers.py", line 1634, in _generate_token_mode
+[BASH]     multi_modal_data = await self._extract_multimodal_data(
+[BASH]                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/handlers.py", line 1228, in _extract_multimodal_data
+[BASH]     videos = await self.video_loader.load_video_batch(video_mm_items)
+[BASH]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/common/multimodal/video_loader.py", line 174, in load_video_batch
+[BASH]     raise Exception("".join(collective_exceptions))
+[BASH] Exception: Failed to load video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4...: Failed to load video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4: Could not open video stream
+[BASH] 
+[BASH] [2m2026-04-10T04:48:32.989310Z[0m [32m INFO[0m [1mhandle_payload[0m: [2mdynamo_runtime::pipeline::network::ingress::push_handler[0m[2m:[0m request completed [3mrequest_id[0m[2m=[0m0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c [2m[3mrequest_id[0m[2m=[0m"0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c" [3mcomponent[0m[2m=[0m"backend" [3mendpoint[0m[2m=[0m"generate" [3mnamespace[0m[2m=[0m"dynamo" [3minstance_id[0m[2m=[0m860079182765768457[0m
+[BASH] [2m2026-04-10T04:48:32.990154Z[0m [31mERROR[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::openai[0m[2m:[0m Backend error detected: (500, Json(ErrorMessage { message: "Exception: Failed to load video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4...: Failed to load video from file:///workspace/lib/llm/tests/data/media/240p_10.mp4: Could not open video stream\n", error_type: "Internal Server Error", code: 500 })) [3mrequest_id[0m[2m=[0m"0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c" [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0m9e3e1724-345e-45a3-8e73-e53cc1df7898 [3mmodel[0m[2m=[0m"qwen/qwen3-vl-2b-instruct"[0m
+[BASH] [2m2026-04-10T04:48:32.990299Z[0m [31mERROR[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::metrics[0m[2m:[0m request completed [3mrequest_id[0m[2m=[0m0c9940e4-9e4f-46ab-9ae1-4f22ff8da46c [3mmodel[0m[2m=[0mqwen/qwen3-vl-2b-instruct [3mendpoint[0m[2m=[0mchat_completions [3mrequest_type[0m[2m=[0munary [3mstatus[0m[2m=[0merror [3merror_type[0m[2m=[0minternal [3merror_detail[0m[2m=[0minternal server error during processing [3melapsed_ms[0m[2m=[0m16 [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0m9e3e1724-345e-45a3-8e73-e53cc1df7898 [3mmodel[0m[2m=[0m"qwen/qwen3-vl-2b-instruct" [3minput_tokens[0m[2m=[0m0 [3moutput_tokens[0m[2m=[0m0[0m
+[BASH] [2m2026-04-10T04:48:32.990446Z[0m [31mERROR[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m500 [3mlatency_ms[0m[2m=[0m17 [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0m9e3e1724-345e-45a3-8e73-e53cc1df7898 [3mmodel[0m[2m=[0m"qwen/qwen3-vl-2b-instruct" [3minput_tokens[0m[2m=[0m0 [3moutput_tokens[0m[2m=[0m0[0m
+[BASH] [2m2026-04-10T04:48:32.990465Z[0m [31mERROR[0m [1mhttp-request[0m: [2mtower_http::trace::on_failure[0m[2m:[0m response failed [3mclassification[0m[2m=[0mStatus code: 500 Internal Server Error [3mlatency[0m[2m=[0m17 ms [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0m9e3e1724-345e-45a3-8e73-e53cc1df7898 [3mmodel[0m[2m=[0m"qwen/qwen3-vl-2b-instruct" [3minput_tokens[0m[2m=[0m0 [3moutput_tokens[0m[2m=[0m0[0m
+[BASH] Cleaning up...
+[BASH] [2m2026-04-10T04:48:33.001597Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+[BASH] [2m2026-04-10T04:48:33.001689Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+[BASH] [2m2026-04-10T04:48:33.001744Z[0m [32m INFO[0m [2mgraceful_shutdown.graceful_shutdown_with_discovery[0m[2m:[0m Received shutdown signal; unregistering endpoints from discovery
+[BASH] [2m2026-04-10T04:48:33.001965Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+[BASH] [2m2026-04-10T04:48:33.002060Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+[BASH] [2m2026-04-10T04:48:33.002071Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 0
+[BASH] [2m2026-04-10T04:48:33.002079Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected
+[BASH] [2m2026-04-10T04:48:33.002124Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+[BASH] [2m2026-04-10T04:48:33.002191Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+[BASH] [2m2026-04-10T04:48:33.002201Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 0
+[BASH] [2m2026-04-10T04:48:33.002209Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected
+[BASH] [2m2026-04-10T04:48:33.002355Z[0m [32m INFO[0m [2mdynamo_llm::discovery::worker_monitor[0m[2m:[0m Worker monitoring task exiting
+[BASH] (EngineCore_DP0 pid=168808) DEBUG 04-10 04:48:33 [v1/engine/core.py:1096] EngineCore exiting.
+[BASH] [2m2026-04-10T04:48:33.002460Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m HTTP server shutdown requested
+[BASH] [2m2026-04-10T04:48:33.006393Z[0m [32m INFO[0m [2mdynamo_runtime::component::endpoint[0m[2m:[0m Successfully unregistered endpoint instance from discovery - worker removed from routing pool [3minstance_id[0m[2m=[0m860079182765768457
+[BASH] [2m2026-04-10T04:48:33.006406Z[0m [32m INFO[0m [2mdynamo_runtime::component::endpoint[0m[2m:[0m Successfully unregistered endpoint instance from discovery - worker removed from routing pool [3minstance_id[0m[2m=[0m860079182765768457
+[BASH] [2m2026-04-10T04:48:33.006470Z[0m [32m INFO[0m [2mdynamo_runtime::component::endpoint[0m[2m:[0m Successfully unregistered endpoint instance from discovery - worker removed from routing pool [3minstance_id[0m[2m=[0m860079182765768457
+[BASH] [2m2026-04-10T04:48:33.007998Z[0m [32m INFO[0m [2mgraceful_shutdown.graceful_shutdown_with_discovery[0m[2m:[0m Grace period 5.00s before stopping endpoints
+[BASH] [2m2026-04-10T04:48:33.803672Z[0m [31mERROR[0m [2mcore_client.monitor_engine_cores[0m[2m:[0m Engine core proc EngineCore_DP0 died unexpectedly, shutting down client.
+[BASH] [2m2026-04-10T04:48:33.827677Z[0m [31mERROR[0m [2masync_llm.output_handler[0m[2m:[0m AsyncLLM output_handler failed.
+[BASH] Traceback (most recent call last):
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 664, in output_handler
+[BASH]     outputs = await engine_core.get_output_async()
+[BASH]               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 1009, in get_output_async
+[BASH]     raise self._format_exception(outputs) from None
+[BASH] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
+[BASH] [2m2026-04-10T04:48:34.202226Z[0m [2mDEBUG[0m [2mloggers.log[0m[2m:[0m Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 0.0%
+[BASH] [2m2026-04-10T04:48:34.211065Z[0m [31mERROR[0m [2mengine_monitor._check_engine_health[0m[2m:[0m Traceback: Traceback (most recent call last):
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/dynamo/vllm/engine_monitor.py", line 92, in _check_engine_health
+[BASH]     await self.engine_client.check_health()
+[BASH]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 878, in check_health
+[BASH]     raise self.dead_error
+[BASH] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
+[BASH] 
+[BASH] [2m2026-04-10T04:48:34.211208Z[0m [31mERROR[0m [2mengine_monitor._check_engine_health[0m[2m:[0m vLLM AsyncLLM health check failed: EngineCore encountered an issue. See stack trace (above) for the root cause.
+[BASH] [2m2026-04-10T04:48:34.211274Z[0m [33m WARN[0m [2mengine_monitor._check_engine_health[0m[2m:[0m Initiating Dynamo Runtime shutdown.
+[BASH] [2m2026-04-10T04:48:34.211436Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+[BASH] [2m2026-04-10T04:48:34.211928Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+[BASH] [2m2026-04-10T04:48:34.212083Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+[BASH] [2m2026-04-10T04:48:34.212095Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 3
+[BASH] [2m2026-04-10T04:48:34.212684Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Unregistered TCP endpoint handler [3mendpoint_name[0m[2m=[0mget_perf_metrics [3mendpoint_path[0m[2m=[0mbef9d75b7763f09/get_perf_metrics
+[BASH] [2m2026-04-10T04:48:34.213015Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Unregistered TCP endpoint handler [3mendpoint_name[0m[2m=[0mclear_kv_blocks [3mendpoint_path[0m[2m=[0mbef9d75b7763f09/clear_kv_blocks
+[BASH] [2m2026-04-10T04:48:34.213108Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Unregistered TCP endpoint handler [3mendpoint_name[0m[2m=[0mgenerate [3mendpoint_path[0m[2m=[0mbef9d75b7763f09/generate
+[BASH] [2m2026-04-10T04:48:34.213164Z[0m [32m INFO[0m [2mdynamo_runtime::utils::graceful_shutdown[0m[2m:[0m Last endpoint completed, notifying all waiters
+[BASH] [2m2026-04-10T04:48:34.213462Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected
+[BASH] [2m2026-04-10T04:48:38.004872Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+[BASH] [2m2026-04-10T04:48:38.005175Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+[BASH] [2m2026-04-10T04:48:38.005230Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+[BASH] [2m2026-04-10T04:48:38.005238Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 0
+[BASH] [2m2026-04-10T04:48:38.005246Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected

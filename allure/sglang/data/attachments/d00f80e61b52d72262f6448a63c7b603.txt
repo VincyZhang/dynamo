@@ -1,0 +1,527 @@
+Allocated dynamic ports - vLLM: 8019, Metrics: 6957, ZMQ Pub: 20068, ZMQ Ack: 20085, NATS: 4320, etcd: 2399
+[VLLM] DEBUG 04-10 04:23:06 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:36] Checking if TPU platform is available.
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:133] Checking if XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:06 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[VLLM] DEBUG 04-10 04:23:07 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:07 [platforms/__init__.py:155] Checking if CPU platform is available.
+[VLLM] DEBUG 04-10 04:23:07 [platforms/__init__.py:133] Checking if XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:07 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[VLLM] DEBUG 04-10 04:23:07 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:07 [platforms/__init__.py:220] Automatically detected platform xpu.
+[VLLM] DEBUG 04-10 04:23:10 [utils/flashinfer.py:55] FlashInfer unavailable since package was not found
+[VLLM] DEBUG 04-10 04:23:13 [entrypoints/utils.py:180] Setting VLLM_WORKER_MULTIPROC_METHOD to 'spawn'
+[VLLM] DEBUG 04-10 04:23:13 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[VLLM] DEBUG 04-10 04:23:13 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[VLLM] DEBUG 04-10 04:23:13 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[VLLM] DEBUG 04-10 04:23:13 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:302] 
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:302]        █     █     █▄   ▄█
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:302]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.17.1
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:302]   █▄█▀ █     █     █     █  model   Qwen/Qwen3-0.6B
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:302]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:302] 
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [entrypoints/utils.py:238] non-default args: {'model_tag': 'Qwen/Qwen3-0.6B', 'port': 8019, 'max_model_len': 8000, 'block_size': 16, 'num_gpu_blocks_override': 20, 'kv_transfer_config': KVTransferConfig(kv_connector='DynamoConnector', engine_id='5538b502-282f-4474-9918-b0e915f8d9ff', kv_buffer_device='cuda', kv_buffer_size=1000000000.0, kv_role='kv_both', kv_rank=None, kv_parallel_size=1, kv_ip='127.0.0.1', kv_port=14579, kv_connector_extra_config={}, kv_connector_module_path='kvbm.vllm_integration.connector', enable_permute_local_kv=False, kv_load_failure_policy='fail')}
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [engine/arg_utils.py:640] HF_HUB_OFFLINE is True, replace model_id [Qwen/Qwen3-0.6B] to model_path [/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca]
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [model_executor/models/registry.py:798] Loaded model info for class vllm.model_executor.models.qwen3.Qwen3ForCausalLM from cache
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [logging_utils/log_time.py:29] Registry inspect model class: Elapsed time 0.0005081 secs
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [config/model.py:531] Resolved architecture: Qwen3ForCausalLM
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [config/model.py:1554] Using max model len 8000
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [config/model.py:1619] Generative models support chunked prefill.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [config/model.py:1677] Generative models support prefix caching.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [engine/arg_utils.py:2037] Enabling chunked prefill by default
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [engine/arg_utils.py:2067] Enabling prefix caching by default
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [engine/arg_utils.py:2153] Defaulting max_num_batched_tokens to 2048 for OPENAI_API_SERVER usage context.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [engine/arg_utils.py:2163] Defaulting max_num_seqs to 256 for OPENAI_API_SERVER usage context.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [config/parallel.py:825] Disabled the custom all-reduce kernel because it is not supported on current platform.
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [config/scheduler.py:231] Chunked prefill is enabled with max_num_batched_tokens=2048.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:13 [config/parallel.py:825] Disabled the custom all-reduce kernel because it is not supported on current platform.
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:13 [config/vllm.py:747] Asynchronous scheduling is enabled.
+[VLLM] (APIServer pid=69458) WARNING 04-10 04:23:14 [distributed/.../v1/nixl_connector.py:96] NIXL was already imported, we can't reset UCX_RCACHE_MAX_UNRELEASED. Please set it to '1024' manually.
+[VLLM] (APIServer pid=69458) INFO 04-10 04:23:14 [distributed/.../v1/nixl_connector.py:114] NIXL is available
+[VLLM] (APIServer pid=69458) WARNING 04-10 04:23:14 [platforms/xpu.py:180] XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[VLLM] (APIServer pid=69458) WARNING 04-10 04:23:14 [config/vllm.py:1187] Turning off hybrid kv cache manager because `--kv-transfer-config` is set. This will reduce the performance of vLLM on LLMs with sliding window attention or Mamba attention. If you are a developer of kv connector, please consider supporting hybrid kv cache manager for your connector by making sure your connector is a subclass of `SupportsHMA` defined in kv_connector/v1/base.py and use --no-disable-hybrid-kv-cache-manager to start vLLM.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:14 [plugins/__init__.py:36] No plugins for group vllm.stat_logger_plugins found.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:14 [renderers/registry.py:52] Loading HfRenderer for renderer_mode='hf'
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:14 [plugins/io_processors/__init__.py:37] No IOProcessor plugins requested by the model
+[VLLM] DEBUG 04-10 04:23:17 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:36] Checking if TPU platform is available.
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:133] Checking if XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:17 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[VLLM] DEBUG 04-10 04:23:19 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:19 [platforms/__init__.py:155] Checking if CPU platform is available.
+[VLLM] DEBUG 04-10 04:23:19 [platforms/__init__.py:133] Checking if XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:19 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[VLLM] DEBUG 04-10 04:23:19 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[VLLM] DEBUG 04-10 04:23:19 [platforms/__init__.py:220] Automatically detected platform xpu.
+[VLLM] DEBUG 04-10 04:23:22 [utils/flashinfer.py:55] FlashInfer unavailable since package was not found
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [v1/engine/core.py:1004] Waiting for init message from front-end.
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:24 [v1/engine/utils.py:1111] HELLO from local core engine process 0.
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [v1/engine/core.py:1015] Received init message: EngineHandshakeMetadata(addresses=EngineZmqAddresses(inputs=['ipc:///tmp/e1646305-558b-49f6-af85-30038c67b6be'], outputs=['ipc:///tmp/17b4f0bc-56d6-4352-aa7e-fe667a77112b'], coordinator_input=None, coordinator_output=None, frontend_stats_publish_address=None), parallel_config={})
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [v1/engine/core.py:812] Has DP Coordinator: False, stats publish address: None
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:24 [v1/engine/core.py:101] Initializing a V1 LLM engine (v0.17.1) with config: model='/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca', speculative_config=None, tokenizer='/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=8000, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=True, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=xpu, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:24 [compilation/decorators.py:202] Inferred dynamic dimensions for forward method of <class 'vllm.model_executor.models.llama.LlamaModel'>: ['input_ids', 'positions', 'intermediate_tensors', 'inputs_embeds']
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:25 [distributed/parallel_state.py:1349] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://192.168.8.2:36467 backend=xccl
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:25 [distributed/parallel_state.py:1393] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://192.168.8.2:36467 backend=xccl
+[VLLM] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:25 [distributed/parallel_state.py:1452] Detected 1 nodes in the distributed environment
+[VLLM] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[VLLM] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[VLLM] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[VLLM] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[VLLM] [Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:25 [distributed/parallel_state.py:1715] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:25 [v1/worker/xpu_worker.py:98] worker init memory snapshot: torch_peak=0.0GiB, free_memory=22.71GiB, total_memory=22.71GiB, xpu_memory=0.0GiB, torch_memory=0.0GiB, non_torch_memory=0.0GiB, timestamp=1775795005.5115442, auto_measure=True
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:25 [v1/worker/xpu_worker.py:99] worker requested memory: 20.44GiB
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:25 [v1/sample/logits_processor/__init__.py:63] No logitsprocs plugins installed (group vllm.logits_processors).
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:25 [model_executor/offloader/base.py:106] Offloader set to NoopOffloader
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:25 [v1/worker/gpu_model_runner.py:4281] Starting to load model /home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca...
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:26 [platforms/xpu.py:57] Setting VLLM_KV_CACHE_LAYOUT to 'NHD' for XPU; only NHD layout is supported by XPU attention kernels.
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:26 [platforms/xpu.py:78] Using Flash Attention backend.
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:26 [v1/attention/backends/flash_attn.py:587] Using FlashAttention version 2
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:27 [compilation/backends.py:100] Using InductorStandaloneAdaptor
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:27 [compilation/backends.py:100] Using InductorStandaloneAdaptor
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:27 [config/compilation.py:1105] enabled custom ops: Counter()
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:27 [config/compilation.py:1106] disabled custom ops: Counter({'rms_norm': 113, 'silu_and_mul': 28, 'vocab_parallel_embedding': 1, 'rotary_embedding': 1, 'apply_rotary_emb': 1, 'logits_processor': 1})
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:27 [model_executor/model_loader/base_loader.py:60] Loading weights on xpu ...
+[VLLM] (EngineCore_DP0 pid=70242) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+[VLLM] (EngineCore_DP0 pid=70242) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  3.93it/s]
+[VLLM] (EngineCore_DP0 pid=70242) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  3.93it/s]
+[VLLM] (EngineCore_DP0 pid=70242) 
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:27 [model_executor/model_loader/default_loader.py:293] Loading weights took 0.26 seconds
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:27 [v1/worker/gpu_model_runner.py:4364] Model loading took 1.12 GiB memory and 1.243533 seconds
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:28 [v1/worker/gpu_model_runner.py:4883] ubatch_slices: None, ubatch_slices_padded: None
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/backends.py:100] Using InductorStandaloneAdaptor
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] Traced files (to be considered for compilation cache):
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/parallel_state.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/vocab_parallel_embedding.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/custom_op.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/communication_op.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/itertools.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen2.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/parameter.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/common.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/linear.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/batch_invariant.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/builtins.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/torch/nn/modules/container.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/attention/attention.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/platforms/interface.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/utils.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/__init__.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/base.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:29 [compilation/caching.py:522] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/activation.py
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:29 [compilation/decorators.py:465] Directly load AOT compilation from path /home/dynamo/.cache/vllm/torch_compile_cache/torch_aot_compile/2fafa98e771e5e63d0eda799d774145ed1d3e9889c79e6fc1670ff393b2d949a/rank_0_0/model
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] Traced files (to be considered for compilation cache):
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/__init__.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/builtins.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/_dynamo/polyfills/itertools.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/torch/nn/modules/container.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/communication_op.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/distributed/parallel_state.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/custom_op.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/activation.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/attention/attention.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/batch_invariant.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/linear.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/base.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/common.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/utils.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/layers/vocab_parallel_embedding.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen2.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/model_executor/parameter.py
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:867] /opt/dynamo/venv/lib/python3.12/site-packages/vllm/platforms/interface.py
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:30 [compilation/backends.py:916] Using cache directory: /home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone for vLLM's torch.compile
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:928] torch.compile cache factors: env=efc5d4393043b5dc0077b6f199b7f1cb7889ed9b6900fb3d30d44db221ef80a5 cfg=0a20cb2ce0 comp=c428283ebb code=c772f65c348929f8740a16cc8e26786c3db97644348d2e4a88d9874477e034bb dir=/home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939] Compile env factors (raw):
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939] {'CMAKE_BUILD_TYPE': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'CUDA_HOME': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'K_SCALE_CONSTANT': 200,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'NVCC_THREADS': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'Q_SCALE_CONSTANT': 200,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_ASCEND_RT_VISIBLE_DEVICES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_HABANA_VISIBLE_MODULES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_NEURON_RT_VISIBLE_CORES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_ONEAPI_DEVICE_SELECTOR': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_RBLN_RT_VISIBLE_DEVICES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_ROCR_VISIBLE_DEVICES': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'RAY_EXPERIMENTAL_NOSET_TPU_VISIBLE_CHIPS': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VERBOSE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ALLOW_CHUNKED_LOCAL_ATTN_WITH_HYBRID_KV_CACHE': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ALLOW_INSECURE_SERIALIZATION': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ALLOW_LONG_MAX_MODEL_LEN': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ALLOW_RUNTIME_LORA_UPDATING': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ALLREDUCE_USE_FLASHINFER': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ALLREDUCE_USE_SYMM_MEM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_API_KEY': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_BLOCKSCALE_FP8_GEMM_FLASHINFER': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_COMPILE_CACHE_SAVE_FORMAT': 'binary',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_COMPUTE_NANS_IN_LOGITS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CONFIGURE_LOGGING': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CONFIG_ROOT': '/home/dynamo/.config/vllm',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CPU_NUM_OF_RESERVED_CPU': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CPU_OMP_THREADS_BIND': 'auto',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CPU_SGL_KERNEL': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CUDART_SO_PATH': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_CUSTOM_SCOPES_FOR_PROFILING': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DBO_COMM_SMS': 20,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEBUG_MFU_METRICS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEBUG_WORKSPACE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEEPEPLL_NVFP4_DISPATCH': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEEPEP_BUFFER_SIZE_MB': 1024,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEEPEP_HIGH_THROUGHPUT_FORCE_INTRA_NODE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEEPEP_LOW_LATENCY_USE_MNNVL': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DEEP_GEMM_WARMUP': 'relax',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DISABLED_KERNELS': (),
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DISABLE_COMPILE_CACHE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DISABLE_LOG_LOGO': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DISABLE_PYNCCL': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DISABLE_REQUEST_ID_RANDOMIZATION': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DISABLE_SHARED_EXPERTS_STREAM': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DOCKER_BUILD_CONTEXT': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DP_RANK': 0,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DP_RANK_LOCAL': 0,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_DP_SIZE': 1,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ELASTIC_EP_DRAIN_REQUESTS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ELASTIC_EP_SCALE_UP_LAUNCH': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_CUDAGRAPH_GC': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_FUSED_MOE_ACTIVATION_CHUNKING': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_INDUCTOR_COORDINATE_DESCENT_TUNING': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_INDUCTOR_MAX_AUTOTUNE': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_MOE_DP_CHUNK': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_PREGRAD_PASSES': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENABLE_RESPONSES_API_STORE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ENGINE_READY_TIMEOUT_S': 600,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_FLASHINFER_ALLREDUCE_BACKEND': 'trtllm',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_FLASHINFER_ALLREDUCE_FUSION_THRESHOLDS_MB': (),
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_FLASHINFER_MOE_BACKEND': 'latency',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_FLASHINFER_WORKSPACE_BUFFER_SIZE': 413138944,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_FLOAT32_MATMUL_PRECISION': 'highest',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_FUSED_MOE_CHUNK_SIZE': 16384,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_GC_DEBUG': '',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_GPT_OSS_HARMONY_SYSTEM_INSTRUCTIONS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_GPT_OSS_SYSTEM_TOOL_MCP_LABELS': (),
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_HAS_FLASHINFER_CUBIN': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_KV_CACHE_LAYOUT': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_KV_EVENTS_USE_INT_BLOCK_HASHES': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_LOG_BATCHSIZE_INTERVAL': -1.0,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_LOG_MODEL_INSPECTION': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_LOOPBACK_IP': '',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_LORA_DISABLE_PDL': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_LORA_RESOLVER_CACHE_DIR': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_LORA_RESOLVER_HF_REPO_LIST': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MAIN_CUDA_VERSION': '12.9',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MARLIN_INPUT_DTYPE': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MARLIN_USE_ATOMIC_ADD': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MAX_TOKENS_PER_EXPERT_FP4_MOE': 163840,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MLA_DISABLE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MM_HASHER_ALGORITHM': 'blake3',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MOE_DP_CHUNK_SIZE': 256,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MOE_ROUTING_SIMULATION_STRATEGY': '',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MOE_USE_DEEP_GEMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MOONCAKE_ABORT_REQUEST_TIMEOUT': 480,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MOONCAKE_BOOTSTRAP_PORT': 8998,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MORIIO_CONNECTOR_READ_MODE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MORIIO_NUM_WORKERS': 1,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MORIIO_POST_BATCH_SIZE': -1,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MORIIO_QP_PER_TRANSFER': 1,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MQ_MAX_CHUNK_BYTES_MB': 16,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MSGPACK_ZERO_COPY_THRESHOLD': 256,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_MXFP4_USE_MARLIN': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NCCL_INCLUDE_PATH': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NCCL_SO_PATH': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NIXL_ABORT_REQUEST_TIMEOUT': 480,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NIXL_SIDE_CHANNEL_HOST': '192.168.8.2',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NIXL_SIDE_CHANNEL_PORT': 5600,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NVFP4_GEMM_BACKEND': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_NVTX_SCOPES_FOR_PROFILING': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_PATTERN_MATCH_DEBUG': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_PLUGINS': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_PP_LAYER_PARTITION': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_PROCESS_NAME_PREFIX': 'VLLM',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_RAY_BUNDLE_INDICES': '',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_RAY_DP_PACK_STRATEGY': 'strict',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_RAY_EXTRA_ENV_VARS_TO_COPY': '',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_RAY_EXTRA_ENV_VAR_PREFIXES_TO_COPY': '',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_RAY_PER_WORKER_GPUS': 1.0,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_CUSTOM_PAGED_ATTN': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_FP8_MFMA_PAGE_ATTN': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_FP8_PADDING': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_MOE_PADDING': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_QUICK_REDUCE_CAST_BF16_TO_FP16': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_QUICK_REDUCE_MAX_SIZE_BYTES_MB': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_QUICK_REDUCE_QUANTIZATION': 'NONE',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_SHUFFLE_KV_CACHE_LAYOUT': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_SLEEP_MEM_CHUNK_SIZE': 256,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FP4BMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FP4_ASM_GEMM': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FP8BMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_LINEAR': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_MHA': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_MLA': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_MOE': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_PAGED_ATTN': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_RMSNORM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_TRITON_GEMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_TRITON_ROPE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_AITER_UNIFIED_ATTENTION': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_ROCM_USE_SKINNY_GEMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_RPC_TIMEOUT': 10000,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_SHARED_EXPERTS_STREAM_TOKEN_THRESHOLD': 256,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_SKIP_P2P_CHECK': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_SKIP_PRECOMPILED_VERSION_SUFFIX': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_SYSTEM_START_DATE': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TARGET_DEVICE': 'xpu',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TEST_FORCE_FP8_MARLIN': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TOOL_JSON_ERROR_AUTOMATIC_RETRY': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TOOL_PARSE_REGEX_TIMEOUT_SECONDS': 1,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TPU_BUCKET_PADDING_GAP': 0,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TPU_MOST_MODEL_LEN': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TPU_USING_PATHWAYS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_TRACE_FUNCTION': 0,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USAGE_SOURCE': 'production',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_AOT_COMPILE': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_BYTECODE_HOOK': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_DEEP_GEMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_DEEP_GEMM_E8M0': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_DEEP_GEMM_TMA_ALIGNED_SCALES': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_EXPERIMENTAL_PARSER_CONTEXT': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FBGEMM': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_FP16': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_FP4': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_FP8': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_INT4': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_MXFP4_BF16': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_MXFP4_MXFP8': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_MOE_MXFP4_MXFP8_CUTLASS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FLASHINFER_SAMPLER': None,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_FUSED_MOE_GROUPED_TOPK': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_MEGA_AOT_ARTIFACT': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_NCCL_SYMM_MEM': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_NVFP4_CT_EMULATIONS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_OINK_OPS': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_PRECOMPILED': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE': 'auto',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_RAY_WRAPPED_PP_COMM': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_STANDALONE_COMPILE': True,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_TRITON_AWQ': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_USE_V2_MODEL_RUNNER': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_V1_USE_OUTLINES_CACHE': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_WEIGHT_OFFLOADING_DISABLE_UVA': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_XGRAMMAR_CACHE_MB': 512,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_XLA_CACHE_PATH': '/home/dynamo/.cache/vllm/xla_cache',
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_XLA_CHECK_RECOMPILATION': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'VLLM_XLA_USE_SPMD': False,
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939]  'V_SCALE_CONSTANT': 100}
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:30 [compilation/backends.py:939] Vllm config hash: 0a20cb2ce0
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:30 [compilation/backends.py:976] Dynamo bytecode transform time: 2.56 s
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:31 [compilation/piecewise_backend.py:100] PiecewiseBackend: compile_ranges: [(1, 2048)]
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:31 [compilation/piecewise_backend.py:104] PiecewiseBackend: compile_sizes: []
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:31 [compilation/backends.py:229] Directly load the 0-th graph for compile range (1, 2048)from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_0', '/home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_0')
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:31 [compilation/backends.py:229] Directly load the 1-th graph for compile range (1, 2048)from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_1', '/home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_1')
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:31 [compilation/backends.py:229] Directly load the 2-th graph for compile range (1, 2048)from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_2', '/home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_2')
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:31 [compilation/backends.py:354] Store the 3-th graph for compile range(1, 2048) from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_3', '/home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_3')
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:32 [compilation/backends.py:229] Directly load the 28-th graph for compile range (1, 2048)from inductor_standalone via handle ('artifact_compile_range_1_2048_subgraph_28', '/home/dynamo/.cache/vllm/torch_compile_cache/856dbb43fd/rank_0_0/backbone/artifact_compile_range_1_2048_subgraph_28')
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:32 [compilation/backends.py:266] Directly load the compiled graph(s) for compile range (1, 2048) from the cache, took 1.173 s
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:32 [compilation/monitor.py:35] torch.compile takes 4.30 s in total
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:33 [v1/worker/gpu_worker.py:412] Initial free memory: 22.71 GiB; Requested memory: 0.900000 (util), 20.44 GiB
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:33 [v1/worker/gpu_worker.py:418] Free memory after profiling: 21.38 GiB (total), 19.11 GiB (within requested)
+[VLLM] (EngineCore_DP0 pid=70242) DEBUG 04-10 04:23:33 [v1/worker/gpu_worker.py:423] Memory profiling takes 5.40 seconds. Total non KV cache memory: 1.77GiB; torch peak memory increase: 0.6GiB; non-torch forward increase memory: 0.04GiB; weights memory: 1.12GiB.
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [v1/worker/gpu_worker.py:424] Available KV cache memory: 18.67 GiB
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [v1/core/kv_cache_utils.py:826] Overriding num_gpu_blocks=10927 with num_gpu_blocks_override=20
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [v1/core/kv_cache_utils.py:1314] GPU KV cache size: 320 tokens
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [v1/core/kv_cache_utils.py:1319] Maximum concurrency for 8,000 tokens per request: 0.04x
+[VLLM] (EngineCore_DP0 pid=70242) [2026-04-10 04:23:33] INFO __init__.py:12: Loaded nixl API module: <module 'nixl_cu12._api' from '/opt/dynamo/venv/lib/python3.12/site-packages/nixl_cu12/_api.py'>
+[VLLM] (EngineCore_DP0 pid=70242) WARNING 04-10 04:23:33 [distributed/.../v1/nixl_connector.py:96] NIXL was already imported, we can't reset UCX_RCACHE_MAX_UNRELEASED. Please set it to '1024' manually.
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [distributed/.../v1/nixl_connector.py:114] NIXL is available
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [distributed/.../kv_connector/factory.py:64] Creating v1 connector with name: DynamoConnector and engine_id: 5538b502-282f-4474-9918-b0e915f8d9ff
+[VLLM] (EngineCore_DP0 pid=70242) WARNING 04-10 04:23:33 [distributed/.../v1/base.py:166] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.
+[VLLM] [2m2026-04-10T04:23:33.959992Z[0m [32m INFO[0m [2m_core::block_manager::vllm::connector::worker[0m[2m:[0m KvConnectorWorker initialized with worker_id: 5538b502-282f-4474-9918-b0e915f8d9ff
+[VLLM] (EngineCore_DP0 pid=70242) INFO 04-10 04:23:33 [v1/attention/backends/utils.py:59] `_KV_CACHE_LAYOUT_OVERRIDE` variable detected. Setting KV cache layout to NHD.
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100] EngineCore failed to start.
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100] Traceback (most recent call last):
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1090, in run_engine_core
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 834, in __init__
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     super().__init__(
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 120, in __init__
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     num_gpu_blocks, num_cpu_blocks, kv_cache_config = self._initialize_kv_caches(
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 279, in _initialize_kv_caches
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     self.model_executor.initialize_from_config(kv_cache_configs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 117, in initialize_from_config
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     self.collective_rpc("initialize_from_config", args=(kv_cache_configs,))
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/uniproc_executor.py", line 76, in collective_rpc
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     result = run_method(self.driver_worker, method, args, kwargs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/serial_utils.py", line 459, in run_method
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/worker/worker_base.py", line 320, in initialize_from_config
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     self.worker.initialize_from_config(kv_cache_config)  # type: ignore
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 481, in initialize_from_config
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     self.model_runner.initialize_kv_cache(kv_cache_config)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 6123, in initialize_kv_cache
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     kv_transfer_group.register_kv_caches(kv_caches)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/kvbm/vllm_integration/connector/dynamo_connector.py", line 105, in register_kv_caches
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     self._worker.register_kv_caches(kv_caches)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/kvbm/vllm_integration/connector_worker.py", line 81, in register_kv_caches
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     torch.cuda.Event(enable_timing=False, interprocess=False)
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/torch/cuda/streams.py", line 184, in __new__
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     return super().__new__(
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]            ^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]   File "/opt/dynamo/venv/lib/python3.12/site-packages/torch/_utils.py", line 1002, in err_fn
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100]     raise RuntimeError(f"Tried to instantiate dummy base class {class_name}")
+[VLLM] (EngineCore_DP0 pid=70242) ERROR 04-10 04:23:33 [v1/engine/core.py:1100] RuntimeError: Tried to instantiate dummy base class Event
+[VLLM] (EngineCore_DP0 pid=70242) Process EngineCore_DP0:
+[VLLM] (EngineCore_DP0 pid=70242) Traceback (most recent call last):
+[VLLM] (EngineCore_DP0 pid=70242)   File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+[VLLM] (EngineCore_DP0 pid=70242)     self.run()
+[VLLM] (EngineCore_DP0 pid=70242)   File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+[VLLM] (EngineCore_DP0 pid=70242)     self._target(*self._args, **self._kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1104, in run_engine_core
+[VLLM] (EngineCore_DP0 pid=70242)     raise e
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1090, in run_engine_core
+[VLLM] (EngineCore_DP0 pid=70242)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (EngineCore_DP0 pid=70242)     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 834, in __init__
+[VLLM] (EngineCore_DP0 pid=70242)     super().__init__(
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 120, in __init__
+[VLLM] (EngineCore_DP0 pid=70242)     num_gpu_blocks, num_cpu_blocks, kv_cache_config = self._initialize_kv_caches(
+[VLLM] (EngineCore_DP0 pid=70242)                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (EngineCore_DP0 pid=70242)     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 279, in _initialize_kv_caches
+[VLLM] (EngineCore_DP0 pid=70242)     self.model_executor.initialize_from_config(kv_cache_configs)
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 117, in initialize_from_config
+[VLLM] (EngineCore_DP0 pid=70242)     self.collective_rpc("initialize_from_config", args=(kv_cache_configs,))
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/executor/uniproc_executor.py", line 76, in collective_rpc
+[VLLM] (EngineCore_DP0 pid=70242)     result = run_method(self.driver_worker, method, args, kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/serial_utils.py", line 459, in run_method
+[VLLM] (EngineCore_DP0 pid=70242)     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/worker/worker_base.py", line 320, in initialize_from_config
+[VLLM] (EngineCore_DP0 pid=70242)     self.worker.initialize_from_config(kv_cache_config)  # type: ignore
+[VLLM] (EngineCore_DP0 pid=70242)     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (EngineCore_DP0 pid=70242)     return func(*args, **kwargs)
+[VLLM] (EngineCore_DP0 pid=70242)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 481, in initialize_from_config
+[VLLM] (EngineCore_DP0 pid=70242)     self.model_runner.initialize_kv_cache(kv_cache_config)
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 6123, in initialize_kv_cache
+[VLLM] (EngineCore_DP0 pid=70242)     kv_transfer_group.register_kv_caches(kv_caches)
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/kvbm/vllm_integration/connector/dynamo_connector.py", line 105, in register_kv_caches
+[VLLM] (EngineCore_DP0 pid=70242)     self._worker.register_kv_caches(kv_caches)
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/kvbm/vllm_integration/connector_worker.py", line 81, in register_kv_caches
+[VLLM] (EngineCore_DP0 pid=70242)     torch.cuda.Event(enable_timing=False, interprocess=False)
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/torch/cuda/streams.py", line 184, in __new__
+[VLLM] (EngineCore_DP0 pid=70242)     return super().__new__(
+[VLLM] (EngineCore_DP0 pid=70242)            ^^^^^^^^^^^^^^^^
+[VLLM] (EngineCore_DP0 pid=70242)   File "/opt/dynamo/venv/lib/python3.12/site-packages/torch/_utils.py", line 1002, in err_fn
+[VLLM] (EngineCore_DP0 pid=70242)     raise RuntimeError(f"Tried to instantiate dummy base class {class_name}")
+[VLLM] (EngineCore_DP0 pid=70242) RuntimeError: Tried to instantiate dummy base class Event
+[VLLM] (APIServer pid=69458) DEBUG 04-10 04:23:34 [v1/engine/utils.py:1000] Waiting for 1 local, 0 remote core engine proc(s) to start.
+[VLLM] (APIServer pid=69458) Traceback (most recent call last):
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/bin/vllm", line 10, in <module>
+[VLLM] (APIServer pid=69458)     sys.exit(main())
+[VLLM] (APIServer pid=69458)              ^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 73, in main
+[VLLM] (APIServer pid=69458)     args.dispatch_function(args)
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 112, in cmd
+[VLLM] (APIServer pid=69458)     uvloop.run(run_server(args))
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 109, in run
+[VLLM] (APIServer pid=69458)     return __asyncio.run(
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+[VLLM] (APIServer pid=69458)     return runner.run(main)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+[VLLM] (APIServer pid=69458)     return self._loop.run_until_complete(task)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/uvloop/__init__.py", line 61, in wrapper
+[VLLM] (APIServer pid=69458)     return await main
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 471, in run_server
+[VLLM] (APIServer pid=69458)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 490, in run_server_worker
+[VLLM] (APIServer pid=69458)     async with build_async_engine_client(
+[VLLM] (APIServer pid=69458)   File "/usr/lib/python3.12/contextlib.py", line 210, in __aenter__
+[VLLM] (APIServer pid=69458)     return await anext(self.gen)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 96, in build_async_engine_client
+[VLLM] (APIServer pid=69458)     async with build_async_engine_client_from_engine_args(
+[VLLM] (APIServer pid=69458)   File "/usr/lib/python3.12/contextlib.py", line 210, in __aenter__
+[VLLM] (APIServer pid=69458)     return await anext(self.gen)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 137, in build_async_engine_client_from_engine_args
+[VLLM] (APIServer pid=69458)     async_llm = AsyncLLM.from_vllm_config(
+[VLLM] (APIServer pid=69458)                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 225, in from_vllm_config
+[VLLM] (APIServer pid=69458)     return cls(
+[VLLM] (APIServer pid=69458)            ^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 154, in __init__
+[VLLM] (APIServer pid=69458)     self.engine_core = EngineCoreClient.make_async_mp_client(
+[VLLM] (APIServer pid=69458)                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (APIServer pid=69458)     return func(*args, **kwargs)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 127, in make_async_mp_client
+[VLLM] (APIServer pid=69458)     return AsyncMPClient(*client_args)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+[VLLM] (APIServer pid=69458)     return func(*args, **kwargs)
+[VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 911, in __init__
+[VLLM] (APIServer pid=69458)     super().__init__(
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 569, in __init__
+[VLLM] (APIServer pid=69458)     with launch_core_engines(
+[VLLM] (APIServer pid=69458)   File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+[VLLM] (APIServer pid=69458)     next(self.gen)
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 951, in launch_core_engines
+[VLLM] (APIServer pid=69458)     wait_for_engine_startup(
+[VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1010, in wait_for_engine_startup
+[VLLM] (APIServer pid=69458)     raise RuntimeError(
+[VLLM] (APIServer pid=69458) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}

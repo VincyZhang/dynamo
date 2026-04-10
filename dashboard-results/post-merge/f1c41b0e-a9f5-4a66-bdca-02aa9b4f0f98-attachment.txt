@@ -1,0 +1,93 @@
+[PYTHON] DEBUG 04-10 04:19:46 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:36] Checking if TPU platform is available.
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:133] Checking if XPU platform is available.
+[PYTHON] DEBUG 04-10 04:19:46 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[PYTHON] DEBUG 04-10 04:19:47 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[PYTHON] DEBUG 04-10 04:19:47 [platforms/__init__.py:155] Checking if CPU platform is available.
+[PYTHON] DEBUG 04-10 04:19:47 [platforms/__init__.py:133] Checking if XPU platform is available.
+[PYTHON] DEBUG 04-10 04:19:47 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[PYTHON] DEBUG 04-10 04:19:47 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[PYTHON] DEBUG 04-10 04:19:47 [platforms/__init__.py:220] Automatically detected platform xpu.
+[PYTHON3] DEBUG 04-10 04:19:49 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:36] Checking if TPU platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:55] TPU platform is not available because: No module named 'libtpu'
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:61] Checking if CUDA platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:88] Exception happens when checking CUDA platform: NVML Shared Library Not Found
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:105] CUDA platform is not available because: NVML Shared Library Not Found
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:112] Checking if ROCm platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:126] ROCm platform is not available because: No module named 'amdsmi'
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:133] Checking if XPU platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:155] Checking if CPU platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:133] Checking if XPU platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:142] Confirmed xccl backend is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:146] Confirmed XPU platform is available.
+[PYTHON3] DEBUG 04-10 04:19:49 [platforms/__init__.py:220] Automatically detected platform xpu.
+[PYTHON] DEBUG 04-10 04:19:50 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+[PYTHON] DEBUG 04-10 04:19:50 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+[PYTHON] DEBUG 04-10 04:19:50 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+[PYTHON] DEBUG 04-10 04:19:50 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+[PYTHON3] [2m2026-04-10T04:19:50.338017Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m Initializing KV store discovery backend: Etcd(http://localhost:2458)
+[PYTHON3] [2m2026-04-10T04:19:50.352426Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Initializing NetworkManager with TCP request plane [3mmode[0m[2m=[0mtcp [3mhost[0m[2m=[0m192.168.8.2 [3mport[0m[2m=[0mOS-assigned
+[PYTHON3] [2m2026-04-10T04:19:50.454719Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-0.6B' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca", skipping download
+[PYTHON3] [2m2026-04-10T04:19:50.454796Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-0.6B' without API validation
+[PYTHON] [2m2026-04-10T04:19:50.491789Z[0m [32m INFO[0m [2mmain.async_main[0m[2m:[0m Request migration disabled (limit: 0)
+[PYTHON] [2m2026-04-10T04:19:50.576954Z[0m [32m INFO[0m [2mdynamo_runtime::distributed[0m[2m:[0m Initializing KV store discovery backend: Etcd(http://localhost:2458)
+[PYTHON3] [2m2026-04-10T04:19:50.578624Z[0m [32m INFO[0m [2m_core[0m[2m:[0m Registered base model 'Qwen/Qwen3-0.6B' MDC
+[PYTHON] [2m2026-04-10T04:19:50.579949Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Initializing NetworkManager with TCP request plane [3mmode[0m[2m=[0mtcp [3mhost[0m[2m=[0m192.168.8.2 [3mport[0m[2m=[0mOS-assigned
+[PYTHON3] [2m2026-04-10T04:19:50.875644Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m Creating TCP request plane server [3mbind_addr[0m[2m=[0m192.168.8.2:0 [3mport_source[0m[2m=[0m"OS-assigned"
+[PYTHON3] [2m2026-04-10T04:19:50.875733Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Initializing TCP server with dispatcher (concurrency=1500, queue=6000)
+[PYTHON3] [2m2026-04-10T04:19:50.875754Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Started TCP worker dispatcher with concurrency limit 1500
+[PYTHON3] [2m2026-04-10T04:19:50.875859Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Binding TCP server to 192.168.8.2:0
+[PYTHON3] [2m2026-04-10T04:19:50.875953Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m TCP server bound successfully [3mrequested[0m[2m=[0m192.168.8.2:0 [3mactual[0m[2m=[0m192.168.8.2:43161
+[PYTHON3] [2m2026-04-10T04:19:50.875988Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::manager[0m[2m:[0m TCP request plane server started [3mactual_addr[0m[2m=[0m192.168.8.2:43161 [3mactual_port[0m[2m=[0m43161
+[PYTHON3] [2m2026-04-10T04:19:50.876032Z[0m [32m INFO[0m [2mdynamo_runtime::pipeline::network::ingress::shared_tcp_endpoint[0m[2m:[0m Registered endpoint 'test.vllm-prepost.generate' with shared TCP server on 192.168.8.2:43161
+[PYTHON] [2m2026-04-10T04:19:50.980906Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m Starting HTTP(S) service [3mprotocol[0m[2m=[0m"HTTP" [3maddress[0m[2m=[0m"0.0.0.0:8035"
+[PYTHON] [2m2026-04-10T04:19:50.986705Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-0.6B' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca", skipping download
+[PYTHON] [2m2026-04-10T04:19:50.986752Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-0.6B' without API validation
+[PYTHON] [2m2026-04-10T04:19:50.987523Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m chat endpoints enabled
+[PYTHON] [2m2026-04-10T04:19:50.987546Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m responses endpoints enabled
+[PYTHON] [2m2026-04-10T04:19:50.988310Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Found cached model 'Qwen/Qwen3-0.6B' at "/home/dynamo/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca", skipping download
+[PYTHON] [2m2026-04-10T04:19:50.988330Z[0m [32m INFO[0m [2mdynamo_llm::hub[0m[2m:[0m Offline mode: using cached model 'Qwen/Qwen3-0.6B' without API validation
+[PYTHON] DEBUG 04-10 04:19:50 [model_executor/models/registry.py:798] Loaded model info for class vllm.model_executor.models.qwen3.Qwen3ForCausalLM from cache
+[PYTHON] DEBUG 04-10 04:19:50 [logging_utils/log_time.py:29] Registry inspect model class: Elapsed time 0.0004123 secs
+[PYTHON] INFO 04-10 04:19:50 [config/model.py:531] Resolved architecture: Qwen3ForCausalLM
+[PYTHON] INFO 04-10 04:19:50 [config/model.py:1554] Using max model len 40960
+[PYTHON] DEBUG 04-10 04:19:50 [config/parallel.py:825] Disabled the custom all-reduce kernel because it is not supported on current platform.
+[PYTHON] INFO 04-10 04:19:50 [config/scheduler.py:231] Chunked prefill is enabled with max_num_batched_tokens=2048.
+[PYTHON] INFO 04-10 04:19:50 [config/vllm.py:747] Asynchronous scheduling is enabled.
+[PYTHON] DEBUG 04-10 04:19:50 [utils/flashinfer.py:55] FlashInfer unavailable since package was not found
+[PYTHON] WARNING 04-10 04:19:51 [platforms/xpu.py:180] XPU Graph is not supported in the current PyTorch version, disabling cudagraph_mode.
+[PYTHON] DEBUG 04-10 04:19:51 [renderers/registry.py:52] Loading HfRenderer for renderer_mode='hf'
+[PYTHON] [2m2026-04-10T04:19:51.722102Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[PYTHON] [2m2026-04-10T04:19:52.038810Z[0m [32m INFO[0m [2mvllm_processor.chat_engine_factory[0m[2m:[0m vLLM OutputProcessor stream_interval=20
+[PYTHON] [2m2026-04-10T04:19:52.044577Z[0m [32m INFO[0m [2mdynamo_llm::discovery::watcher[0m[2m:[0m Chat completions is ready
+[PYTHON] [2m2026-04-10T04:19:52.044945Z[0m [32m INFO[0m [2mdynamo_llm::discovery::model[0m[2m:[0m Adding worker set to model [3mmodel[0m[2m=[0mQwen/Qwen3-0.6B [3mnamespace[0m[2m=[0mtest
+[PYTHON] [2m2026-04-10T04:19:52.044974Z[0m [32m INFO[0m [2mdynamo_llm::discovery::watcher[0m[2m:[0m added model [3mmodel_name[0m[2m=[0m"Qwen/Qwen3-0.6B" [3mnamespace[0m[2m=[0m"test"
+[PYTHON] [2m2026-04-10T04:19:52.728903Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m0
+[PYTHON] [2m2026-04-10T04:19:52.737910Z[0m [32m INFO[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::metrics[0m[2m:[0m request received [3mrequest_id[0m[2m=[0m4995bde5-0306-4e23-952d-3f555c5a012b [3mmodel[0m[2m=[0mqwen/qwen3-0.6b [3mendpoint[0m[2m=[0mchat_completions [3mrequest_type[0m[2m=[0mstream [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0ma6bdc7b3-a3b7-433f-89c2-a673c81facaa [3mmodel[0m[2m=[0m"qwen/qwen3-0.6b"[0m
+[PYTHON] [2m2026-04-10T04:19:52.739414Z[0m [32m INFO[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::service_v2[0m[2m:[0m http response sent [3mstatus[0m[2m=[0m200 [3mlatency_ms[0m[2m=[0m1 [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0ma6bdc7b3-a3b7-433f-89c2-a673c81facaa [3mmodel[0m[2m=[0m"qwen/qwen3-0.6b"[0m
+[PYTHON] INFO 04-10 04:19:52 [renderers/hf.py:318] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+[PYTHON] DEBUG 04-10 04:19:52 [v1/sample/logits_processor/__init__.py:63] No logitsprocs plugins installed (group vllm.logits_processors).
+[PYTHON] WARNING 04-10 04:19:52 [v1/engine/input_processor.py:254] Passing raw prompts to InputProcessor is deprecated and will be removed in v0.18. You should instead pass the outputs of Renderer.render_cmpl() or Renderer.render_chat().
+[PYTHON3] [2m2026-04-10T04:19:52.853770Z[0m [32m INFO[0m [1mhandle_payload[0m: [2mdynamo_runtime::pipeline::network::ingress::push_handler[0m[2m:[0m request received [3mrequest_id[0m[2m=[0m2e2a0e4e-7798-41e5-b7fb-6e6854de727f [2m[3mrequest_id[0m[2m=[0m"2e2a0e4e-7798-41e5-b7fb-6e6854de727f" [3mcomponent[0m[2m=[0m"vllm-prepost" [3mendpoint[0m[2m=[0m"generate" [3mnamespace[0m[2m=[0m"test" [3minstance_id[0m[2m=[0m409719219601644037[0m
+[PYTHON3] [2m2026-04-10T04:19:52.859952Z[0m [32m INFO[0m [1mhandle_payload[0m: [2mdynamo_runtime::pipeline::network::ingress::push_handler[0m[2m:[0m request completed [3mrequest_id[0m[2m=[0m2e2a0e4e-7798-41e5-b7fb-6e6854de727f [2m[3mrequest_id[0m[2m=[0m"2e2a0e4e-7798-41e5-b7fb-6e6854de727f" [3mcomponent[0m[2m=[0m"vllm-prepost" [3mendpoint[0m[2m=[0m"generate" [3mnamespace[0m[2m=[0m"test" [3minstance_id[0m[2m=[0m409719219601644037[0m
+[PYTHON] [2m2026-04-10T04:19:52.866899Z[0m [32m INFO[0m [1mhttp-request[0m: [2mdynamo_llm::http::service::metrics[0m[2m:[0m request completed [3mrequest_id[0m[2m=[0m4995bde5-0306-4e23-952d-3f555c5a012b [3mmodel[0m[2m=[0mqwen/qwen3-0.6b [3mendpoint[0m[2m=[0mchat_completions [3mrequest_type[0m[2m=[0mstream [3mstatus[0m[2m=[0msuccess [3melapsed_ms[0m[2m=[0m128 [2m[3mmethod[0m[2m=[0mPOST [3muri[0m[2m=[0m/v1/chat/completions [3mversion[0m[2m=[0mHTTP/1.1 [3mrequest_id[0m[2m=[0ma6bdc7b3-a3b7-433f-89c2-a673c81facaa [3mmodel[0m[2m=[0m"qwen/qwen3-0.6b" [3minput_tokens[0m[2m=[0m0 [3moutput_tokens[0m[2m=[0m0[0m
+[PYTHON] [2m2026-04-10T04:19:53.120237Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+[PYTHON] [2m2026-04-10T04:19:53.120532Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+[PYTHON] [2m2026-04-10T04:19:53.120616Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+[PYTHON] [2m2026-04-10T04:19:53.120627Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 0
+[PYTHON] [2m2026-04-10T04:19:53.120635Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected
+[PYTHON] [2m2026-04-10T04:19:53.120824Z[0m [32m INFO[0m [2mdynamo_llm::http::service::service_v2[0m[2m:[0m HTTP server shutdown requested
+[PYTHON] [2m2026-04-10T04:19:58.122596Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Runtime shutdown initiated
+[PYTHON] [2m2026-04-10T04:19:58.123145Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 1: Cancelling endpoint shutdown token
+[PYTHON] [2m2026-04-10T04:19:58.123235Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 2: Waiting for graceful endpoints to complete
+[PYTHON] [2m2026-04-10T04:19:58.123244Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Active graceful endpoints: 0
+[PYTHON] [2m2026-04-10T04:19:58.123251Z[0m [32m INFO[0m [2mdynamo_runtime::runtime[0m[2m:[0m Phase 3: All endpoints ended gracefully. Connections to backend services will now be disconnected

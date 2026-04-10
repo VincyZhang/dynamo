@@ -1,0 +1,45 @@
+INFO     NatsServer:managed_process.py:437 Running command: nats-server --trace -p 4320 in /workspace
+INFO     NatsServer:managed_process.py:662 Checking Port: 4320
+INFO     NatsServer:managed_process.py:670 SUCCESS: Check Port: 4320
+INFO     NatsServer:managed_process.py:775 Running custom health check '_nats_ready'
+DEBUG    asyncio:selector_events.py:64 Using selector: EpollSelector
+INFO     NatsServer:managed_process.py:795 SUCCESS: Custom health check '_nats_ready' passed (attempt=1, elapsed=0.0s)
+INFO     EtcdServer:managed_process.py:437 Running command: etcd --listen-client-urls http://0.0.0.0:2399 --advertise-client-urls http://0.0.0.0:2399 --listen-peer-urls http://0.0.0.0:2400 --initial-advertise-peer-urls http://localhost:2400 --initial-cluster default=http://localhost:2400 --data-dir /tmp/etcd_rjcgzobd in /workspace
+INFO     EtcdServer:managed_process.py:662 Checking Port: 2399
+INFO     EtcdServer:managed_process.py:670 SUCCESS: Check Port: 2399
+INFO     ManagedProcess:managed_process.py:437 Running command: vllm serve --block-size 16 --port 8019 --kv-transfer-config {"kv_connector":"DynamoConnector","kv_role":"kv_both", "kv_connector_module_path": "kvbm.vllm_integration.connector"} Qwen/Qwen3-0.6B --max-model-len 8000 --num-gpu-blocks-override 20 in /workspace
+INFO     ManagedProcess:managed_process.py:662 Checking Port: 8019
+ERROR    ManagedProcess:managed_process.py:642 Main server process died with exit code 1 while waiting for port 8019
+ERROR    ManagedProcess:managed_process.py:627 === Last 20 lines from /tmp/dynamo_tests/test_onboarding_determinism[llm_server_kvbm0]_vllm/vllm.log.txt ===
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     return func(*args, **kwargs)
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 127, in make_async_mp_client
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     return AsyncMPClient(*client_args)
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     return func(*args, **kwargs)
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)            ^^^^^^^^^^^^^^^^^^^^^
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 911, in __init__
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     super().__init__(
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 569, in __init__
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     with launch_core_engines(
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     next(self.gen)
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 951, in launch_core_engines
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     wait_for_engine_startup(
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)   File "/opt/dynamo/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1010, in wait_for_engine_startup
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458)     raise RuntimeError(
+ERROR    ManagedProcess:managed_process.py:633 [VLLM] (APIServer pid=69458) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+ERROR    ManagedProcess:managed_process.py:634 === End of log tail ===
+INFO     ManagedProcess:managed_process.py:558 Sending SIGTERM to process group: 69458
+INFO     ManagedProcess:managed_process.py:31 Terminating PID: 69460 name: tee
+INFO     ManagedProcess:managed_process.py:36 Sending SIGTERM (kill): 69460 tee
+INFO     ManagedProcess:managed_process.py:31 Terminating PID: 69459 name: sed
+INFO     ManagedProcess:managed_process.py:36 Sending SIGTERM (kill): 69459 sed
+INFO     EtcdServer:managed_process.py:558 Sending SIGTERM to process group: 69447
+INFO     EtcdServer:managed_process.py:31 Terminating PID: 69448 name: sed
+INFO     EtcdServer:managed_process.py:36 Sending SIGTERM (kill): 69448 sed
+INFO     NatsServer:managed_process.py:558 Sending SIGTERM to process group: 69434
+INFO     NatsServer:managed_process.py:31 Terminating PID: 69435 name: sed
+INFO     NatsServer:managed_process.py:36 Sending SIGTERM (kill): 69435 sed

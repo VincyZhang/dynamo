@@ -1,0 +1,1 @@
+{"id":"3c8115d7baf92d6464e122d2cad829d8","fullName":"tests.serve.test_vllm_xpu#test_serve_deployment","name":"test_serve_deployment[agg-request-plane-http]","status":"passed","testResultsByEnv":{"vllm-amd64":"ef4df922c6f25243c6fd4c423ce27dc8","default":"a55e9a19ee4781a0f7677595ece844f2"}}

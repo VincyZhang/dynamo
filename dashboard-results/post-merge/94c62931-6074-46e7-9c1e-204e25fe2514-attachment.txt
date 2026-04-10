@@ -1,0 +1,258 @@
+INFO     NatsServer:managed_process.py:437 Running command: nats-server --trace -p 4318 in /workspace
+INFO     NatsServer:managed_process.py:662 Checking Port: 4318
+INFO     NatsServer:managed_process.py:670 SUCCESS: Check Port: 4318
+INFO     NatsServer:managed_process.py:775 Running custom health check '_nats_ready'
+DEBUG    asyncio:selector_events.py:64 Using selector: EpollSelector
+INFO     NatsServer:managed_process.py:795 SUCCESS: Custom health check '_nats_ready' passed (attempt=1, elapsed=0.0s)
+INFO     EtcdServer:managed_process.py:437 Running command: etcd --listen-client-urls http://0.0.0.0:2405 --advertise-client-urls http://0.0.0.0:2405 --listen-peer-urls http://0.0.0.0:2406 --initial-advertise-peer-urls http://localhost:2406 --initial-cluster default=http://localhost:2406 --data-dir /tmp/etcd_4wy24k4j in /workspace
+INFO     EtcdServer:managed_process.py:662 Checking Port: 2405
+INFO     EtcdServer:managed_process.py:670 SUCCESS: Check Port: 2405
+INFO     test_serve_deployment[agg-router]:common.py:43 Starting agg-router-xpu test_deployment
+INFO     test_serve_deployment[agg-router]:common.py:49 Using model: Qwen/Qwen3-0.6B
+INFO     test_serve_deployment[agg-router]:common.py:50 Script: xpu/agg_router_xpu.sh
+INFO     EngineProcess:managed_process.py:437 Running command: bash /workspace/examples/backends/vllm/launch/xpu/agg_router_xpu.sh in /workspace/examples/backends/vllm
+INFO     EngineProcess:managed_process.py:690 Checking URL http://localhost:8023/v1/models
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+INFO     EngineProcess:managed_process.py:742 Still waiting for URL http://localhost:8023/v1/models (custom check failed) (attempt=13, elapsed=21.1s)
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /v1/models HTTP/1.1" 200 109
+INFO     EngineProcess:managed_process.py:710 SUCCESS: Check URL: http://localhost:8023/v1/models (attempt=15, elapsed=25.1s)
+Response:
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "Qwen/Qwen3-0.6B",
+      "object": "model",
+      "created": 1775797850,
+      "owned_by": "nvidia"
+    }
+  ]
+}
+INFO     EngineProcess:managed_process.py:690 Checking URL http://localhost:8023/health
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "GET /health HTTP/1.1" 200 1905
+INFO     EngineProcess:managed_process.py:710 SUCCESS: Check URL: http://localhost:8023/health (attempt=1, elapsed=0.0s)
+Response:
+{
+  "status": "healthy",
+  "endpoints": [
+    "dyn://dynamo.backend.clear_kv_blocks",
+    "dyn://dynamo.backend.generate",
+    "dyn://dynamo.backend.get_perf_metrics",
+    "dyn://dynamo.backend.router-discovery",
+    "dyn://dynamo.backend.worker_kv_indexer_query_dp0"
+  ],
+  "instances": [
+    {
+      "component": "backend",
+      "endpoint": "clear_kv_blocks",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170377,
+      "transport": {
+        "tcp": "192.168.8.2:46037/36b99d75cc6f7309/clear_kv_blocks"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "clear_kv_blocks",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170379,
+      "transport": {
+        "tcp": "192.168.8.2:34273/36b99d75cc6f730b/clear_kv_blocks"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "generate",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170377,
+      "transport": {
+        "tcp": "192.168.8.2:46037/36b99d75cc6f7309/generate"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "generate",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170379,
+      "transport": {
+        "tcp": "192.168.8.2:34273/36b99d75cc6f730b/generate"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "get_perf_metrics",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170377,
+      "transport": {
+        "tcp": "192.168.8.2:46037/36b99d75cc6f7309/get_perf_metrics"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "get_perf_metrics",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170379,
+      "transport": {
+        "tcp": "192.168.8.2:34273/36b99d75cc6f730b/get_perf_metrics"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "router-discovery",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170373,
+      "transport": {
+        "tcp": "192.168.8.2:37729/36b99d75cc6f7305/router-discovery"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "worker_kv_indexer_query_dp0",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170377,
+      "transport": {
+        "tcp": "192.168.8.2:46037/36b99d75cc6f7309/worker_kv_indexer_query_dp0"
+      }
+    },
+    {
+      "component": "backend",
+      "endpoint": "worker_kv_indexer_query_dp0",
+      "namespace": "dynamo",
+      "instance_id": 3943356078006170379,
+      "transport": {
+        "tcp": "192.168.8.2:34273/36b99d75cc6f730b/worker_kv_indexer_query_dp0"
+      }
+    }
+  ]
+}
+INFO     test_serve_deployment[agg-router]:common.py:124 TESTING: Payload: ChatPayload
+INFO     tests.utils.client:client.py:94 Sending request (curl equivalent):
+curl -X POST "http://localhost:8023/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Tell me a knock knock joke about AI."
+    }
+  ],
+  "max_tokens": 1000,
+  "temperature": 0.0,
+  "stream": false,
+  "model": "Qwen/Qwen3-0.6B"
+}'
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "POST /v1/chat/completions HTTP/1.1" 200 3193
+INFO     tests.utils.client:client.py:111 Received response: status=200, elapsed=13.15s
+DEBUG    tests.utils.client:client.py:118 Response headers: {'content-type': 'application/json', 'content-length': '3193', 'date': 'Fri, 10 Apr 2026 05:11:05 GMT'}
+DEBUG    tests.utils.client:client.py:133 Response body: {
+  "id": "chatcmpl-015e32a0-143a-4107-9029-658b04f74544",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "content": "<think>\nOkay, the user wants a knock knock joke about AI. Let me start by thinking about the structure of a typical joke. Usually, it's a setup, a punchline, and a twist. Since it's about AI, I need to incorporate that element.\n\nFirst, the setup. Maybe start with a knock on a door. The person says \"Knock knock, knock knock, knock knock...\" and then the AI is involved. The AI could be the one who answers. But how to make it funny?\n\nI should use some tech terms related to AI. Words like \"neural networks,\" \"deep learning,\" \"artificial intelligence.\" Maybe mention something like \"AI is the future\" to add a twist.\n\nThe punchline needs to be unexpected. Maybe the AI is the one who answers, but there's a twist r wouldn it even it for into the joke. For example, the AI says something like \"Hello, AI,\" and then the punchline is that the AI i... (truncated)
+INFO     tests.utils.payloads:payloads.py:99 SUCCESS: Found 6/6 expected keywords: ['AI', 'knock', 'joke', 'think', 'artificial', 'intelligence']
+INFO     tests.utils.engine_process:engine_process.py:104 Extracted content: 
+<think>
+Okay, the user wants a knock knock joke about AI. Let me start by thinking about the structure of a typical joke. Usually, it's a setup, a punchline, and a twist. Since it's about AI, I need t...
+INFO     tests.utils.engine_process:engine_process.py:147 SUCCESS: All expected log patterns: ['ZMQ listener .* received batch with \\d+ events \\(engine_seq=\\d+(?:, [^)]*)?\\)', 'Event processor for worker_id \\d+ processing event: Stored\\(', 'Selected worker: worker_type=\\w+, worker_id=\\d+ dp_rank=.*?, logit: '] found
+INFO     tests.utils.client:client.py:94 Sending request (curl equivalent):
+curl -X POST "http://localhost:8023/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Tell me a knock knock joke about AI."
+    }
+  ],
+  "max_tokens": 1000,
+  "temperature": 0.0,
+  "stream": false,
+  "model": "Qwen/Qwen3-0.6B"
+}'
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "POST /v1/chat/completions HTTP/1.1" 200 3200
+INFO     tests.utils.client:client.py:111 Received response: status=200, elapsed=13.20s
+DEBUG    tests.utils.client:client.py:118 Response headers: {'content-type': 'application/json', 'content-length': '3200', 'date': 'Fri, 10 Apr 2026 05:11:19 GMT'}
+DEBUG    tests.utils.client:client.py:133 Response body: {
+  "id": "chatcmpl-2a512832-a0c7-4714-a8d3-cd42832ac091",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "content": "<think>\nOkay, the user wants a knock knock joke about AI. Let me start by thinking about the structure of a typical joke. Usually, it's a setup, a punchline, and a twist. Since it's about AI, I need to incorporate that element.\n\nFirst, the setup. Maybe start with a knock on a door. The person says \"Knock knock, knock knock, knock knock...\" and then the AI is involved. The AI could be the one who answers. But how to make it funny?\n\nI should use some tech terms related to AI. Words like \"neural networks,\" \"deep learning,\" \"artificial intelligence.\" Maybe mention something like \"AI is the future\" to add a twist.\n\nThe punchline needs to be unexpected. Maybe the AI is the one who answers, but there's a twist r wouldn it even it for into the joke. For example, the AI says something like \"Hello, AI,\" and then the punchline is that the AI i... (truncated)
+INFO     tests.utils.payloads:payloads.py:99 SUCCESS: Found 6/6 expected keywords: ['AI', 'knock', 'joke', 'think', 'artificial', 'intelligence']
+INFO     tests.utils.engine_process:engine_process.py:104 Extracted content: 
+<think>
+Okay, the user wants a knock knock joke about AI. Let me start by thinking about the structure of a typical joke. Usually, it's a setup, a punchline, and a twist. Since it's about AI, I need t...
+INFO     tests.utils.engine_process:engine_process.py:147 SUCCESS: All expected log patterns: ['ZMQ listener .* received batch with \\d+ events \\(engine_seq=\\d+(?:, [^)]*)?\\)', 'Event processor for worker_id \\d+ processing event: Stored\\(', 'Selected worker: worker_type=\\w+, worker_id=\\d+ dp_rank=.*?, logit: '] found
+INFO     tests.utils.client:client.py:94 Sending request (curl equivalent):
+curl -X POST "http://localhost:8023/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Tell me a knock knock joke about AI."
+    }
+  ],
+  "max_tokens": 1000,
+  "temperature": 0.0,
+  "stream": false,
+  "model": "Qwen/Qwen3-0.6B"
+}'
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8023
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8023 "POST /v1/chat/completions HTTP/1.1" 200 2626
+INFO     tests.utils.client:client.py:111 Received response: status=200, elapsed=6.38s
+DEBUG    tests.utils.client:client.py:118 Response headers: {'content-type': 'application/json', 'content-length': '2626', 'date': 'Fri, 10 Apr 2026 05:11:26 GMT'}
+DEBUG    tests.utils.client:client.py:133 Response body: {
+  "id": "chatcmpl-ce9cf18f-ff1c-458d-9052-283b8f52d083",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "content": "<think>\nOkay, the user wants a knock knock joke about AI. Let me start by thinking about the structure of a typical joke. Usually, it's a setup, a punchline, and a twist. The setup should involve a scenario where someone is being knocked, and the punchline is the twist.\n\nFirst, I need to create a scenario where AI is involved. Maybe something like a robot or a smart device. Let's say a robot is being knocked down. The setup could be a robot in a room, maybe with a problem or a challenge. The punchline could be the twist where the AI is the one who solved the problem, leading to a funny outcome.\n\nI should make sure the joke is light-hearted and not too complex. Maybe include some humor related to technology. Let me think of some words: \"knock from\n be such usually and and the AI.\" Then, the setup could be a robot in a room, and the punchline is... (truncated)
+INFO     tests.utils.payloads:payloads.py:99 SUCCESS: Found 4/6 expected keywords: ['AI', 'knock', 'joke', 'think']
+INFO     tests.utils.engine_process:engine_process.py:104 Extracted content: 
+<think>
+Okay, the user wants a knock knock joke about AI. Let me start by thinking about the structure of a typical joke. Usually, it's a setup, a punchline, and a twist. The setup should involve a sc...
+INFO     tests.utils.engine_process:engine_process.py:147 SUCCESS: All expected log patterns: ['ZMQ listener .* received batch with \\d+ events \\(engine_seq=\\d+(?:, [^)]*)?\\)', 'Event processor for worker_id \\d+ processing event: Stored\\(', 'Selected worker: worker_type=\\w+, worker_id=\\d+ dp_rank=.*?, logit: '] found
+INFO     EngineProcess:managed_process.py:558 Sending SIGTERM to process group: 226756
+INFO     EngineProcess:managed_process.py:31 Terminating PID: 226758 name: tee
+INFO     EngineProcess:managed_process.py:36 Sending SIGTERM (kill): 226758 tee
+INFO     EngineProcess:managed_process.py:31 Terminating PID: 226757 name: sed
+INFO     EngineProcess:managed_process.py:36 Sending SIGTERM (kill): 226757 sed
+INFO     EtcdServer:managed_process.py:558 Sending SIGTERM to process group: 226744
+INFO     EtcdServer:managed_process.py:31 Terminating PID: 226745 name: sed
+INFO     EtcdServer:managed_process.py:36 Sending SIGTERM (kill): 226745 sed
+INFO     NatsServer:managed_process.py:558 Sending SIGTERM to process group: 226731
+INFO     NatsServer:managed_process.py:31 Terminating PID: 226732 name: sed
+INFO     NatsServer:managed_process.py:36 Sending SIGTERM (kill): 226732 sed

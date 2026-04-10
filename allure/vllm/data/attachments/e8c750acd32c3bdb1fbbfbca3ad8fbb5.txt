@@ -1,0 +1,210 @@
+INFO     NatsServer:managed_process.py:437 Running command: nats-server --trace -p 4266 in /workspace
+INFO     NatsServer:managed_process.py:662 Checking Port: 4266
+INFO     NatsServer:managed_process.py:670 SUCCESS: Check Port: 4266
+INFO     NatsServer:managed_process.py:775 Running custom health check '_nats_ready'
+DEBUG    asyncio:selector_events.py:64 Using selector: EpollSelector
+INFO     NatsServer:managed_process.py:795 SUCCESS: Custom health check '_nats_ready' passed (attempt=1, elapsed=0.0s)
+INFO     EtcdServer:managed_process.py:437 Running command: etcd --listen-client-urls http://0.0.0.0:2462 --advertise-client-urls http://0.0.0.0:2462 --listen-peer-urls http://0.0.0.0:2463 --initial-advertise-peer-urls http://localhost:2463 --initial-cluster default=http://localhost:2463 --data-dir /tmp/etcd_dkiqwhby in /workspace
+INFO     EtcdServer:managed_process.py:662 Checking Port: 2462
+INFO     EtcdServer:managed_process.py:670 SUCCESS: Check Port: 2462
+INFO     DynamoFrontendProcess:managed_process.py:437 Running command: python -m dynamo.frontend --router-mode round-robin --http-port 8035 --migration-limit 0 in /workspace
+INFO     tests.fault_tolerance.migration.test_vllm:test_vllm.py:249 Frontend started successfully
+INFO     DynamoWorkerProcess:managed_process.py:437 Running command: python3 -m dynamo.vllm --model Qwen/Qwen3-0.6B --enforce-eager --max-model-len 8192 --max-num-seqs 1 --num-gpu-blocks-override 512 --gpu-memory-utilization 0.15 --kv-events-config {"publisher": "zmq", "topic": "kv-events", "endpoint": "tcp://*:20081", "enable_kv_cache_events": true} in /workspace
+INFO     DynamoWorkerProcess:managed_process.py:690 Checking URL http://localhost:9161/health
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 96
+INFO     DynamoWorkerProcess:managed_process.py:742 Still waiting for URL http://localhost:9161/health (status code 503) (attempt=21, elapsed=20.1s)
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9161
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9161 "GET /health HTTP/1.1" 200 181
+INFO     tests.fault_tolerance.migration.test_vllm:test_vllm.py:215 worker1 status is ready
+INFO     DynamoWorkerProcess:managed_process.py:710 SUCCESS: Check URL: http://localhost:9161/health (attempt=27, elapsed=26.1s)
+Response:
+{
+  "status": "ready",
+  "uptime": {
+    "secs": 16,
+    "nanos": 792155192
+  },
+  "endpoints": {
+    "worker_kv_indexer_query_dp0": "ready",
+    "generate": "ready",
+    "clear_kv_blocks": "ready",
+    "get_perf_metrics": "ready"
+  }
+}
+INFO     DynamoWorkerProcess:managed_process.py:690 Checking URL http://localhost:8035/v1/models
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8035
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8035 "GET /v1/models HTTP/1.1" 200 27
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8035
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8035 "GET /v1/models HTTP/1.1" 200 109
+INFO     DynamoWorkerProcess:managed_process.py:710 SUCCESS: Check URL: http://localhost:8035/v1/models (attempt=2, elapsed=2.0s)
+Response:
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "Qwen/Qwen3-0.6B",
+      "object": "model",
+      "created": 1775794554,
+      "owned_by": "nvidia"
+    }
+  ]
+}
+INFO     tests.fault_tolerance.migration.test_vllm:test_vllm.py:253 Worker 1 PID: 35313
+INFO     DynamoWorkerProcess:managed_process.py:437 Running command: python3 -m dynamo.vllm --model Qwen/Qwen3-0.6B --enforce-eager --max-model-len 8192 --max-num-seqs 1 --num-gpu-blocks-override 512 --gpu-memory-utilization 0.15 --kv-events-config {"publisher": "zmq", "topic": "kv-events", "endpoint": "tcp://*:20082", "enable_kv_cache_events": true} in /workspace
+INFO     DynamoWorkerProcess:managed_process.py:690 Checking URL http://localhost:9101/health
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 95
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 96
+INFO     DynamoWorkerProcess:managed_process.py:742 Still waiting for URL http://localhost:9101/health (status code 503) (attempt=21, elapsed=20.1s)
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 503 96
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:9101
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:9101 "GET /health HTTP/1.1" 200 181
+INFO     tests.fault_tolerance.migration.test_vllm:test_vllm.py:215 worker2 status is ready
+INFO     DynamoWorkerProcess:managed_process.py:710 SUCCESS: Check URL: http://localhost:9101/health (attempt=24, elapsed=23.1s)
+Response:
+{
+  "status": "ready",
+  "uptime": {
+    "secs": 14,
+    "nanos": 928031056
+  },
+  "endpoints": {
+    "clear_kv_blocks": "ready",
+    "get_perf_metrics": "ready",
+    "generate": "ready",
+    "worker_kv_indexer_query_dp0": "ready"
+  }
+}
+INFO     DynamoWorkerProcess:managed_process.py:690 Checking URL http://localhost:8035/v1/models
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8035
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8035 "GET /v1/models HTTP/1.1" 200 109
+INFO     DynamoWorkerProcess:managed_process.py:710 SUCCESS: Check URL: http://localhost:8035/v1/models (attempt=1, elapsed=0.0s)
+Response:
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "Qwen/Qwen3-0.6B",
+      "object": "model",
+      "created": 1775794579,
+      "owned_by": "nvidia"
+    }
+  ]
+}
+INFO     tests.fault_tolerance.migration.test_vllm:test_vllm.py:260 Worker 2 PID: 38894
+INFO     tests.fault_tolerance.migration.utils:utils.py:227 Sending chat completion request (stream=True) with prompt: 'Tell me a long long long story about yourself?...'
+DEBUG    urllib3.connectionpool:connectionpool.py:241 Starting new HTTP connection (1): localhost:8035
+DEBUG    urllib3.connectionpool:connectionpool.py:544 http://localhost:8035 "POST /v1/chat/completions HTTP/1.1" 200 None
+INFO     tests.fault_tolerance.migration.utils:utils.py:241 Received response with status code: 200
+INFO     tests.fault_tolerance.migration.utils:utils.py:341 Request was received by Worker 1
+INFO     tests.fault_tolerance.migration.utils:utils.py:585 Killing Worker 1 with PID 35313
+INFO     root:managed_process.py:31 Terminating PID: 35313 name: python3
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 35313 python3
+WARNING  root:managed_process.py:88 Parent process did not exit within timeout
+INFO     root:managed_process.py:31 Terminating PID: 35313 name: python3
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 35313 python3
+INFO     root:managed_process.py:31 Terminating PID: 37760 name: python3
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 37760 python3
+INFO     root:managed_process.py:31 Terminating PID: 37761 name: VLLM::EngineCore
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 37761 VLLM::EngineCore
+INFO     root:managed_process.py:31 Terminating PID: 35313 name: python3
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 35313 python3
+INFO     root:managed_process.py:31 Terminating PID: 37760 name: python3
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 37760 python3
+INFO     root:managed_process.py:31 Terminating PID: 37761 name: VLLM::EngineCor
+INFO     root:managed_process.py:33 Sending SIGKILL (kill -9): 37761 VLLM::EngineCor
+INFO     DynamoWorkerProcess:managed_process.py:558 Sending SIGTERM to process group: 38894
+INFO     DynamoWorkerProcess:managed_process.py:31 Terminating PID: 38896 name: tee
+INFO     DynamoWorkerProcess:managed_process.py:36 Sending SIGTERM (kill): 38896 tee
+INFO     DynamoWorkerProcess:managed_process.py:31 Terminating PID: 38895 name: sed
+INFO     DynamoWorkerProcess:managed_process.py:36 Sending SIGTERM (kill): 38895 sed
+INFO     DynamoWorkerProcess:managed_process.py:558 Sending SIGTERM to process group: 35313
+INFO     DynamoWorkerProcess:managed_process.py:31 Terminating PID: 35315 name: tee
+INFO     DynamoWorkerProcess:managed_process.py:36 Sending SIGTERM (kill): 35315 tee
+INFO     DynamoWorkerProcess:managed_process.py:31 Terminating PID: 35314 name: sed
+INFO     DynamoWorkerProcess:managed_process.py:36 Sending SIGTERM (kill): 35314 sed
+INFO     DynamoFrontendProcess:managed_process.py:558 Sending SIGTERM to process group: 35310
+INFO     DynamoFrontendProcess:managed_process.py:31 Terminating PID: 35312 name: tee
+INFO     DynamoFrontendProcess:managed_process.py:36 Sending SIGTERM (kill): 35312 tee
+INFO     DynamoFrontendProcess:managed_process.py:31 Terminating PID: 35311 name: sed
+INFO     DynamoFrontendProcess:managed_process.py:36 Sending SIGTERM (kill): 35311 sed
+INFO     EtcdServer:managed_process.py:558 Sending SIGTERM to process group: 35298
+INFO     EtcdServer:managed_process.py:31 Terminating PID: 35299 name: sed
+INFO     EtcdServer:managed_process.py:36 Sending SIGTERM (kill): 35299 sed
+INFO     NatsServer:managed_process.py:558 Sending SIGTERM to process group: 35285
+INFO     NatsServer:managed_process.py:31 Terminating PID: 35286 name: sed
+INFO     NatsServer:managed_process.py:36 Sending SIGTERM (kill): 35286 sed
