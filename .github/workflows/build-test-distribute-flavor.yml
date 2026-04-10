@@ -228,6 +228,13 @@ jobs:
           else
             echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"}]' >> $GITHUB_OUTPUT
           fi
+      - name: Bootstrap buildkit for XPU (use runner docker builder)
+        if: inputs.device == 'xpu'
+        uses: ./.github/actions/bootstrap-buildkit
+        with:
+          builder_name: ${{ inputs.builder_name }}
+          use_runner_docker_builder: 'true'
+          skip_bootstrap: 'false'
       - name: Build
         id: build
         uses: ./.github/actions/build-flavor
