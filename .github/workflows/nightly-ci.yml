@@ -40,7 +40,8 @@ jobs:
         with:
           builder_name: ${{ steps.export-builder-name.outputs.builder_name }}
           buildkit_worker_addresses: ''
-          fresh_builder: 'true'
+          use_runner_docker_builder: true
+          fresh_builder: false
 
 
   # ============================================================================
@@ -76,12 +77,14 @@ jobs:
   # ============================================================================
   vllm-xpu-pipeline:
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
+    needs: [create-fresh-builder]
     with:
       framework: vllm
       device: xpu
       target: runtime
       platform: 'linux/amd64'
-      builder_name: 'unused-xpu-uses-runner-docker'
+      fresh_builder: false
+      builder_name: ${{ needs.create-fresh-builder.outputs.builder_name }}
       build_timeout_minutes: 180
       run_cpu_only_tests: false
       run_single_gpu_tests: false

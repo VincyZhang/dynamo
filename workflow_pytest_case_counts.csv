@@ -1,0 +1,39 @@
+workflow,job,marker_field,marker_expression,test_case_count
+pr.yaml,planner-pipeline,cpu_only_test_markers,pre_merge and planner and gpu_0,0
+pr.yaml,vllm-pipeline,cpu_only_test_markers,pre_merge and vllm and gpu_0,8
+pr.yaml,vllm-pipeline,single_gpu_test_markers,pre_merge and vllm and gpu_1,18
+pr.yaml,vllm-pipeline,multi_gpu_test_markers,pre_merge and vllm and (gpu_2 or gpu_4),6
+pr.yaml,vllm-xpu-pipeline,single_xpu_test_markers,pre_merge and vllm and xpu_1,12
+pr.yaml,vllm-xpu-pipeline,multi_gpu_test_markers,pre_merge and vllm and xpu_2,0
+pr.yaml,sglang-pipeline,cpu_only_test_markers,pre_merge and sglang and gpu_0,1
+pr.yaml,sglang-pipeline,single_gpu_test_markers,pre_merge and sglang and gpu_1,11
+pr.yaml,sglang-pipeline,multi_gpu_test_markers,pre_merge and sglang and (gpu_2 or gpu_4),6
+pr.yaml,trtllm-pipeline,cpu_only_test_markers,pre_merge and trtllm and gpu_0,1
+pr.yaml,trtllm-pipeline,single_gpu_test_markers,pre_merge and trtllm and gpu_1,17
+pr.yaml,trtllm-pipeline,multi_gpu_test_markers,pre_merge and trtllm and (gpu_2 or gpu_4),4
+nightly-ci.yml,vllm-pipeline,cpu_only_test_markers,vllm and gpu_0,10
+nightly-ci.yml,vllm-pipeline,single_gpu_test_markers,vllm and gpu_1,174
+nightly-ci.yml,vllm-xpu-pipeline,single_gpu_test_markers,vllm and xpu_1,153
+nightly-ci.yml,vllm-pipeline,multi_gpu_test_markers,vllm and (gpu_2 or gpu_4),19
+nightly-ci.yml,vllm-xpu-pipeline,multi_gpu_test_markers,vllm and xpu_2,9
+nightly-ci.yml,sglang-pipeline,cpu_only_test_markers,sglang and gpu_0,1
+nightly-ci.yml,sglang-pipeline,single_gpu_test_markers,sglang and gpu_1,145
+nightly-ci.yml,sglang-pipeline,multi_gpu_test_markers,sglang and (gpu_2 or gpu_4),9
+nightly-ci.yml,trtllm-pipeline,cpu_only_test_markers,trtllm and gpu_0,3
+nightly-ci.yml,trtllm-pipeline,single_gpu_test_markers,trtllm and gpu_1,165
+nightly-ci.yml,trtllm-pipeline,multi_gpu_test_markers,trtllm and (gpu_2 or gpu_4),8
+post-merge-ci.yml,vllm-pipeline,cpu_only_test_markers,(pre_merge or post_merge) and vllm and gpu_0,10
+post-merge-ci.yml,vllm-pipeline,single_gpu_test_markers,(pre_merge or post_merge) and vllm and gpu_1,59
+post-merge-ci.yml,vllm-xpu-pipeline,single_gpu_test_markers,(pre_merge or post_merge) and vllm and xpu_1,49
+post-merge-ci.yml,vllm-pipeline,multi_gpu_test_markers,(pre_merge or post_merge) and vllm and (gpu_2 or gpu_4),6
+post-merge-ci.yml,vllm-xpu-pipeline,multi_gpu_test_markers,(pre_merge or post_merge) and vllm and xpu_2,3
+post-merge-ci.yml,sglang-pipeline,cpu_only_test_markers,(pre_merge or post_merge) and sglang and gpu_0,1
+post-merge-ci.yml,sglang-pipeline,single_gpu_test_markers,(pre_merge or post_merge) and sglang and gpu_1,45
+post-merge-ci.yml,sglang-pipeline,multi_gpu_test_markers,(pre_merge or post_merge) and sglang and (gpu_2 or gpu_4),6
+post-merge-ci.yml,trtllm-pipeline,cpu_only_test_markers,(pre_merge or post_merge) and trtllm and gpu_0,3
+post-merge-ci.yml,trtllm-pipeline,single_gpu_test_markers,(pre_merge or post_merge) and trtllm and gpu_1,82
+post-merge-ci.yml,trtllm-pipeline,multi_gpu_test_markers,(pre_merge or post_merge) and trtllm and (gpu_2 or gpu_4),4
+post-merge-ci.yml,vllm-efa-pipeline,cpu_only_test_markers,(pre_merge or post_merge) and vllm and gpu_0,10
+post-merge-ci.yml,trtllm-efa-pipeline,cpu_only_test_markers,(pre_merge or post_merge) and trtllm and gpu_0,3
+container-validation-dynamo.yml,test-parallel,pytest_marks,pre_merge and parallel and not (vllm or sglang or trtllm) and (gpu_0),24
+container-validation-dynamo.yml,test-sequential,pytest_marks,pre_merge and not parallel and not (vllm or sglang or trtllm) and (gpu_0),37
