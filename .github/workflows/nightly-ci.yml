@@ -89,7 +89,7 @@ jobs:
       run_cpu_only_tests: false
       run_single_gpu_tests: false
       run_single_xpu_tests: true
-      single_xpu_test_markers: 'vllm and (xpu_1 or xpu_2)'
+      single_xpu_test_markers: 'nightly and vllm and (xpu_1 or xpu_2)'
       single_xpu_test_timeout_minutes: 180
       run_multi_gpu_tests: false
       copy_to_acr: false
