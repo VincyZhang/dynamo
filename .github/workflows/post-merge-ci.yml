@@ -42,6 +42,7 @@ jobs:
       cpu_only_test_timeout_minutes: 60
       single_gpu_test_timeout_minutes: 60
       multi_gpu_test_timeout_minutes: 60
+      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -93,6 +94,7 @@ jobs:
       cpu_only_test_timeout_minutes: 60
       single_gpu_test_timeout_minutes: 60
       multi_gpu_test_timeout_minutes: 60
+      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -119,6 +121,7 @@ jobs:
       cpu_only_test_timeout_minutes: 60
       single_gpu_test_timeout_minutes: 60
       multi_gpu_test_timeout_minutes: 60
+      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -198,6 +201,7 @@ jobs:
       run_single_gpu_tests: false
       run_multi_gpu_tests: false
       copy_to_acr: false
+      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -223,6 +227,7 @@ jobs:
       run_single_gpu_tests: false
       run_multi_gpu_tests: false
       copy_to_acr: false
+      use_sccache: false
     secrets: inherit
 
   # ============================================================================
