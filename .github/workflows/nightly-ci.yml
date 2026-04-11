@@ -41,6 +41,7 @@ jobs:
           builder_name: ${{ steps.export-builder-name.outputs.builder_name }}
           buildkit_worker_addresses: ''
           fresh_builder: false
+          use_runner_docker_builder: true
 
 
   # ============================================================================
