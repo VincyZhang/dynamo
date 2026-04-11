@@ -47,7 +47,7 @@ inputs:
   use_sccache:
     description: 'Enable sccache for the build'
     required: false
-    default: 'true'
+    default: false
   aws_access_key_id:
     description: 'AWS Access Key ID'
     required: false

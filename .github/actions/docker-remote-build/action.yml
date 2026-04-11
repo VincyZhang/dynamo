@@ -56,7 +56,7 @@ inputs:
   use_sccache:
     description: 'Use SCCache for caching'
     required: false
-    default: 'true'
+    default: false
   extra_build_args:
     description: 'Additional Docker build args (newline-separated list of KEY=VALUE pairs)'
     required: false

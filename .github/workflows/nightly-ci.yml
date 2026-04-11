@@ -69,7 +69,6 @@ jobs:
       single_gpu_test_timeout_minutes: 180
       multi_gpu_test_markers: 'vllm and (gpu_2 or gpu_4)'
       multi_gpu_test_timeout_minutes: 120
-      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -94,7 +93,6 @@ jobs:
       run_multi_gpu_tests: false
       copy_to_acr: false
       push_image: false
-      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -120,7 +118,6 @@ jobs:
       single_gpu_test_timeout_minutes: 180
       multi_gpu_test_markers: 'sglang and (gpu_2 or gpu_4)'
       multi_gpu_test_timeout_minutes: 120
-      use_sccache: false
     secrets: inherit
 
   # ============================================================================
@@ -146,7 +143,6 @@ jobs:
       single_gpu_test_timeout_minutes: 180
       multi_gpu_test_markers: 'trtllm and (gpu_2 or gpu_4)'
       multi_gpu_test_timeout_minutes: 120
-      use_sccache: false
     secrets: inherit
 
   # ============================================================================
