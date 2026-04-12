@@ -195,6 +195,7 @@ jobs:
       use_runner_docker_builder: true
       fresh_builder: false
       use_sccache: false
+      push_image: false
     secrets: inherit
 
   vllm-dev-build:
