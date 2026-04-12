@@ -311,8 +311,33 @@ jobs:
         id: calculate-target-tag
         shell: bash
         run: |
-          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
-          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.test_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
+          TARGET_TAG_PLAIN="${{ needs.build.outputs.target_tag_plain }}"
+          TEST_TAG_PLAIN="${{ needs.build.outputs.test_tag_plain }}"
+          IMAGE_TAG_SUFFIX="${{ needs.build.outputs.image_tag_suffix }}"
+
+          if [[ -z "${TARGET_TAG_PLAIN}" || -z "${TEST_TAG_PLAIN}" ]]; then
+            EFA_SUFFIX=""
+            if [[ "${{ inputs.make_efa }}" == "true" ]]; then
+              EFA_SUFFIX="-efa"
+            fi
+            TARGET_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}"
+            TEST_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}-test"
+          fi
+
+          if [[ -z "${IMAGE_TAG_SUFFIX}" ]]; then
+            if [[ "${{ inputs.cpu_only }}" == "true" ]]; then
+              IMAGE_TAG_SUFFIX="-cpu"
+            elif [[ "${{ inputs.device }}" == "xpu" ]]; then
+              IMAGE_TAG_SUFFIX="-xpu"
+            else
+              CUDA_VERSION_RAW="${{ inputs.cuda_version }}"
+              CUDA_VERSION="${CUDA_VERSION_RAW%%.*}"
+              IMAGE_TAG_SUFFIX="-cuda${CUDA_VERSION}"
+            fi
+          fi
+
+          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TARGET_TAG_PLAIN}${IMAGE_TAG_SUFFIX}
+          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TEST_TAG_PLAIN}${IMAGE_TAG_SUFFIX}
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       # - name: Docker Login
@@ -407,9 +432,34 @@ jobs:
         id: calculate-target-tag
         shell: bash
         run: |
-          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.target_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
+          TARGET_TAG_PLAIN="${{ needs.build.outputs.target_tag_plain }}"
+          TEST_TAG_PLAIN="${{ needs.build.outputs.test_tag_plain }}"
+          IMAGE_TAG_SUFFIX="${{ needs.build.outputs.image_tag_suffix }}"
+
+          if [[ -z "${TARGET_TAG_PLAIN}" || -z "${TEST_TAG_PLAIN}" ]]; then
+            EFA_SUFFIX=""
+            if [[ "${{ inputs.make_efa }}" == "true" ]]; then
+              EFA_SUFFIX="-efa"
+            fi
+            TARGET_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}"
+            TEST_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}-test"
+          fi
+
+          if [[ -z "${IMAGE_TAG_SUFFIX}" ]]; then
+            if [[ "${{ inputs.cpu_only }}" == "true" ]]; then
+              IMAGE_TAG_SUFFIX="-cpu"
+            elif [[ "${{ inputs.device }}" == "xpu" ]]; then
+              IMAGE_TAG_SUFFIX="-xpu"
+            else
+              CUDA_VERSION_RAW="${{ inputs.cuda_version }}"
+              CUDA_VERSION="${CUDA_VERSION_RAW%%.*}"
+              IMAGE_TAG_SUFFIX="-cuda${CUDA_VERSION}"
+            fi
+          fi
+
+          RUNTIME_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TARGET_TAG_PLAIN}${IMAGE_TAG_SUFFIX}
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
-          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ needs.build.outputs.test_tag_plain }}${{ needs.build.outputs.image_tag_suffix }}
+          TEST_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${TEST_TAG_PLAIN}${IMAGE_TAG_SUFFIX}
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
       # - name: Docker Login
       #   uses: ./.github/actions/docker-login

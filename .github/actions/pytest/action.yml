@@ -344,12 +344,12 @@ runs:
 
         exit ${TEST_EXIT_CODE}
 
-    - name: Cleanup MinIO Service
-      if: always() && inputs.start_minio == 'true' && env.MINIO_STARTED_BY_ACTION == 'true'
-      shell: bash
-      run: |
-        echo "🧹 Cleaning up MinIO container..."
-        docker rm -f dynamo-minio-test 2>/dev/null || true
+    #- name: Cleanup MinIO Service
+    #  if: always() && inputs.start_minio == 'true' && env.MINIO_STARTED_BY_ACTION == 'true'
+    #  shell: bash
+    #  run: |
+    #    echo "🧹 Cleaning up MinIO container..."
+    #    docker rm -f dynamo-minio-test 2>/dev/null || true
 
     - name: Cleanup Pytest Containers
       if: always() && inputs.device == 'xpu'
