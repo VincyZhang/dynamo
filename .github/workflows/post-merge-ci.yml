@@ -4,7 +4,7 @@
 name: Post-Merge CI Pipeline
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 permissions:
   contents: read
 
