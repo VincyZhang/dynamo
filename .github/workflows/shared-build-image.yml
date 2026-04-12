@@ -52,6 +52,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_sccache:
+        description: 'Use sccache for build caching (requires AWS credentials)'
+        required: false
+        type: boolean
+        default: false
       push_image:
         description: 'Push image to registry'
         required: false
@@ -261,6 +266,7 @@ jobs:
           extra_tags: ${{ steps.extra-tags.outputs.tags }}
           push_image: ${{ inputs.push_image }}
           no_load: ${{ inputs.no_load }}
+          use_sccache: ${{ inputs.use_sccache }}
           extra_build_args: |
             DYNAMO_COMMIT_SHA=${{ github.sha }}
             ${{ inputs.extra_build_args }}

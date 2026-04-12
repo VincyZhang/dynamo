@@ -194,6 +194,7 @@ jobs:
       build_timeout_minutes: 60
       use_runner_docker_builder: true
       fresh_builder: false
+      use_sccache: false
     secrets: inherit
 
   vllm-dev-build:
