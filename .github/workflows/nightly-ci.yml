@@ -4,9 +4,9 @@
 name: Nightly CI Pipeline
 
 on:
-  pull_request:
-    branches:
-      - main
+  # pull_request:
+  #   branches:
+  #     - main
   workflow_dispatch:  # Allow manual triggering for testing
 
 permissions:
@@ -53,13 +53,12 @@ jobs:
   vllm-pipeline:
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
     needs: [create-fresh-builder]
-    if: false
     with:
       framework: vllm
       target: runtime
-      fresh_builder: true
-      platform: 'linux/amd64,linux/arm64'
-      cuda_versions: '["12.9", "13.0"]'
+      fresh_builder: false
+      platform: 'linux/amd64'
+      cuda_versions: '["non-cuda"]'
       extra_tags: |
         ${{ github.ref_name == 'main' && 'main-vllm' || '' }}
         ${{ github.ref_name == 'main' && format('main-vllm-{0}', github.sha) || '' }}
@@ -68,32 +67,11 @@ jobs:
       cpu_only_test_markers: 'vllm and gpu_0'
       single_gpu_test_markers: 'vllm and gpu_1'
       single_gpu_test_timeout_minutes: 180
-      multi_gpu_test_markers: 'vllm and (gpu_2 or gpu_4)'
-      multi_gpu_test_timeout_minutes: 120
-    secrets: inherit
-
-  # ============================================================================
-  # VLLM XPU PIPELINE
-  # ============================================================================
-  vllm-xpu-pipeline:
-    uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
-    needs: [create-fresh-builder]
-    with:
-      framework: vllm
-      device: xpu
-      target: runtime
-      platform: 'linux/amd64'
-      fresh_builder: false
-      builder_name: ${{ needs.create-fresh-builder.outputs.builder_name }}
-      build_timeout_minutes: 180
-      run_cpu_only_tests: false
-      run_single_gpu_tests: false
       run_single_xpu_tests: true
       single_xpu_test_markers: 'nightly and vllm and (xpu_1 or xpu_2)'
       single_xpu_test_timeout_minutes: 180
-      run_multi_gpu_tests: false
-      copy_to_acr: false
-      push_image: false
+      multi_gpu_test_markers: 'vllm and (gpu_2 or gpu_4)'
+      multi_gpu_test_timeout_minutes: 120
     secrets: inherit
 
   # ============================================================================
@@ -153,7 +131,7 @@ jobs:
     name: Clean K8s builder if exists
     runs-on: prod-default-small-v2
     if: always()
-    needs: [vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline, create-fresh-builder]
+    needs: [vllm-pipeline, sglang-pipeline, trtllm-pipeline, create-fresh-builder]
     permissions:
       contents: read
     steps:
@@ -176,7 +154,7 @@ jobs:
     name: Notify Slack
     runs-on: ubuntu-slim
     if: false
-    needs: [ vllm-pipeline, vllm-xpu-pipeline, sglang-pipeline, trtllm-pipeline ]
+    needs: [ vllm-pipeline, sglang-pipeline, trtllm-pipeline ]
     permissions:
       contents: read
     steps:
