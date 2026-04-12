@@ -1,4 +1,4 @@
-name: 'Pytest'
+﻿name: 'Pytest'
 description: 'Run pytest on pre-built container images'
 inputs:
   pytest_marks:
@@ -265,7 +265,7 @@ runs:
           # Construct final command with xdist parallelization (-n) and other options
           # --dist=loadscope groups tests by module/class to prevent race conditions in stateful tests
           # --durations=0: show ALL test/setup/teardown durations (0 = no limit)
-          PYTEST_CMD="pytest ${PARALLEL_OPTS} --dist=loadscope --continue-on-collection-errors -v --tb=short --log-cli-level=DEBUG --log-level=DEBUG --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=0 -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest ${PARALLEL_OPTS} --dist=loadscope --continue-on-collection-errors -v --tb=long -s --log-cli-level=DEBUG --log-level=DEBUG --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=0 -m \"${{ inputs.pytest_marks }}\""
         fi
 
         # Get absolute path for test-results directory and ensure it has proper permissions
@@ -284,7 +284,11 @@ runs:
         DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_TYPE=${{ inputs.test_type }}")
         DOCKER_ENV_FLAGS+=(--env "DYNAMO_TEST_WORKFLOW=${GITHUB_WORKFLOW}")
 
-        echo "🐳 Docker run command (dind sidecar):"
+        echo "** Available local docker images (dynamo/vllm related):"
+        docker images --format '{{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}' | grep -E 'dynamo|vllm|non_cuda|xpu' || echo '(none matching dynamo/vllm/xpu)'
+        echo "** Image to be used: ${{ inputs.image_tag }}"
+        docker inspect --format 'ID={{.Id}} Created={{.Created}} Size={{.Size}}' '${{ inputs.image_tag }}' 2>/dev/null || echo 'WARNING: Image not found locally: ${{ inputs.image_tag }}'
+        echo "** Docker run command (dind sidecar):"
         echo "docker run ${GPU_FLAGS} ${DOCKER_OPTS} ${DOCKER_EXTRA_FLAGS[@]} --rm -w /workspace --network host ${DOCKER_ENV_FLAGS[@]} --name ${{ env.CONTAINER_ID }}_pytest -v ${TEST_RESULTS_DIR}:/workspace/test-results ${{ inputs.image_tag }} bash -c \"${PYTEST_CMD}\""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
