@@ -214,7 +214,7 @@ jobs:
           # "linux/amd64,linux/arm64" -> both runners
           # "linux/amd64"             -> amd64 runner only (covers EFA and other single-arch)
           # "linux/arm64"             -> arm64 runner only
-          if [[ "$DEVICE" == "xpu" ]]; then
+            if [[ "${{ inputs.device }}" == "xpu" ]]; then
             echo 'runners=[{"arch":"amd64","runner":"xpu"}]' >> $GITHUB_OUTPUT
           elif [[ "$PLATFORM" == *"amd64"* && "$PLATFORM" == *"arm64"* ]]; then
             echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"},{"arch":"arm64","runner":"prod-tester-arm-v1"}]' >> $GITHUB_OUTPUT
