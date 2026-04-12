@@ -91,6 +91,7 @@ runs:
           docker start "${MINIO_CONTAINER_NAME}" > /dev/null
         else
           echo "🚀 No existing MinIO container found, starting a new container..."
+          echo "▶️ Executing: docker run -d --name \"${MINIO_CONTAINER_NAME}\" -p 9000:9000 -p 9001:9001 -e \"MINIO_ROOT_USER=${MINIO_ACCESS_KEY}\" -e \"MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}\" quay.io/minio/minio server /data --console-address ':9001'"
           docker run -d \
             --name "${MINIO_CONTAINER_NAME}" \
             -p 9000:9000 \
@@ -173,6 +174,7 @@ runs:
         echo "🧹 Removing any leftover containers with name ${{ env.CONTAINER_ID }}_pytest..."
         docker rm -f "${{ env.CONTAINER_ID }}_pytest" 2>/dev/null || true
 
+        echo "▶️ Executing: docker run ${GPU_FLAGS} ${DOCKER_EXTRA_FLAGS[*]} --rm -w /workspace --cpus=${NUM_CPUS} --shm-size=200m --network host ${DOCKER_ENV_FLAGS[*]} --name ${{ env.CONTAINER_ID }}_pytest -v \"${TEST_RESULTS_DIR}:/workspace/test-results\" ${{ inputs.image_tag }} sh -c \"umask 0022 && ${PYTEST_CMD}\""
         docker run ${GPU_FLAGS} \
           "${DOCKER_EXTRA_FLAGS[@]}" \
           --rm -w /workspace \
@@ -283,6 +285,7 @@ runs:
         echo "🧹 Removing any leftover containers with name ${{ env.CONTAINER_ID }}_pytest..."
         docker rm -f "${{ env.CONTAINER_ID }}_pytest" 2>/dev/null || true
 
+        echo "▶️ Executing: docker run ${GPU_FLAGS} ${DOCKER_OPTS} ${DOCKER_EXTRA_FLAGS[*]} --rm -w /workspace --network host ${DOCKER_ENV_FLAGS[*]} --name ${{ env.CONTAINER_ID }}_pytest -v \"${TEST_RESULTS_DIR}:/workspace/test-results\" ${{ inputs.image_tag }} sh -c \"umask 0022 && ${PYTEST_CMD}\""
         docker run ${GPU_FLAGS} ${DOCKER_OPTS} \
           "${DOCKER_EXTRA_FLAGS[@]}" \
           --rm -w /workspace \
