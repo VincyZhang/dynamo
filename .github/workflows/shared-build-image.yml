@@ -47,6 +47,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_runner_docker_builder:
+        description: 'Use local runner docker buildx instead of remote K8s BuildKit'
+        required: false
+        type: boolean
+        default: false
       push_image:
         description: 'Push image to registry'
         required: false
@@ -176,6 +181,7 @@ jobs:
           arch: ${{ matrix.cuda_version == 'xpu' && 'linux/amd64' || inputs.platform }}
           cuda_version: ${{ (matrix.cuda_version == 'xpu' || matrix.cuda_version == 'cpu') && '' || matrix.cuda_version }}
           fresh_builder: ${{ inputs.fresh_builder }}
+          use_runner_docker_builder: ${{ inputs.use_runner_docker_builder }}
       - name: Calculate extra tags
         id: extra-tags
         shell: bash
