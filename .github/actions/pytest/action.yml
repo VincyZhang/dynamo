@@ -85,10 +85,12 @@ runs:
         fi
 
         if docker ps --filter "name=^/${MINIO_CONTAINER_NAME}$" --format '{{.Names}}' | grep -qx "${MINIO_CONTAINER_NAME}"; then
-          echo "♻️  Found existing MinIO container ${MINIO_CONTAINER_NAME}, waiting for readiness..."
+          echo "♻️  Found running MinIO container ${MINIO_CONTAINER_NAME}, waiting for readiness..."
+        elif docker ps -a --filter "name=^/${MINIO_CONTAINER_NAME}$" --format '{{.Names}}' | grep -qx "${MINIO_CONTAINER_NAME}"; then
+          echo "♻️  Found existing stopped MinIO container ${MINIO_CONTAINER_NAME}, starting it..."
+          docker start "${MINIO_CONTAINER_NAME}" > /dev/null
         else
-          echo "🚀 No running MinIO found, starting a new container..."
-          docker rm -f "${MINIO_CONTAINER_NAME}" 2>/dev/null || true
+          echo "🚀 No existing MinIO container found, starting a new container..."
           docker run -d \
             --name "${MINIO_CONTAINER_NAME}" \
             -p 9000:9000 \
