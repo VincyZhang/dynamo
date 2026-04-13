@@ -138,7 +138,7 @@ runs:
           PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
         else
           echo "🚀 Running pytest in normal mode"
-          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=long --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 -m \"${{ inputs.pytest_marks }}\""
 
           # Set device-specific docker flags
           GPU_FLAGS=""

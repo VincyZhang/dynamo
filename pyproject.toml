@@ -176,7 +176,9 @@ addopts = [
     # FIXME: Get relative/generic blob paths to work here
 ]
 xfail_strict = true
-log_cli_level = "INFO"
+log_cli = true
+log_cli_level = "DEBUG"
+log_level = "DEBUG"
 filterwarnings = [
     "error",
     # CUDA deprecation warnings from tensorrt_llm
