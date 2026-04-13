@@ -48,6 +48,7 @@ DYN_SYSTEM_PORT=${DYN_SYSTEM_PORT:-8081} \
   --max-model-len "$MAX_MODEL_LEN" \
   --max-num-seqs "$MAX_CONCURRENT_SEQS" \
   --block-size "${BLOCK_SIZE:-64}" \
+  --gpu-memory-utilization 0.75 \
   $GPU_MEM_ARGS \
   --kv-transfer-config '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both","kv_buffer_device":"xpu"}' &
 
