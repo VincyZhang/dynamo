@@ -20,6 +20,7 @@ from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
 from tests.utils.device import (
     build_nixl_kv_transfer_config,
     get_default_vllm_block_size,
+    get_gpu_memory_utilization,
 )
 from tests.utils.engine_process import FRONTEND_PORT
 from tests.utils.managed_process import ManagedProcess
@@ -48,6 +49,13 @@ class DynamoWorkerProcess(ManagedProcess):
         etcd_endpoints: list,
         mode: WorkerMode = WorkerMode.AGGREGATED,
     ):
+        # Disaggregated mode runs prefill+decode workers on the same device in CI.
+        # Use device-aware utilization to keep XPU memory headroom stable.
+        gpu_memory_utilization = get_gpu_memory_utilization(
+            num_workers=2 if mode != WorkerMode.AGGREGATED else 1,
+            single_gpu=True,
+        )
+
         command = [
             "python3",
             "-m",
@@ -56,7 +64,7 @@ class DynamoWorkerProcess(ManagedProcess):
             FAULT_TOLERANCE_MODEL_NAME,
             "--enforce-eager",
             "--gpu-memory-utilization",
-            "0.45",
+            str(gpu_memory_utilization),
             "--max-model-len",
             "8192",
             "--block-size",

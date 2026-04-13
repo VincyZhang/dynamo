@@ -28,6 +28,7 @@ from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
 from tests.utils.device import (
     build_nixl_kv_transfer_config_json,
     get_default_vllm_block_size,
+    get_gpu_memory_utilization,
 )
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.payloads import check_health_generate, check_models_api
@@ -61,6 +62,10 @@ class DynamoWorkerProcess(ManagedProcess):
 
         # Determine max-model-len based on worker type
         max_model_len = "4096" if is_prefill is None else "16384"
+        gpu_memory_utilization = get_gpu_memory_utilization(
+            num_workers=2 if is_prefill is not None else 1,
+            single_gpu=True,
+        )
 
         command = [
             "python3",
@@ -70,7 +75,7 @@ class DynamoWorkerProcess(ManagedProcess):
             FAULT_TOLERANCE_MODEL_NAME,
             "--enforce-eager",
             "--gpu-memory-utilization",
-            "0.45",
+            str(gpu_memory_utilization),
             "--max-model-len",
             max_model_len,
             "--block-size",
