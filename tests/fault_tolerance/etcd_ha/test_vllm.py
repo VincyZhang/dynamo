@@ -19,8 +19,10 @@ from tests.fault_tolerance.etcd_ha.utils import (
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
 from tests.utils.device import (
     build_nixl_kv_transfer_config,
+    detect_target_device,
     get_default_vllm_block_size,
     get_gpu_memory_utilization,
+    select_best_xpu_device,
 )
 from tests.utils.engine_process import FRONTEND_PORT
 from tests.utils.managed_process import ManagedProcess
@@ -51,10 +53,20 @@ class DynamoWorkerProcess(ManagedProcess):
     ):
         # Disaggregated mode runs prefill+decode workers on the same device in CI.
         # Use device-aware utilization to keep XPU memory headroom stable.
-        gpu_memory_utilization = get_gpu_memory_utilization(
-            num_workers=2 if mode != WorkerMode.AGGREGATED else 1,
-            single_gpu=True,
-        )
+        if detect_target_device() == "xpu":
+            # On XPU, concurrent migration tests occupy memory. Raise
+            # gpu_memory_utilization so the KV cache check
+            # (available = free - (1-util)*total) passes under load.
+            # Limit max_model_len and num_gpu_blocks_override to minimize
+            # actual KV allocation (64 blocks * 64 tokens/block = 4096 tokens).
+            gpu_memory_utilization = 0.9
+            max_model_len = "4096"
+        else:
+            gpu_memory_utilization = get_gpu_memory_utilization(
+                num_workers=2 if mode != WorkerMode.AGGREGATED else 1,
+                single_gpu=True,
+            )
+            max_model_len = "8192"
 
         command = [
             "python3",
@@ -66,10 +78,15 @@ class DynamoWorkerProcess(ManagedProcess):
             "--gpu-memory-utilization",
             str(gpu_memory_utilization),
             "--max-model-len",
-            "8192",
+            max_model_len,
             "--block-size",
             str(get_default_vllm_block_size()),
         ]
+
+        # On XPU, limit actual KV blocks to match max_model_len to reduce memory footprint
+        if detect_target_device() == "xpu":
+            num_blocks = int(max_model_len) // get_default_vllm_block_size()
+            command.extend(["--num-gpu-blocks-override", str(num_blocks)])
 
         # Set port based on worker type
         port = "8082" if mode == WorkerMode.PREFILL else "8081"
@@ -89,6 +106,8 @@ class DynamoWorkerProcess(ManagedProcess):
 
         # Set debug logging and ETCD endpoints
         env = os.environ.copy()
+        if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
+            env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
         env["DYN_LOG"] = "debug"
         env["ETCD_ENDPOINTS"] = ",".join(etcd_endpoints)
         env["DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS"] = '["generate"]'
@@ -259,6 +278,14 @@ def test_etcd_ha_failover_vllm_disaggregated(
     - ETCD leader termination
     - Frontend/worker disconnection from their connected ETCD replica
     """
+    if detect_target_device() == "xpu":
+        pytest.skip(
+            "Temporarily skipped on XPU: disaggregated etcd_ha starts 2 concurrent workers "
+            "(1 prefill + 1 decode). Running alongside migration tests causes combined XPU "
+            "memory pressure that triggers KV cache initialization failure. "
+            "Disaggregated mode is also not yet fully validated on XPU."
+        )
+
     # Step 1: Start NATS server
     with NatsServer(request):
         logger.info("NATS server started successfully")
