@@ -407,17 +407,14 @@ def test_request_migration_vllm_kv_transfer(
         stream: True for streaming, False for non-streaming
     """
 
-    request_plane = request.getfixturevalue("request_plane")
-    if (
-        migration_limit > 0
-        and immediate_kill
-        and request_api == "chat"
-        and stream
-        and request_plane == "nats"
-    ):
+    if detect_target_device() == "xpu":
         pytest.skip(
-            "Temporarily skipped on XPU: kv-transfer migration with nats+stream+worker_failure "
-            "can be OOM-killed in CI (exit 137) before test assertions complete"
+            "Temporarily skipped on XPU: kv_transfer migration starts 3 workers "
+            "(1 prefill + 2 decode) at 0.25 gpu_memory_utilization each (0.75x "
+            "total). When running concurrently with aggregated migration tests "
+            "(2 workers x 0.25 = 0.50x), combined usage exceeds XPU device "
+            "capacity causing SIGKILL (exit 137). KV-transfer migration is also "
+            "not yet fully supported on XPU."
         )
 
     # Step 1: Start the frontend
@@ -503,6 +500,15 @@ def test_request_migration_vllm_decode(
         request_api: "chat" for chat completion API, "completion" for completion API
         stream: True for streaming, False for non-streaming
     """
+    if detect_target_device() == "xpu":
+        pytest.skip(
+            "Temporarily skipped on XPU: decode migration starts 3 workers "
+            "(1 prefill + 2 decode) at 0.25 gpu_memory_utilization each (0.75x "
+            "total). When running concurrently with aggregated migration tests "
+            "(2 workers x 0.25 = 0.50x), combined usage exceeds XPU device "
+            "capacity causing SIGKILL (exit 137). Decode migration is also "
+            "not yet fully supported on XPU."
+        )
     if not stream:
         pytest.skip(
             "Decode test requires streaming to wait for response before stopping worker"
