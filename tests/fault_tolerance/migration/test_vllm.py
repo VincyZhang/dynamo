@@ -17,7 +17,7 @@ import shutil
 import pytest
 
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
-from tests.utils.device import build_nixl_kv_transfer_config
+from tests.utils.device import build_nixl_kv_transfer_config, get_gpu_memory_utilization
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.payloads import check_models_api
 from tests.utils.port_utils import allocate_port, deallocate_port
@@ -110,7 +110,7 @@ class DynamoWorkerProcess(ManagedProcess):
             "--num-gpu-blocks-override",  # limit total KV cache allocation
             "512",  # 8192 tokens x 1 context / 16 tokens per block = 512 blocks
             "--gpu-memory-utilization",
-            "0.15",  # avoid assertion error on vLLM available memory checks
+            str(get_gpu_memory_utilization(num_workers=2, single_gpu=True)),
         ]
         if is_prefill is True:
             command.extend(["--disaggregation-mode", "prefill"])
