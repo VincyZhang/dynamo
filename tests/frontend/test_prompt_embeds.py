@@ -75,6 +75,8 @@ class VllmPromptEmbedsWorkerProcess(ManagedProcess):
             TEST_MODEL,
             "--max-model-len",
             "4096",
+            "--gpu-memory-utilization",
+            "0.75",
             "--discovery-backend",
             "file",
             "--request-plane",
