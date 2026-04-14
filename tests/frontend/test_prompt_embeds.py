@@ -220,14 +220,6 @@ class TestPromptEmbedsE2E:
         if chunks[-1].choices:
             assert chunks[-1].choices[0].finish_reason is not None
 
-    @pytest.mark.xfail(
-        detect_target_device() == "xpu",
-        reason=(
-            "XPU known bug: Rust maps FinishReason::Error to finish_reason='stop' "
-            "in non-streaming mode (HTTP 200), so the OpenAI client does not raise."
-        ),
-        strict=True,
-    )
     def test_invalid_tensor_data_rejected(self, dynamo_client):
         """
         Test that invalid tensor data is properly rejected by Python decoder.
@@ -235,11 +227,8 @@ class TestPromptEmbedsE2E:
         This tests the Python-side torch.load() error handling, which
         Rust validation cannot cover (Rust only checks base64 and size).
 
-        On CUDA: non-streaming mode correctly returns an HTTP error response and
-        the OpenAI client raises an exception.
-        On XPU: this test is marked xfail because the Rust layer silently maps
-        FinishReason::Error -> finish_reason="stop" (HTTP 200), meaning no
-        exception is raised. The xfail documents the known XPU Rust bug.
+        Non-streaming mode should surface invalid prompt_embeds as an error and
+        the OpenAI client should raise an exception.
         """
         # Create data that passes Rust validation (valid base64, >100 bytes)
         # but fails Python torch.load()

@@ -54,12 +54,11 @@ class DynamoWorkerProcess(ManagedProcess):
         # Disaggregated mode runs prefill+decode workers on the same device in CI.
         # Use device-aware utilization to keep XPU memory headroom stable.
         if detect_target_device() == "xpu":
-            # On XPU, concurrent migration tests occupy memory. Raise
-            # gpu_memory_utilization so the KV cache check
-            # (available = free - (1-util)*total) passes under load.
+            # Keep headroom on XPU hosts where free memory can dip below 20 GiB
+            # during concurrent CI activity, otherwise vLLM startup may fail.
             # Limit max_model_len and num_gpu_blocks_override to minimize
             # actual KV allocation (64 blocks * 64 tokens/block = 4096 tokens).
-            gpu_memory_utilization = 0.9
+            gpu_memory_utilization = 0.8
             max_model_len = "4096"
         else:
             gpu_memory_utilization = get_gpu_memory_utilization(
