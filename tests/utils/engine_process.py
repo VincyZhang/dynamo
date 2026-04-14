@@ -11,7 +11,8 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from tests.utils.constants import DefaultPort
-from tests.utils.device import detect_target_device, select_best_xpu_device
+# Temporarily disabled for alternative XPU placement testing.
+# from tests.utils.device import detect_target_device, select_best_xpu_device
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.payloads import BasePayload, check_health_generate, check_models_api
 
@@ -173,11 +174,13 @@ class EngineProcess(ManagedProcess):
         if extra_env:
             env.update(extra_env)
 
-        # Auto-select best XPU device if target is XPU and ZE_AFFINITY_MASK is not already set
-        if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
-            best_device = select_best_xpu_device()
-            env["ZE_AFFINITY_MASK"] = str(best_device)
-            logger.info(f"Auto-selected XPU device {best_device} and set ZE_AFFINITY_MASK={best_device}")
+        # Temporarily disable auto XPU device selection for alternative testing.
+        # if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
+        #     best_device = select_best_xpu_device()
+        #     env["ZE_AFFINITY_MASK"] = str(best_device)
+        #     logger.info(
+        #         f"Auto-selected XPU device {best_device} and set ZE_AFFINITY_MASK={best_device}"
+        #     )
 
         return cls(
             command=command,
