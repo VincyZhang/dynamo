@@ -25,7 +25,7 @@ on:
         type: string
         default: 'linux/amd64,linux/arm64'
       cuda_versions:
-        description: 'DEPRECATED: use version_selectors. CUDA/XPU selectors as JSON array (e.g., ["12.9", "13.0", "xpu"]).'
+        description: 'DEPRECATED: use version_selectors. Has no effect; only kept for backward compatibility.'
         required: false
         type: string
         default: '["12.9"]'
@@ -169,7 +169,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version_selector: ${{ fromJson(inputs.version_selectors != '' && inputs.version_selectors || inputs.cuda_versions) }}
+        version_selector: ${{ fromJson(inputs.version_selectors) }}
     # This name weirdly shows in the checks overview, but not once you dive into
     # a specific workflow. Keeping it as a short placeholder
     name: matrix

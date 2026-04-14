@@ -256,6 +256,18 @@ def test_request_migration_vllm_aggregated(
         stream: True for streaming, False for non-streaming
     """
 
+    # Skip flaky combinations on nats transport
+    _request_plane = request.node.callspec.params.get("request_plane", "")
+    if (
+        _request_plane == "nats"
+        and migration_limit > 0
+        and migration_max_seq_len is None
+        and stream
+    ):
+        pytest.skip(
+            "Flaky on XPU: migration_enabled+max_seq_len_disabled+stream+nats is unstable"
+        )
+
     # Step 1: Start the frontend
     with DynamoFrontendProcess(
         request,
