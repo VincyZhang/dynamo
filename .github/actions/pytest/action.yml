@@ -295,7 +295,6 @@ runs:
         # Pre-cleanup: remove any leftover containers with the same name
         echo "🧹 Removing any leftover containers with name ${{ env.CONTAINER_ID }}_pytest..."
         docker rm -f "${{ env.CONTAINER_ID }}_pytest" 2>/dev/null || true
-
         docker run ${GPU_FLAGS} ${DOCKER_OPTS} \
           "${DOCKER_EXTRA_FLAGS[@]}" \
           --rm -w /workspace \
