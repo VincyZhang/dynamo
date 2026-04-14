@@ -22,8 +22,8 @@ on:
         description: 'Plain runtime image tag prefix from the build workflow'
         required: true
         type: string
-      cuda_version:
-        description: 'CUDA versions to test as a JSON array'
+      version_selector:
+        description: 'Runtime version selectors to test as a JSON array (e.g. cuda versions, cpu, xpu)'
         required: true
         type: string
       platform:
@@ -97,9 +97,12 @@ jobs:
       fail-fast: false
       matrix:
         platform: ${{ fromJson(inputs.platform) }}
-        cuda_version: ${{ fromJson(inputs.cuda_version) }}
-    name: ${{ inputs.test_type }} ${{ matrix.cuda_version == 'cpu' && 'cpu' || matrix.cuda_version == 'xpu' && 'xpu' || format('cuda{0}', matrix.cuda_version) }}, ${{ matrix.platform }}
-    runs-on: ${{ matrix.cuda_version == 'xpu' && matrix.platform == 'amd64' && 'xpu' || (matrix.platform == 'amd64' && inputs.amd_runner || 'prod-tester-arm-v1') }}
+        version_selector: ${{ fromJson(inputs.version_selector) }}
+        exclude:
+          - version_selector: xpu
+            platform: arm64
+    name: ${{ inputs.test_type }} ${{ matrix.version_selector == 'cpu' && 'cpu' || matrix.version_selector == 'xpu' && 'xpu' || format('cuda{0}', matrix.version_selector) }}, ${{ matrix.platform }}
+    runs-on: ${{ matrix.version_selector == 'xpu' && 'xpu' || matrix.platform == 'amd64' && inputs.amd_runner || 'prod-tester-arm-v1' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
@@ -109,16 +112,15 @@ jobs:
         env:
           ECR_REPOSITORY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo
         run: |
-          CUDA_VERSION="${{ matrix.cuda_version }}"
-          CUDA_MAJOR=${CUDA_VERSION%%.*}
-          if [[ "${{ matrix.cuda_version }}" == "cpu" ]]; then
+          
+          if [[ "${{ matrix.version_selector }}" == "cpu" ]]; then
             CPU_IMAGE_TAG=${{ github.sha }}-${{ inputs.target_tag_plain }}
             echo "cpu_runtime_image=${ECR_REPOSITORY}:${CPU_IMAGE_TAG}" >> $GITHUB_OUTPUT
             echo "cpu_test_image=${ECR_REPOSITORY}:${CPU_IMAGE_TAG}-test" >> $GITHUB_OUTPUT
             echo "runtime_image=${ECR_REPOSITORY}:${CPU_IMAGE_TAG}" >> $GITHUB_OUTPUT
             echo "test_image=${ECR_REPOSITORY}:${CPU_IMAGE_TAG}-test" >> $GITHUB_OUTPUT
             exit 0
-          elif [[ "${{ matrix.cuda_version }}" == "xpu" ]]; then
+          elif [[ "${{ matrix.version_selector }}" == "xpu" ]]; then
             XPU_IMAGE_TAG=${{ github.sha }}-${{ inputs.target_tag_plain }}-xpu
             echo "xpu_runtime_image=${ECR_REPOSITORY}:${XPU_IMAGE_TAG}" >> $GITHUB_OUTPUT
             echo "xpu_test_image=${ECR_REPOSITORY}:${XPU_IMAGE_TAG}-test" >> $GITHUB_OUTPUT
@@ -128,6 +130,8 @@ jobs:
           elif [[ "${{ inputs.target_tag_plain }}" == *"planner"* ]]; then
             IMAGE_TAG=${{ github.sha }}-${{ inputs.target_tag_plain }}
           else
+            CUDA_VERSION="${{ matrix.version_selector }}"
+            CUDA_MAJOR=${CUDA_VERSION%%.*}
             IMAGE_TAG=${{ github.sha }}-${{ inputs.target_tag_plain }}-cuda${CUDA_MAJOR}
           fi
 
@@ -148,10 +152,10 @@ jobs:
       #  run: |
       #    source ./.github/scripts/retry_docker.sh
       #    start_time=$(date +%s)
-      #    if [[ "${{ matrix.cuda_version }}" == "cpu" ]]; then
+      #    if [[ "${{ matrix.version_selector }}" == "cpu" ]]; then
       #      retry_pull ${{ steps.calculate-target-tag.outputs.cpu_runtime_image }}
       #      retry_pull ${{ steps.calculate-target-tag.outputs.cpu_test_image }}
-      #    elif [[ "${{ matrix.platform }}" == "amd64" && "${{ matrix.cuda_version }}" == "xpu" ]]; then
+      #    elif [[ "${{ matrix.platform }}" == "amd64" && "${{ matrix.version_selector }}" == "xpu" ]]; then
       #      retry_pull ${{ steps.calculate-target-tag.outputs.xpu_runtime_image }}
       #      retry_pull ${{ steps.calculate-target-tag.outputs.xpu_test_image }}
       #    else
@@ -181,7 +185,7 @@ jobs:
       #      echo "✅ Sanity check passed"
       #    fi
       - name: Run CPU-only tests (parallelized)
-        if: ${{ inputs.run_cpu_only_tests && matrix.cuda_version == 'cpu' }}
+        if: ${{ inputs.run_cpu_only_tests && matrix.version_selector == 'cpu' }}
         timeout-minutes: ${{ inputs.cpu_only_test_timeout_minutes }}
         uses: ./.github/actions/pytest
         with:
@@ -195,7 +199,7 @@ jobs:
           dind_as_sidecar: 'true'
       - name: Run GPU tests (sequential)
         timeout-minutes: ${{ inputs.gpu_test_timeout_minutes }}
-        if: ${{ matrix.platform == 'amd64' && inputs.run_gpu_tests && matrix.cuda_version != 'cpu' && matrix.cuda_version != 'xpu' }}
+        if: ${{ matrix.platform == 'amd64' && inputs.run_gpu_tests && startsWith(matrix.version_selector, 'cuda') }}
         uses: ./.github/actions/pytest
         with:
           image_tag: ${{ steps.calculate-target-tag.outputs.test_image }}
@@ -208,7 +212,7 @@ jobs:
           dind_as_sidecar: 'true'
       - name: Run XPU tests (sequential)
         timeout-minutes: ${{ inputs.xpu_test_timeout_minutes }}
-        if: ${{ matrix.cuda_version == 'xpu' && matrix.platform == 'amd64' && inputs.run_xpu_test }}
+        if: ${{ matrix.version_selector == 'xpu' && matrix.platform == 'amd64' && inputs.run_xpu_test }}
         uses: ./.github/actions/pytest
         with:
           image_tag: ${{ steps.calculate-target-tag.outputs.test_image }}
@@ -220,5 +224,14 @@ jobs:
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           device: xpu
+
+      - name: Cleanup Docker Images
+        if: ${{ always() && matrix.version_selector == 'xpu' && matrix.platform == 'amd64' && inputs.run_xpu_test }}
+        shell: bash
+        run: |
+          echo "🧹 Cleaning up XPU docker images..."
+          docker image rm -f "${{ steps.calculate-target-tag.outputs.test_image }}" 2>/dev/null || true
+          docker image rm -f "${{ steps.calculate-target-tag.outputs.runtime_image }}" 2>/dev/null || true
+          echo "✓ XPU image cleanup finished"
       
       
