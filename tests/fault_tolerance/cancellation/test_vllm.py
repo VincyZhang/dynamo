@@ -227,6 +227,7 @@ class DynamoWorkerProcess(ManagedProcess):
 @pytest.mark.post_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
+@pytest.mark.skipif(detect_target_device() == "xpu", reason="skip flaky cancellation stream test on XPU")
 def test_request_cancellation_vllm_aggregated(
     request, runtime_services_dynamic_ports, predownload_models
 ):
