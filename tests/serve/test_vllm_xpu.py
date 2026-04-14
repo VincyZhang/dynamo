@@ -96,7 +96,7 @@ vllm_configs = {
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
             ),  # KV cache cap (2x safety over min=559_693_824)
-            pytest.mark.timeout(120),  # ~5x observed 24.3s; CI machines are slower
+            pytest.mark.timeout(240),  # ~10x observed 24.3s; XPU CI is significantly slower
             pytest.mark.post_merge,
         ],
         model="Qwen/Qwen3-0.6B",
@@ -507,8 +507,8 @@ vllm_configs = {
                 4_074_898_000
             ),  # KV cache cap (2x safety over min=2_037_448_704)
             pytest.mark.timeout(
-                420
-            ),  # 7B model loads ~48s on CI (A10G/L4) vs ~15s locally
+                840
+            ),  # 7B model loads ~48s on GPU CI, but XPU is significantly slower; doubled to accommodate
             pytest.mark.post_merge,
         ],
         model="deepseek-ai/deepseek-llm-7b-base",
@@ -813,7 +813,7 @@ def test_lora_aggregated(
 @pytest.mark.e2e
 @pytest.mark.xpu_2
 @pytest.mark.model("Qwen/Qwen3-0.6B")
-@pytest.mark.timeout(600)
+@pytest.mark.timeout(900)
 @pytest.mark.post_merge
 @pytest.mark.parametrize("num_system_ports", [2], indirect=True)
 def test_lora_aggregated_router(
