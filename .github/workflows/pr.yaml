@@ -279,7 +279,7 @@ jobs:
     with:
       framework: dynamo
       target: planner
-      version_selector: '[""]'
+      version_selector: '["cpu"]'
       platform: 'linux/amd64'
       builder_name: ${{ needs.changed-files.outputs.builder_name }}
       build_timeout_minutes: 45
@@ -405,7 +405,7 @@ jobs:
       test_type: CPU Test
       amd_runner: prod-tester-amd-gpu-v1 # TODO: CPU only DinD runner for dynamo repo
       target_tag_plain: ${{ needs.planner-build.outputs.target_tag_plain }}
-      version_selector: '[""]'
+      version_selector: '["cpu"]'
       platform: '["amd64"]'
       run_sanity_check: false
       run_cpu_only_tests: true
@@ -466,7 +466,7 @@ jobs:
       framework: dynamo
       target: planner
       target_tag_plain: ${{ needs.planner-build.outputs.target_tag_plain }}
-      version_selector: '[""]'
+      version_selector: '["cpu"]'
       platform: '["amd64"]'
     secrets: inherit
 
@@ -481,7 +481,7 @@ jobs:
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.vllm-build.outputs.target_tag_plain }}
-      version_selector: '["12.9", "13.0", "cpu", "xpu"]'
+      version_selector: '["12.9", "13.0", "xpu"]'
       override_arch: amd64 # We are using AMD64 images only on the rest of the clusters.
       copy_timeout_minutes: 10
     secrets: inherit

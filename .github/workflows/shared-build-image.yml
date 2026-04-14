@@ -232,7 +232,7 @@ jobs:
             MAKE_EFA_FLAG="--make-efa"
           fi
           # If CUDA version is empty, use empty arg to fallback to default (eg. for planner)
-          if [ "${{ matrix.version_selector }}" == "" ] || [ "${{ matrix.version_selector }}" == "xpu" ] || [ "${{ matrix.version_selector }}" == "cpu" ]; then
+          if [ "${{ matrix.version_selector }}" == "xpu" ] || [ "${{ matrix.version_selector }}" == "cpu" ]; then
             CUDA_FLAG=""
           else
             CUDA_FLAG="--cuda-version=${{ matrix.version_selector }}"
