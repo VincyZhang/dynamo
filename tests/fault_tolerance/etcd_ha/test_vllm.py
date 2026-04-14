@@ -22,7 +22,7 @@ from tests.utils.device import (
     detect_target_device,
     get_default_vllm_block_size,
     get_gpu_memory_utilization,
-    select_best_xpu_device,
+    # select_best_xpu_device,
 )
 from tests.utils.engine_process import FRONTEND_PORT
 from tests.utils.managed_process import ManagedProcess
@@ -106,8 +106,8 @@ class DynamoWorkerProcess(ManagedProcess):
 
         # Set debug logging and ETCD endpoints
         env = os.environ.copy()
-        if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
-            env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
+        # if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
+        #     env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
         env["DYN_LOG"] = "debug"
         env["ETCD_ENDPOINTS"] = ",".join(etcd_endpoints)
         env["DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS"] = '["generate"]'

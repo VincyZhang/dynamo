@@ -10,7 +10,7 @@ import pytest
 import requests
 
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
-from tests.utils.device import detect_target_device, get_default_vllm_block_size, select_best_xpu_device
+from tests.utils.device import detect_target_device, get_default_vllm_block_size  # , select_best_xpu_device
 from tests.utils.engine_process import FRONTEND_PORT
 from tests.utils.managed_process import DynamoFrontendProcess, ManagedProcess
 from tests.utils.payloads import check_models_api, completions_response_handler
@@ -44,8 +44,8 @@ class DynamoWorkerProcess(ManagedProcess):
 
         # Set debug logging environment
         env = os.environ.copy()
-        if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
-            env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
+        # if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
+        #     env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
         env["DYN_LOG"] = "debug"
         env["DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS"] = '["generate"]'
         # TODO: Replace hardcoded port with allocate_ports() for xdist-safe parallel execution

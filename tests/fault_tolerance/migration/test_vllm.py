@@ -17,7 +17,7 @@ import shutil
 import pytest
 
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME
-from tests.utils.device import build_nixl_kv_transfer_config, detect_target_device, get_gpu_memory_utilization, select_best_xpu_device
+from tests.utils.device import build_nixl_kv_transfer_config, detect_target_device, get_gpu_memory_utilization  # , select_best_xpu_device
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.payloads import check_models_api
 from tests.utils.port_utils import allocate_port, deallocate_port
@@ -150,8 +150,8 @@ class DynamoWorkerProcess(ManagedProcess):
 
         # Set environment variables
         env = os.environ.copy()
-        if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
-            env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
+        # if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
+        #     env["ZE_AFFINITY_MASK"] = str(select_best_xpu_device())
         env["DYN_REQUEST_PLANE"] = request.getfixturevalue("request_plane")
 
         # All workers need unique NIXL side channel ports for KV transfer
