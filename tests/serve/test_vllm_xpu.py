@@ -475,9 +475,10 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.pre_merge,
             pytest.mark.timeout(600),  # TODO: profile to get tighter timeout
-        ],  # TODO: profile to get max_vram
+        ],  # TODO: profile to get max_vram; excluded from XPU CI by 'not multimodal' until FFMPEG data-stream issue resolved
         model="Qwen/Qwen3-VL-2B-Instruct",
         delayed_start=60,  # Video models require longer loading time
         script_args=["--model", "Qwen/Qwen3-VL-2B-Instruct"],
