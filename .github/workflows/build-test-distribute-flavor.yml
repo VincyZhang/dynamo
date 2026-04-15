@@ -410,6 +410,16 @@ jobs:
           dind_as_sidecar: 'true'
           device: ${{ inputs.device }}
 
+      - name: Cleanup XPU Docker images
+        if: always() && inputs.device == 'xpu'
+        shell: bash
+        run: |
+          echo "🧹 Cleaning up XPU Docker images to free disk space..."
+          docker image rm -f "${{ steps.calculate-target-tag.outputs.test_image }}" 2>/dev/null || true
+          docker image rm -f "${{ steps.calculate-target-tag.outputs.runtime_image }}" 2>/dev/null || true
+          echo "✓ XPU Docker images cleaned up"
+
+
   # ============================================================================
   # MULTI-GPU TESTS
   # ============================================================================
