@@ -1,1 +1,2 @@
 Burst commit 1
+Burst commit 2
