@@ -68,7 +68,7 @@ def get_gpu_memory_utilization(num_workers: int = 1, single_gpu: bool = False) -
 
     if device == "xpu":
         # XPU general case (single worker or multi-GPU)
-        return 0.3
+        return 0.4
 
     # CUDA (default): more generous utilization
     return 0.45
