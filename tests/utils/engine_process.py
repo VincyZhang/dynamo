@@ -176,6 +176,11 @@ class EngineProcess(ManagedProcess):
         if extra_env:
             env.update(extra_env)
 
+        logger.info(
+            "Engine launch environment: ZE_AFFINITY_MASK=%r",
+            env.get("ZE_AFFINITY_MASK"),
+        )
+
         # Temporarily disable auto XPU device selection for alternative testing.
         # if detect_target_device() == "xpu" and "ZE_AFFINITY_MASK" not in env:
         #     best_device = select_best_xpu_device()
