@@ -30,6 +30,7 @@ from tests.router.helper import (
 from tests.utils.constants import DefaultPort
 from tests.utils.device import (
     build_nixl_kv_transfer_config_json,
+    detect_target_device,
     get_default_vllm_block_size,
     get_device_visibility_env_var,
     get_gpu_memory_utilization,
@@ -50,6 +51,7 @@ pytestmark = [
 SPEEDUP_RATIO = 10.0
 BLOCK_SIZE = get_default_vllm_block_size()  # 64 on XPU (fmha requirement), 16 on CUDA
 _GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=True)
+_MAX_MODEL_LEN = 768 if detect_target_device() == "xpu" else 1024
 
 # Shared vLLM configuration for all tests
 # gpu_memory_utilization limits actual VRAM allocation (required for multi-worker on same GPU)
@@ -57,14 +59,14 @@ VLLM_ARGS: Dict[str, Any] = {
     "block_size": BLOCK_SIZE,
     "model": MODEL_NAME,
     "gpu_memory_utilization": _GPU_MEM_UTIL,
-    "max_model_len": 1024,  # Limit context length to reduce KV cache size
+    "max_model_len": _MAX_MODEL_LEN,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }
 
 VLLM_ARGS_NO_BLOCK_SIZE: Dict[str, Any] = {
     "model": MODEL_NAME,
     "gpu_memory_utilization": _GPU_MEM_UTIL,
-    "max_model_len": 1024,  # Limit context length to reduce KV cache size
+    "max_model_len": _MAX_MODEL_LEN,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }
 
