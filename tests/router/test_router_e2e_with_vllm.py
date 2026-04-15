@@ -491,7 +491,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
-@pytest.mark.timeout(150)  # ~3x average (~43s/test), rounded up
+@pytest.mark.timeout(300)  # XPU CI observed >160s; raise timeout to reduce false failures
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_vllm_kv_router_basic(
     request,
