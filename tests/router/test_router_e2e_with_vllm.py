@@ -176,14 +176,24 @@ class VLLMProcess(ManagedEngineProcessMixin):
         # Matches test.sh behavior:
         # - When data_parallel_size is set, launch one process per DP rank
         # - Each process gets --data-parallel-rank and --data-parallel-size
-        # - Each process runs on its own GPU via CUDA_VISIBLE_DEVICES
+        # - Each process runs on its assigned device visibility env var
         # - --kv-transfer-config enables KV cache transfer between ranks
 
         for worker_idx in range(num_workers):
+            visibility_env_var = get_device_visibility_env_var()
+            inherited_visibility = os.environ.get(visibility_env_var)
+
             # Calculate GPU device for this process
             if single_gpu:
-                # Force all processes to GPU 0 (for single-GPU testing)
-                gpu_device = str(gpu_start_index)
+                # On XPU, prefer externally pinned affinity when provided by CI/runtime,
+                # but do not override an explicit non-default gpu_start_index.
+                if (
+                    visibility_env_var == "ZE_AFFINITY_MASK"
+                    and inherited_visibility
+                ):
+                    gpu_device = inherited_visibility
+                else:
+                    gpu_device = str(gpu_start_index)
             elif data_parallel_size is not None:
                 # Worker sees dp_rank GPUs (each DP rank gets its own GPU)
                 worker_start_gpu = gpu_start_index + worker_idx * data_parallel_size
@@ -270,7 +280,6 @@ class VLLMProcess(ManagedEngineProcessMixin):
             command.extend(["--kv-events-config", json.dumps(kv_events_cfg)])
 
             env = os.environ.copy()  # Copy parent environment
-            visibility_env_var = get_device_visibility_env_var()
             env_vars = {
                 visibility_env_var: gpu_device,
                 "DYN_NAMESPACE": self.namespace,
