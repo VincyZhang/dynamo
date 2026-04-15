@@ -17,8 +17,6 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source "$SCRIPT_DIR/../../../common/launch_utils.sh"
 
 MODEL="Wan-AI/Wan2.2-TI2V-5B-Diffusers"
-# Not a valid PNG, example only
-INPUT_REFERENCE_DATA_URL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX3kAAAAASUVORK5CYII="
 
 # Parse command line arguments
 EXTRA_ARGS=()
@@ -47,7 +45,7 @@ curl -s http://localhost:${HTTP_PORT}/v1/videos \\
   -d '{
     "model": "${MODEL}",
     "prompt": "A bear sleeping",
-    "input_reference": "${INPUT_REFERENCE_DATA_URL}",
+    "input_reference": "/tmp/input.png",
     "size": "832x480",
     "response_format": "url",
     "nvext": {

@@ -227,10 +227,6 @@ impl MetricsHierarchy for Component {
     fn get_metrics_registry(&self) -> &MetricsRegistry {
         &self.metrics_registry
     }
-
-    fn connection_id(&self) -> Option<u64> {
-        Some(self.drt.connection_id())
-    }
 }
 
 impl Component {
@@ -393,10 +389,6 @@ impl MetricsHierarchy for Endpoint {
 
     fn get_metrics_registry(&self) -> &MetricsRegistry {
         &self.metrics_registry
-    }
-
-    fn connection_id(&self) -> Option<u64> {
-        Some(self.component.drt().connection_id())
     }
 }
 

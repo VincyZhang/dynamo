@@ -6,7 +6,6 @@ mod collector;
 mod entrypoints;
 pub(crate) mod offline;
 mod online;
-mod planner_handle;
 mod router_shared;
 mod validate;
 
@@ -77,7 +76,6 @@ pub use entrypoints::{
     simulate_trace_requests_with_router_mode, simulate_trace_workload,
     simulate_trace_workload_disagg_with_router_mode, simulate_trace_workload_with_router_mode,
 };
-pub use planner_handle::{PlannerReplayHandle, PlannerTickData};
 pub use validate::validate_replay_args_mode;
 
 pub(crate) fn normalize_trace_requests(

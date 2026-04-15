@@ -63,11 +63,8 @@ def _preprocess_for_encode_config(config: Config) -> Dict[str, Any]:
     return config.__dict__
 
 
-def parse_args(argv: list[str] | None = None) -> Config:
+def parse_args() -> Config:
     """Parse command-line arguments for the vLLM backend.
-
-    Args:
-        argv: Command-line arguments.  ``None`` means ``sys.argv[1:]``.
 
     Returns:
         Config: Parsed configuration object.
@@ -97,7 +94,7 @@ def parse_args(argv: list[str] | None = None) -> Config:
             continue
         vg._group_actions.append(action)
 
-    args, unknown = parser.parse_known_args(argv)
+    args, unknown = parser.parse_known_args()
     dynamo_config = Config.from_cli_args(args)
 
     # Validate arguments

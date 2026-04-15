@@ -94,10 +94,6 @@ impl MetricsHierarchy for DistributedRuntime {
     fn get_metrics_registry(&self) -> &MetricsRegistry {
         &self.metrics_registry
     }
-
-    fn connection_id(&self) -> Option<u64> {
-        Some(self.discovery_client.instance_id())
-    }
 }
 
 impl std::fmt::Debug for DistributedRuntime {
@@ -585,18 +581,9 @@ impl DistributedConfig {
         //
         // Historically we only connected to NATS when the request plane was NATS, which made
         // `DYN_REQUEST_PLANE=tcp|http` incompatible with KV routing modes that rely on NATS.
-        // Enable the NATS client when any of these hold:
-        // 1. Request plane is NATS
-        // 2. NATS_SERVER is explicitly configured
-        // 3. Event plane is NATS (the default)
-        let event_plane_is_nats =
-            std::env::var(crate::config::environment_names::event_plane::DYN_EVENT_PLANE)
-                .map(|v| v.eq_ignore_ascii_case("nats"))
-                .unwrap_or(true);
-
+        // If a NATS server is configured via env, enable the client regardless of request plane.
         let nats_enabled = request_plane.is_nats()
-            || std::env::var(crate::config::environment_names::nats::NATS_SERVER).is_ok()
-            || event_plane_is_nats;
+            || std::env::var(crate::config::environment_names::nats::NATS_SERVER).is_ok();
 
         // DYN_DISCOVERY_BACKEND selects the discovery mechanism
         // Valid values: "kubernetes", "etcd" (default), "file", "mem"
@@ -636,13 +623,8 @@ impl DistributedConfig {
             ..Default::default()
         };
         let request_plane = RequestPlaneMode::from_env();
-        let event_plane_is_nats =
-            std::env::var(crate::config::environment_names::event_plane::DYN_EVENT_PLANE)
-                .map(|v| v.eq_ignore_ascii_case("nats"))
-                .unwrap_or(true);
         let nats_enabled = request_plane.is_nats()
-            || std::env::var(crate::config::environment_names::nats::NATS_SERVER).is_ok()
-            || event_plane_is_nats;
+            || std::env::var(crate::config::environment_names::nats::NATS_SERVER).is_ok();
         DistributedConfig {
             discovery_backend: DiscoveryBackend::KvStore(kv::Selector::Etcd(Box::new(etcd_config))),
             nats_config: if nats_enabled {

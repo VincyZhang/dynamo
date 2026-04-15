@@ -100,13 +100,12 @@ class PrefillHandler(HandlerBase):
         super().__init__(config)
         self._encoder_cache = encoder_cache
 
-    async def remote_encode_with_nixl(self, request: dict, context=None):
+    async def remote_encode_with_nixl(self, request: dict):
         """
         Call encode worker for NIXL flow to load embeddings and unpack the response.
 
         Args:
             request: Request dict
-            context: Optional Dynamo context for trace propagation
 
         Returns:
             Encoder's embeddings tensor to be used by the prefill worker
@@ -115,7 +114,7 @@ class PrefillHandler(HandlerBase):
         if self.encode_client is None:
             raise RuntimeError("Encode client is not configured.")
         encode_response = None
-        async for res in await self.encode_client.round_robin(request, context=context):
+        async for res in await self.encode_client.round_robin(request):
             encode_response = res.data()
             break
 
@@ -155,9 +154,7 @@ class PrefillHandler(HandlerBase):
             if embedding_paths:
                 if self.encode_client and self.connector:
                     logging.info(f"PrefillHandler: embedding_paths={embedding_paths}")
-                    embeddings_tensor = await self.remote_encode_with_nixl(
-                        request, context=context
-                    )
+                    embeddings_tensor = await self.remote_encode_with_nixl(request)
                 else:
                     # We can still handle embedding_paths without NIXL:
                     # `MultimodalRequestProcessor.process_openai_request` will load the embeddings
@@ -175,7 +172,6 @@ class PrefillHandler(HandlerBase):
                         request,
                         self.encode_client,
                         self._encoder_cache,
-                        trace_context=context,
                     )
                     if isinstance(result, list):
                         # Cache path: got List[torch.Tensor]
