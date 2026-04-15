@@ -96,7 +96,9 @@ vllm_configs = {
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_119_388_000
             ),  # KV cache cap (2x safety over min=559_693_824)
-            pytest.mark.timeout(240),  # ~10x observed 24.3s; XPU CI is significantly slower
+            pytest.mark.timeout(
+                600
+            ),  # Increased to cover slow XPU CI model predownload/setup variance
             pytest.mark.post_merge,
         ],
         model="Qwen/Qwen3-0.6B",
