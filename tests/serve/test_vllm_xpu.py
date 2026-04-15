@@ -510,13 +510,13 @@ vllm_configs = {
             ),  # KV cache cap (2x safety over min=2_037_448_704)
             pytest.mark.timeout(
                 840
-            ),  # 7B model loads ~48s on GPU CI, but XPU is significantly slower; doubled to accommodate
+            ),  # XPU CI model startup can be significantly slower
             pytest.mark.post_merge,
         ],
-        model="deepseek-ai/deepseek-llm-7b-base",
+        model="Qwen/Qwen3-0.6B",
         script_args=[
             "--model",
-            "deepseek-ai/deepseek-llm-7b-base",
+            "Qwen/Qwen3-0.6B",
             "--dyn-endpoint-types",
             "completions",
         ],
