@@ -662,7 +662,6 @@ def test_multimodal_b64(
 @pytest.mark.xpu_1
 @pytest.mark.pre_merge
 @pytest.mark.multimodal
-@pytest.mark.model("Qwen/Qwen3-VL-2B-Instruct")
 @pytest.mark.timeout(220)
 def test_multimodal_b64_frontend_decoding(
     request,
