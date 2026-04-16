@@ -497,6 +497,10 @@ class VLLMProcess(ManagedEngineProcessMixin):
     process_name = "vLLM worker"
     cleanup_name = "vLLM worker resources"
     init_delay_reason = "initialize NIXL before starting next worker"
+    # XPU memory profiling takes much longer than CUDA; give the first worker
+    # enough time to finish profiling before the second worker starts, so they
+    # don't interfere with each other's free-memory measurements.
+    init_delay_seconds = 30 if detect_target_device() == "xpu" else 5
 
 
 @pytest.mark.pre_merge
