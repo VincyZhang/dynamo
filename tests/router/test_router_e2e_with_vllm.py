@@ -549,11 +549,12 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
     process_name = "vLLM worker"
     cleanup_name = "vLLM worker resources"
-    init_delay_reason = "initialize NIXL before starting next worker"
-    # XPU memory profiling takes much longer than CUDA; give the first worker
-    # enough time to finish profiling before the second worker starts, so they
-    # don't interfere with each other's free-memory measurements.
-    init_delay_seconds = 30 if detect_target_device() == "xpu" else 5
+    init_delay_reason = "finish post-init registration before starting next worker"
+    # Health check now runs per-worker in __enter__, guaranteeing engine init
+    # (including GPU memory profiling) completes before the next worker starts.
+    # The remaining delay only needs to cover post-health-check registration
+    # (e.g. NIXL metadata, etcd lease).
+    init_delay_seconds = 5
 
 
 @pytest.mark.pre_merge
@@ -609,7 +610,7 @@ def test_vllm_kv_router_without_block_size_specified_in_vllm_args(
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
-@pytest.mark.timeout(150)  # ~3x average (~43s/test), rounded up
+@pytest.mark.timeout(600)  # XPU model loading can take 4+ min
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_router_decisions_vllm_multiple_workers(
     request,

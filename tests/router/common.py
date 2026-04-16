@@ -2045,8 +2045,21 @@ def _test_router_decisions(
         router_thread = threading.Thread(target=_create_router, daemon=True)
         router_thread.start()
 
+        import time as _time
+
+        _router_start = _time.monotonic()
+        _ROUTER_INIT_TIMEOUT = 120  # seconds
+
         while router_thread.is_alive():
             router_thread.join(timeout=2)
+            elapsed = _time.monotonic() - _router_start
+            if elapsed > _ROUTER_INIT_TIMEOUT:
+                raise RuntimeError(
+                    f"KvRouter initialization timed out after {elapsed:.0f}s "
+                    f"waiting for {expected_num_instances} workers to register. "
+                    f"A worker may have crashed during startup (e.g. port "
+                    f"conflict, GPU OOM) without fully exiting."
+                )
             if hasattr(engine_workers, "worker_processes"):
                 for idx, wp in enumerate(engine_workers.worker_processes):
                     if wp.proc and wp.proc.poll() is not None:
