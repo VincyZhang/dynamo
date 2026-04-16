@@ -300,13 +300,18 @@ class VLLMProcess(ManagedEngineProcessMixin):
             if replay_port is not None:
                 worker_ports.append(replay_port)
 
-            # Create managed process for the worker
+            # Create managed process for the worker.
+            # Include kv_event_port in health_check_ports so that __enter__
+            # waits until ZMQ PUB is actually listening.  _check_port polls
+            # _check_process_alive(), so if the EngineCore crashes during init
+            # (e.g. ZMQ "Address already in use") the health check detects the
+            # process death immediately instead of hanging.
             process = ManagedProcess(
                 command=command,
                 env=env,
                 timeout=120,  # Allow time for model loading
                 display_output=True,
-                health_check_ports=[],
+                health_check_ports=[kv_event_port],
                 health_check_urls=[],
                 log_dir=request.node.name,
                 terminate_all_matching_process_names=False,
@@ -425,6 +430,13 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
                 new_worker_id = None
                 for _ in range(120):
+                    # Check if worker process died (e.g. ZMQ port conflict)
+                    if process.proc and process.proc.poll() is not None:
+                        raise RuntimeError(
+                            f"vLLM worker {worker_idx} exited with code "
+                            f"{process.proc.returncode} during startup "
+                            f"(check worker logs for ZMQ/port errors)"
+                        )
                     ids = set(client.instance_ids())
                     new = ids - known_ids
                     if new:
