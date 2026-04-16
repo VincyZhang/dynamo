@@ -16,7 +16,7 @@ import psutil
 import requests
 
 from tests.utils.constants import DefaultPort
-from tests.utils.port_utils import allocate_port, deallocate_port
+from tests.utils.port_utils import allocate_port, deallocate_port, release_reserved_ports
 from tests.utils.test_output import resolve_test_output_path
 
 
@@ -443,6 +443,9 @@ class ManagedProcess:
         stdin = subprocess.DEVNULL
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
+
+        # Release OS-level port reservations so child processes can bind.
+        release_reserved_ports()
 
         if self.display_output:
             self.proc = subprocess.Popen(
