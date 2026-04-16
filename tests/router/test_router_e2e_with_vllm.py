@@ -351,21 +351,50 @@ class VLLMProcess(ManagedEngineProcessMixin):
             "--port",
             str(self._standalone_indexer_port),
         ]
-        self._indexer_process = ManagedProcess(
-            command=indexer_cmd,
-            timeout=120,
-            display_output=True,
-            health_check_ports=[self._standalone_indexer_port],
-            health_check_urls=[],
-            log_dir=self._request.node.name,
-            terminate_all_matching_process_names=False,
-            display_name="dynamo-kv-indexer",
-            reserved_ports=[self._standalone_indexer_port],
-        )
-        logger.info(
-            "Starting standalone indexer on port %s", self._standalone_indexer_port
-        )
-        self._indexer_process.__enter__()
+        indexer_env = os.environ.copy()
+        indexer_env.pop("DYN_SYSTEM_PORT", None)  # Indexer has no system server
+
+        # Retry indexer startup: the Rust binary takes ~5s for Python/FFI init,
+        # during which the reserved port socket has been released and another
+        # process *may* transiently occupy it.
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            self._indexer_process = ManagedProcess(
+                command=indexer_cmd,
+                env=indexer_env,
+                timeout=120,
+                display_output=True,
+                health_check_ports=[self._standalone_indexer_port],
+                health_check_urls=[],
+                log_dir=self._request.node.name,
+                terminate_all_matching_process_names=False,
+                display_name="dynamo-kv-indexer",
+                reserved_ports=[self._standalone_indexer_port],
+            )
+            logger.info(
+                "Starting standalone indexer on port %s (attempt %d/%d)",
+                self._standalone_indexer_port,
+                attempt,
+                max_retries,
+            )
+            try:
+                self._indexer_process.__enter__()
+                break
+            except RuntimeError:
+                if attempt == max_retries:
+                    raise
+                logger.warning(
+                    "Indexer startup failed (attempt %d/%d), retrying...",
+                    attempt,
+                    max_retries,
+                )
+                try:
+                    self._indexer_process.__exit__(None, None, None)
+                except Exception:
+                    pass
+                import time as _time
+
+                _time.sleep(2)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -484,8 +513,12 @@ class VLLMProcess(ManagedEngineProcessMixin):
             "--model-name",
             self.model_name,
         ]
+        indexer_b_env = os.environ.copy()
+        indexer_b_env.pop("DYN_SYSTEM_PORT", None)  # Indexer has no system server
+
         self._indexer_b_process = ManagedProcess(
             command=indexer_b_cmd,
+            env=indexer_b_env,
             timeout=120,
             display_output=True,
             health_check_ports=[self._standalone_indexer_b_port],
