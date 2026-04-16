@@ -88,6 +88,8 @@ class VllmPromptEmbedsWorkerProcess(ManagedProcess):
             "file",
             "--request-plane",
             "tcp",
+            "--event-plane",
+            "zmq",
             "--enable-prompt-embeds",
             "--kv-events-config",
             '{"enable_kv_cache_events": false}',
@@ -159,7 +161,7 @@ def start_services(
         request,
         frontend_port=frontend_port,
         terminate_all_matching_process_names=False,
-        extra_args=["--discovery-backend", "file", "--request-plane", "tcp"],
+        extra_args=["--discovery-backend", "file", "--request-plane", "tcp", "--event-plane", "zmq"],
     ):
         logger.info("Frontend started for prompt embeds tests")
         with VllmPromptEmbedsWorkerProcess(
