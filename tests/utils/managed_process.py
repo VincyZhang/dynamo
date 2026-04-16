@@ -176,6 +176,7 @@ class ManagedProcess:
     straggler_commands: List[str] = field(default_factory=list)
     log_dir: str = os.getcwd()
     display_name: Optional[str] = None
+    reserved_ports: List[int] = field(default_factory=list)
 
     # Ensure attributes exist even if startup fails early
     proc: Optional[subprocess.Popen] = None
@@ -445,7 +446,8 @@ class ManagedProcess:
         stderr = subprocess.STDOUT
 
         # Release OS-level port reservations so child processes can bind.
-        release_reserved_ports()
+        # Only release ports owned by this process; leave other workers' ports reserved.
+        release_reserved_ports(self.reserved_ports if self.reserved_ports else None)
 
         if self.display_output:
             self.proc = subprocess.Popen(
