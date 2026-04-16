@@ -498,7 +498,8 @@ class ManagedProcess:
 
         # Release OS-level port reservations so child processes can bind.
         # Only release ports owned by this process; leave other workers' ports reserved.
-        release_reserved_ports(self.reserved_ports if self.reserved_ports else None)
+        _ports_to_release = self.reserved_ports if self.reserved_ports else None
+        release_reserved_ports(_ports_to_release)
 
         if self.display_output:
             self.proc = subprocess.Popen(
