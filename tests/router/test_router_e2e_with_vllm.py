@@ -297,6 +297,11 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
             env.update(env_vars)
 
+            # Collect all ports owned by this worker for targeted release
+            worker_ports = [system_port, kv_event_port, nixl_port]
+            if replay_port is not None:
+                worker_ports.append(replay_port)
+
             # Create managed process for the worker
             process = ManagedProcess(
                 command=command,
@@ -307,6 +312,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
                 health_check_urls=[],
                 log_dir=request.node.name,
                 terminate_all_matching_process_names=False,
+                reserved_ports=worker_ports,
             )
             self.worker_processes.append(process)
             if data_parallel_size is not None:
@@ -354,6 +360,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
             log_dir=self._request.node.name,
             terminate_all_matching_process_names=False,
             display_name="dynamo-kv-indexer",
+            reserved_ports=[self._standalone_indexer_port],
         )
         logger.info(
             "Starting standalone indexer on port %s", self._standalone_indexer_port
@@ -486,6 +493,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
             log_dir=self._request.node.name,
             terminate_all_matching_process_names=False,
             display_name="dynamo-kv-indexer-b",
+            reserved_ports=[self._standalone_indexer_b_port],
         )
         logger.info(
             "Starting standalone indexer B on port %s with peer http://localhost:%s",
