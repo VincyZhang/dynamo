@@ -76,8 +76,8 @@ jobs:
 
   deploy-status-check:
     runs-on: ubuntu-latest
-    needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
-    if: false
+    needs: [deploy-operator, deploy-test-vllm, deploy-test-vllm-xpu, deploy-test-sglang, deploy-test-trtllm]
+    if: always() && needs.deploy-test-vllm-xpu.result != 'skipped'
     steps:
       - name: Check all deploy test jobs
         run: |
@@ -85,7 +85,7 @@ jobs:
 
   operator:
     needs: changed-files
-    if: false
+    if: needs.changed-files.outputs.deploy == 'true' || needs.changed-files.outputs.operator == 'true'
     name: Operator
     runs-on: prod-default-v2
     env:
@@ -474,14 +474,42 @@ jobs:
   # IMAGE COPY PIPELINES
   # ============================================================================
 
+  vllm-push-xpu:
+    name: vllm-runtime # Push XPU image to ECR for deploy tests
+    needs: [changed-files, vllm-build, vllm-test]
+    if: needs.changed-files.outputs.deploy == 'true'
+    runs-on: xpu
+    env:
+      ECR_HOSTNAME: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Docker Login
+        uses: ./.github/actions/docker-login
+        with:
+          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+      - name: Push XPU images to ECR
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ github.sha }}-${{ needs.vllm-build.outputs.target_tag_plain }}-xpu
+          RUNTIME_IMAGE="${ECR_HOSTNAME}/ai-dynamo/dynamo:${IMAGE_TAG}"
+          TEST_IMAGE="${ECR_HOSTNAME}/ai-dynamo/dynamo:${IMAGE_TAG}-test"
+          echo "Pushing runtime image: ${RUNTIME_IMAGE}"
+          docker push "${RUNTIME_IMAGE}"
+          echo "Pushing test image: ${TEST_IMAGE}"
+          docker push "${TEST_IMAGE}"
+
   vllm-copy-to-acr:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
-    needs: [changed-files, vllm-build, vllm-test]
-    if: false
+    needs: [changed-files, vllm-build, vllm-push-xpu]
+    if: needs.changed-files.outputs.deploy == 'true'
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.vllm-build.outputs.target_tag_plain }}
-      version_selector: '["12.9", "13.0", "xpu"]'
+      version_selector: '["xpu"]'
       override_arch: amd64 # We are using AMD64 images only on the rest of the clusters.
       copy_timeout_minutes: 10
     secrets: inherit
@@ -515,8 +543,8 @@ jobs:
   # ============================================================================
 
   deploy-operator:
-    if: false
     needs: [changed-files, operator]
+    if: always() && !cancelled() && needs.changed-files.outputs.deploy == 'true'
     runs-on: prod-default-small-v2
     outputs:
       namespace: ${{ steps.setup.outputs.namespace }}
@@ -544,6 +572,20 @@ jobs:
       framework: vllm
       profiles: '["agg", "agg_router", "disagg", "disagg_router"]'
       image_suffix: vllm-runtime-cuda12
+      namespace: ${{ needs.deploy-operator.outputs.namespace }}
+      vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
+      operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
+    secrets: inherit
+
+  deploy-test-vllm-xpu:
+    name: vllm XPU Deploy Test
+    needs: [changed-files, deploy-operator, vllm-copy-to-acr, vllm-test]
+    if: needs.changed-files.outputs.deploy == 'true'
+    uses: ./.github/workflows/shared-deploy-test.yml
+    with:
+      framework: vllm
+      profiles: '["agg_xpu_dra", "disagg_xpu_dra"]'
+      image_suffix: vllm-runtime-xpu
       namespace: ${{ needs.deploy-operator.outputs.namespace }}
       vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
       operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
@@ -578,8 +620,8 @@ jobs:
     secrets: inherit
 
   deploy-cleanup:
-    if: false
-    needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm]
+    if: always() && needs.deploy-operator.result == 'success'
+    needs: [deploy-operator, deploy-test-vllm, deploy-test-vllm-xpu, deploy-test-sglang, deploy-test-trtllm]
     runs-on: prod-default-small-v2
     steps:
       - uses: actions/checkout@v4
