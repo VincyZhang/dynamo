@@ -9,6 +9,9 @@ from contextlib import ExitStack
 from typing import Callable
 
 import pytest
+
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service not installed")
+
 from gpu_memory_service.server.fsm import ServerState
 
 from tests.utils.constants import FAULT_TOLERANCE_MODEL_NAME

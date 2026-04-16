@@ -15,6 +15,9 @@ import signal
 import time
 
 import pytest
+
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service not installed")
+
 from gpu_memory_service.failover_lock.flock import FlockFailoverLock
 
 pytestmark = [

@@ -16,6 +16,9 @@ import time
 from typing import cast
 
 import pytest
+
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service not installed")
+
 from gpu_memory_service.client.memory_manager import GMSClientMemoryManager
 from gpu_memory_service.client.torch.module import (
     materialize_module_from_gms,

@@ -23,6 +23,9 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 
 import pynvml
 import pytest
+
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service not installed")
+
 from gpu_memory_service.client import memory_manager as client_memory_manager
 from gpu_memory_service.client.memory_manager import (
     GMSClientMemoryManager,

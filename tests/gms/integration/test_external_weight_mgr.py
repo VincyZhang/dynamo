@@ -9,6 +9,9 @@ from contextlib import ExitStack
 from typing import Callable, Protocol
 
 import pytest
+
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service not installed")
+
 from gpu_memory_service.client.session import _GMSClientSession
 from gpu_memory_service.common.locks import RequestedLockType
 from gpu_memory_service.server.fsm import ServerState
