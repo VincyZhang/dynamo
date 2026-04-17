@@ -431,8 +431,15 @@ class ManagedProcess:
         if process.poll() is None:
             raise ManagedProcessStopTimeoutError(attr_name, process.pid, wait_timeout)
 
+    @staticmethod
+    def _is_port_connectable(port: int) -> bool:
+        """Return True if something is listening on *port* (TCP connect succeeds)."""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            return s.connect_ex(("localhost", port)) == 0
+
     def _wait_ports_free(self, timeout=30):
-        """Wait until health_check_ports are not connectable by stale processes.
+        """Wait until ALL reserved ports are not connectable by stale processes.
 
         Between tests, a previous worker's process may still hold a port
         (e.g. system_status_server stuck in Rust runtime teardown).  If we
@@ -442,16 +449,22 @@ class ManagedProcess:
            *old* process → false-positive "port ready".
         2. Our child's ``zmq.bind()`` / ``listen()`` fails with EADDRINUSE.
 
-        This method polls each health_check_port and blocks until no external
-        process is listening (connect_ex returns non-zero).  Our own
-        reservation socket (bind-only, no listen) does NOT make the port
-        connectable, so this check correctly ignores it.
+        We check **all** reserved_ports (system_port, kv_event_port,
+        nixl_port, …) — not just health_check_ports — because cross-type
+        port reuse across tests is the primary source of EADDRINUSE:
+        Test N's system_port can become Test N+1's kv_event_port.
+
+        Our own reservation socket (bind-only, no listen) does NOT make
+        the port connectable, so this check correctly ignores it.
         """
-        if not self.health_check_ports:
+        # Check all reserved_ports; fall back to health_check_ports for
+        # processes that don't declare reserved_ports.
+        ports_to_check = self.reserved_ports or self.health_check_ports
+        if not ports_to_check:
             return
 
         start = time.time()
-        for port in self.health_check_ports:
+        for port in ports_to_check:
             while True:
                 elapsed = time.time() - start
                 if elapsed >= timeout:
@@ -462,10 +475,8 @@ class ManagedProcess:
                         timeout,
                     )
                     break
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(1)
-                    if s.connect_ex(("localhost", port)) != 0:
-                        break  # Port is free
+                if not self._is_port_connectable(port):
+                    break  # Port is free
                 self._logger.info(
                     "Port %d still held by a previous process, waiting...", port
                 )

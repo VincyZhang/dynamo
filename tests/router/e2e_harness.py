@@ -138,12 +138,75 @@ class ManagedEngineProcessMixin:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # Collect all ports across all workers BEFORE termination so we can
+        # verify they are released afterwards.
+        all_ports: list[int] = []
+        for process in self.worker_processes:
+            all_ports.extend(process.reserved_ports or [])
+            all_ports.extend(process.health_check_ports or [])
+        # Deduplicate while preserving order
+        seen: set[int] = set()
+        unique_ports: list[int] = []
+        for p in all_ports:
+            if p not in seen:
+                seen.add(p)
+                unique_ports.append(p)
+
         for i, process in enumerate(self.worker_processes):
             logger.info("Stopping %s %d", self.process_name, i)
             process.__exit__(exc_type, exc_val, exc_tb)
 
-        logger.info("Waiting for %s to fully clean up...", self.cleanup_name)
-        time.sleep(self.cleanup_delay_seconds)
+        # Actively verify all ports are released instead of a fixed sleep.
+        # Previous tests' Rust runtime (system_status_server) can take
+        # several seconds to fully release ports after process termination.
+        self._wait_ports_released(unique_ports)
+
+    def _wait_ports_released(
+        self, ports: list[int], timeout: float = 15.0, poll_interval: float = 0.5
+    ):
+        """Poll until none of *ports* are connectable, or *timeout* expires.
+
+        Replaces a fixed ``cleanup_delay_seconds`` sleep with an active check
+        that verifies Rust runtime / ZMQ sockets have fully released their
+        ports.  This prevents the next test from hitting EADDRINUSE when it
+        allocates or binds the same port numbers.
+        """
+        if not ports:
+            time.sleep(self.cleanup_delay_seconds)
+            return
+
+        from tests.utils.managed_process import ManagedProcess
+
+        start = time.time()
+        remaining = set(ports)
+        while remaining and (time.time() - start) < timeout:
+            still_held = {
+                p for p in remaining if ManagedProcess._is_port_connectable(p)
+            }
+            if not still_held:
+                logger.info(
+                    "All %d worker ports verified free in %.1fs",
+                    len(ports),
+                    time.time() - start,
+                )
+                break
+            remaining = still_held
+            logger.info(
+                "%d port(s) still held after cleanup: %s — waiting...",
+                len(remaining),
+                sorted(remaining),
+            )
+            time.sleep(poll_interval)
+        else:
+            if remaining:
+                logger.warning(
+                    "Ports still connectable after %.1fs timeout: %s",
+                    timeout,
+                    sorted(remaining),
+                )
+
+        # Small grace period for kernel socket teardown (TIME_WAIT, etc.)
+        time.sleep(1)
 
 
 def get_engine_endpoint(engine_workers, request_plane: str, component_name: str):
