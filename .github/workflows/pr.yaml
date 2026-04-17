@@ -76,7 +76,7 @@ jobs:
 
   deploy-status-check:
     runs-on: ubuntu-latest
-    needs: [deploy-operator, deploy-test-vllm, deploy-test-vllm-xpu, deploy-test-sglang, deploy-test-trtllm]
+    needs: [deploy-xpu-setup, deploy-test-vllm, deploy-test-vllm-xpu, deploy-test-sglang, deploy-test-trtllm, deploy-xpu-cleanup]
     if: always() && needs.deploy-test-vllm-xpu.result != 'skipped'
     steps:
       - name: Check all deploy test jobs
@@ -474,15 +474,49 @@ jobs:
   # IMAGE COPY PIPELINES
   # ============================================================================
 
-  vllm-push-xpu:
-    name: vllm-runtime # Push XPU image to ECR for deploy tests
-    needs: [changed-files, vllm-build, vllm-test]
-    if: needs.changed-files.outputs.deploy == 'true'
+  deploy-xpu-setup:
+    name: XPU Deploy Setup # Setup kind cluster and load images for XPU deploy tests
+    needs: [changed-files, vllm-build, vllm-test, operator]
+    if: always() && !cancelled() && needs.changed-files.outputs.deploy == 'true' && needs.vllm-build.result == 'success' && needs.vllm-test.result == 'success'
     runs-on: xpu
+    outputs:
+      kubeconfig_base64: ${{ steps.kind-kubeconfig.outputs.kubeconfig_base64 }}
+      operator_tag: ${{ steps.resolve-operator.outputs.operator_tag }}
     env:
       ECR_HOSTNAME: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+      KIND_CLUSTER_NAME: dynamo-xpu-ci
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Install kind
+        shell: bash
+        run: |
+          if ! command -v kind &>/dev/null; then
+            curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64
+            chmod +x ./kind
+            sudo mv ./kind /usr/local/bin/kind
+          fi
+      - name: Create kind cluster
+        shell: bash
+        run: |
+          kind delete cluster --name ${KIND_CLUSTER_NAME} || true
+          kind create cluster --name ${KIND_CLUSTER_NAME} --wait 5m
+      - name: Load runtime images into kind
+        shell: bash
+        run: |
+          IMAGE_TAG=${{ github.sha }}-${{ needs.vllm-build.outputs.target_tag_plain }}-xpu
+          RUNTIME_IMAGE="${ECR_HOSTNAME}/ai-dynamo/dynamo:${IMAGE_TAG}"
+          echo "Loading runtime image into kind: ${RUNTIME_IMAGE}"
+          kind load docker-image "${RUNTIME_IMAGE}" --name ${KIND_CLUSTER_NAME}
+      - name: Resolve operator tag
+        id: resolve-operator
+        shell: bash
+        run: |
+          if [ "${{ needs.operator.result }}" == "success" ]; then
+            OPERATOR_TAG="${{ needs.operator.outputs.operator_default_tag }}"
+          else
+            OPERATOR_TAG="main-operator"
+          fi
+          echo "operator_tag=${OPERATOR_TAG}" >> $GITHUB_OUTPUT
       - name: Docker Login
         uses: ./.github/actions/docker-login
         with:
@@ -491,21 +525,69 @@ jobs:
           azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
           azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
           azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-      - name: Push XPU images to ECR
+      - name: Pull and load operator image into kind
         shell: bash
         run: |
-          IMAGE_TAG=${{ github.sha }}-${{ needs.vllm-build.outputs.target_tag_plain }}-xpu
-          RUNTIME_IMAGE="${ECR_HOSTNAME}/ai-dynamo/dynamo:${IMAGE_TAG}"
-          TEST_IMAGE="${ECR_HOSTNAME}/ai-dynamo/dynamo:${IMAGE_TAG}-test"
-          echo "Pushing runtime image: ${RUNTIME_IMAGE}"
-          docker push "${RUNTIME_IMAGE}"
-          echo "Pushing test image: ${TEST_IMAGE}"
-          docker push "${TEST_IMAGE}"
+          OPERATOR_TAG=${{ steps.resolve-operator.outputs.operator_tag }}
+          OPERATOR_IMAGE="${ECR_HOSTNAME}/ai-dynamo/dynamo:${OPERATOR_TAG}"
+          echo "Pulling operator image: ${OPERATOR_IMAGE}"
+          docker pull "${OPERATOR_IMAGE}" --platform linux/amd64
+          echo "Loading operator image into kind"
+          kind load docker-image "${OPERATOR_IMAGE}" --name ${KIND_CLUSTER_NAME}
+      - name: Install Helm
+        shell: bash
+        run: |
+          if ! command -v helm &>/dev/null; then
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          fi
+      - name: Install Dynamo platform via Helm
+        shell: bash
+        env:
+          OPERATOR_TAG: ${{ steps.resolve-operator.outputs.operator_tag }}
+        run: |
+          echo "::group::Install Dynamo platform via Helm (inside kind)"
+          set -x
+          OPERATOR_REPO="${ECR_HOSTNAME}/ai-dynamo/dynamo"
+          echo "Using operator image: ${OPERATOR_REPO}:${OPERATOR_TAG}"
+
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          cd deploy/helm/charts/platform/
+          helm dep build .
+
+          helm upgrade --install dynamo-platform . --namespace default \
+            --set dynamo-operator.controllerManager.manager.image.repository=${OPERATOR_REPO} \
+            --set dynamo-operator.controllerManager.manager.image.tag=${OPERATOR_TAG} \
+            --set dynamo-operator.controllerManager.manager.image.pullPolicy=IfNotPresent \
+            --set dynamo-operator.gpuDiscovery.enabled=false \
+            --set global.grove.install=true \
+            --set global.kai-scheduler.install=false \
+            --debug
+          echo "::endgroup::"
+      - name: Wait for operator rollout
+        shell: bash
+        run: |
+          echo "::group::Wait for operator rollout inside kind"
+          kubectl rollout status deployment -n default --watch --timeout=900s
+          echo "::endgroup::"
+      - name: Create HF token secret
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          kubectl create secret generic hf-token-secret \
+            --from-literal=HF_TOKEN=${HF_TOKEN} \
+            -n default || true
+      - name: Export kubeconfig
+        id: kind-kubeconfig
+        shell: bash
+        run: |
+          KUBECONFIG_B64=$(kind get kubeconfig --name ${KIND_CLUSTER_NAME} | base64 -w 0)
+          echo "kubeconfig_base64=${KUBECONFIG_B64}" >> $GITHUB_OUTPUT
 
   vllm-copy-to-acr:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
-    needs: [changed-files, vllm-build, vllm-push-xpu]
-    if: needs.changed-files.outputs.deploy == 'true'
+    needs: [changed-files, vllm-build]
+    if: false # Disabled: XPU deploy tests now use local kind cluster
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.vllm-build.outputs.target_tag_plain }}
@@ -544,7 +626,7 @@ jobs:
 
   deploy-operator:
     needs: [changed-files, operator]
-    if: always() && !cancelled() && needs.changed-files.outputs.deploy == 'true'
+    if: false # Disabled: XPU deploy tests use local kind cluster, no vCluster needed
     runs-on: prod-default-small-v2
     outputs:
       namespace: ${{ steps.setup.outputs.namespace }}
@@ -578,18 +660,30 @@ jobs:
     secrets: inherit
 
   deploy-test-vllm-xpu:
-    name: vllm XPU Deploy Test
-    needs: [changed-files, deploy-operator, vllm-copy-to-acr, vllm-test]
+    name: vllm XPU Deploy Test ${{ matrix.profile }}
+    needs: [changed-files, deploy-xpu-setup]
     if: needs.changed-files.outputs.deploy == 'true'
-    uses: ./.github/workflows/shared-deploy-test.yml
-    with:
-      framework: vllm
-      profiles: '["agg_xpu_dra", "disagg_xpu_dra"]'
-      image_suffix: vllm-runtime-xpu
-      namespace: ${{ needs.deploy-operator.outputs.namespace }}
-      vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
-      operator_tag: ${{ needs.deploy-operator.outputs.operator_tag }}
-    secrets: inherit
+    runs-on: xpu
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [agg_xpu_dra, disagg_xpu_dra]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Run Dynamo Deploy Test
+        uses: ./.github/actions/dynamo-deploy-test
+        with:
+          kubeconfig_base64: ${{ needs.deploy-xpu-setup.outputs.kubeconfig_base64 }}
+          namespace: default
+          registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+          operator_tag: ${{ needs.deploy-xpu-setup.outputs.operator_tag }}
+          hf_token: ${{ secrets.HF_TOKEN }}
+          framework: vllm
+          profile: ${{ matrix.profile }}
+          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo:${{ github.sha }}-vllm-runtime-xpu
+          platform_arch: amd64
+          extra_pytest_args: -m framework_only
 
   deploy-test-sglang:
     name: sglang Deploy Test
@@ -620,7 +714,7 @@ jobs:
     secrets: inherit
 
   deploy-cleanup:
-    if: always() && needs.deploy-operator.result == 'success'
+    if: false # Disabled: vCluster cleanup not needed, XPU uses kind (cleaned by deploy-xpu-cleanup)
     needs: [deploy-operator, deploy-test-vllm, deploy-test-vllm-xpu, deploy-test-sglang, deploy-test-trtllm]
     runs-on: prod-default-small-v2
     steps:
@@ -632,6 +726,21 @@ jobs:
           kubeconfig_base64: ${{ secrets.AZURE_AKS_CI_KUBECONFIG_B64 }}
           vcluster_name: ${{ needs.deploy-operator.outputs.vcluster_name }}
           vcluster_namespace: ${{ needs.deploy-operator.outputs.namespace }}
+
+  deploy-xpu-cleanup:
+    name: XPU Deploy Cleanup
+    if: always() && needs.deploy-xpu-setup.result == 'success'
+    needs: [deploy-xpu-setup, deploy-test-vllm-xpu]
+    runs-on: xpu
+    env:
+      KIND_CLUSTER_NAME: dynamo-xpu-ci
+    steps:
+      - name: Delete kind cluster
+        shell: bash
+        run: |
+          echo "::group::Delete kind cluster ${KIND_CLUSTER_NAME}"
+          kind delete cluster --name ${KIND_CLUSTER_NAME} || true
+          echo "::endgroup::"
 
   clean-k8s-builder:
     name: Clean K8s builder if exists
