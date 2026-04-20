@@ -105,7 +105,7 @@ jobs:
       framework: vllm
       target: dev
       platform: 'linux/amd64,linux/arm64'
-      cuda_versions: '["12.9", "13.0"]'
+      version_selectors: '["12.9", "13.0"]'
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
       build_timeout_minutes: 60
       push_image: true
@@ -121,7 +121,7 @@ jobs:
       framework: sglang
       target: dev
       platform: 'linux/amd64,linux/arm64'
-      cuda_versions: '["12.9", "13.0"]'
+      version_selectors: '["12.9", "13.0"]'
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
       build_timeout_minutes: 60
       push_image: true
@@ -137,7 +137,7 @@ jobs:
       framework: trtllm
       target: dev
       platform: 'linux/amd64,linux/arm64'
-      cuda_versions: '["13.1"]'
+      version_selectors: '["13.1"]'
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
       build_timeout_minutes: 60
       push_image: true

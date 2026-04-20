@@ -24,16 +24,10 @@ on:
         required: false
         type: string
         default: 'linux/amd64,linux/arm64'
-      cuda_versions:
-        description: 'DEPRECATED: use version_selectors. Has no effect; only kept for backward compatibility.'
-        required: false
-        type: string
-        default: '["12.9"]'
       version_selectors:
         description: 'CUDA/XPU selectors to build (JSON array, e.g., ["12.9", "13.0", "xpu"]).'
-        required: false
+        required: true
         type: string
-        default: ''
       build_timeout_minutes:
         description: 'Timeout in minutes for the build step'
         required: false
