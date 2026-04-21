@@ -44,10 +44,7 @@ try:
     from gpu_memory_service.server.fsm import ServerState
     from gpu_memory_service.server.rpc import GMSRPCServer
 except ModuleNotFoundError:
-    pytest.skip(
-        "gpu_memory_service package is not available in this test image",
-        allow_module_level=True,
-    )
+    pytest.skip("gpu_memory_service not installed", allow_module_level=True)
 
 pytestmark = [
     pytest.mark.pre_merge,

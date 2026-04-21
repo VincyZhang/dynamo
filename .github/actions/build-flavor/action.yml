@@ -44,6 +44,18 @@ inputs:
     description: 'SCCache S3 Bucket'
     required: false
     default: ''
+  use_sccache:
+    description: 'Enable sccache for the build'
+    required: false
+    default: 'true'
+  aws_access_key_id:
+    description: 'AWS Access Key ID'
+    required: false
+    default: ''
+  aws_secret_access_key:
+    description: 'AWS Secret Access Key'
+    required: false
+    default: ''
   hf_token:
     description: 'HuggingFace token'
     required: false
