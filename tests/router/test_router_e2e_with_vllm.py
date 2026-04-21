@@ -278,27 +278,16 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
             env.update(env_vars)
 
-            # Collect all ports owned by this worker for targeted release
-            worker_ports = [system_port, kv_event_port, nixl_port]
-            if replay_port is not None:
-                worker_ports.append(replay_port)
-
-            # Create managed process for the worker.
-            # Include kv_event_port in health_check_ports so that __enter__
-            # waits until ZMQ PUB is actually listening.  _check_port polls
-            # _check_process_alive(), so if the EngineCore crashes during init
-            # (e.g. ZMQ "Address already in use") the health check detects the
-            # process death immediately instead of hanging.
+            # Create managed process for the worker
             process = ManagedProcess(
                 command=command,
                 env=env,
                 timeout=120,  # Allow time for model loading
                 display_output=True,
-                health_check_ports=[kv_event_port],
+                health_check_ports=[],
                 health_check_urls=[],
                 log_dir=request.node.name,
                 terminate_all_matching_process_names=False,
-                reserved_ports=worker_ports,
             )
             self.worker_processes.append(process)
             if data_parallel_size is not None:
@@ -337,50 +326,20 @@ class VLLMProcess(ManagedEngineProcessMixin):
             "--port",
             str(self._standalone_indexer_port),
         ]
-        indexer_env = os.environ.copy()
-        indexer_env.pop("DYN_SYSTEM_PORT", None)  # Indexer has no system server
-
-        # Retry indexer startup: the Rust binary takes ~5s for Python/FFI init,
-        # during which the reserved port socket has been released and another
-        # process *may* transiently occupy it.
-        max_retries = 3
-        for attempt in range(1, max_retries + 1):
-            self._indexer_process = ManagedProcess(
-                command=indexer_cmd,
-                env=indexer_env,
-                timeout=120,
-                display_output=True,
-                health_check_ports=[self._standalone_indexer_port],
-                health_check_urls=[],
-                log_dir=self._request.node.name,
-                terminate_all_matching_process_names=False,
-                display_name="dynamo-kv-indexer",
-                reserved_ports=[self._standalone_indexer_port],
-            )
-            logger.info(
-                "Starting standalone indexer on port %s (attempt %d/%d)",
-                self._standalone_indexer_port,
-                attempt,
-                max_retries,
-            )
-            try:
-                self._indexer_process.__enter__()
-                break
-            except RuntimeError:
-                if attempt == max_retries:
-                    raise
-                logger.warning(
-                    "Indexer startup failed (attempt %d/%d), retrying...",
-                    attempt,
-                    max_retries,
-                )
-                try:
-                    self._indexer_process.__exit__(None, None, None)
-                except Exception:
-                    pass
-                import time as _time
-
-                _time.sleep(2)
+        self._indexer_process = ManagedProcess(
+            command=indexer_cmd,
+            timeout=120,
+            display_output=True,
+            health_check_ports=[self._standalone_indexer_port],
+            health_check_urls=[],
+            log_dir=self._request.node.name,
+            terminate_all_matching_process_names=False,
+            display_name="dynamo-kv-indexer",
+        )
+        logger.info(
+            "Starting standalone indexer on port %s", self._standalone_indexer_port
+        )
+        self._indexer_process.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -413,13 +372,6 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
                 new_worker_id = None
                 for _ in range(120):
-                    # Check if worker process died (e.g. ZMQ port conflict)
-                    if process.proc and process.proc.poll() is not None:
-                        raise RuntimeError(
-                            f"vLLM worker {worker_idx} exited with code "
-                            f"{process.proc.returncode} during startup "
-                            f"(check worker logs for ZMQ/port errors)"
-                        )
                     ids = set(client.instance_ids())
                     new = ids - known_ids
                     if new:
@@ -506,12 +458,8 @@ class VLLMProcess(ManagedEngineProcessMixin):
             "--model-name",
             self.model_name,
         ]
-        indexer_b_env = os.environ.copy()
-        indexer_b_env.pop("DYN_SYSTEM_PORT", None)  # Indexer has no system server
-
         self._indexer_b_process = ManagedProcess(
             command=indexer_b_cmd,
-            env=indexer_b_env,
             timeout=120,
             display_output=True,
             health_check_ports=[self._standalone_indexer_b_port],
@@ -519,7 +467,6 @@ class VLLMProcess(ManagedEngineProcessMixin):
             log_dir=self._request.node.name,
             terminate_all_matching_process_names=False,
             display_name="dynamo-kv-indexer-b",
-            reserved_ports=[self._standalone_indexer_b_port],
         )
         logger.info(
             "Starting standalone indexer B on port %s with peer http://localhost:%s",
@@ -530,12 +477,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
     process_name = "vLLM worker"
     cleanup_name = "vLLM worker resources"
-    init_delay_reason = "finish post-init registration before starting next worker"
-    # Health check now runs per-worker in __enter__, guaranteeing engine init
-    # (including GPU memory profiling) completes before the next worker starts.
-    # The remaining delay only needs to cover post-health-check registration
-    # (e.g. NIXL metadata, etcd lease).
-    init_delay_seconds = 5
+    init_delay_reason = "initialize NIXL before starting next worker"
 
 
 @pytest.mark.pre_merge
@@ -678,6 +620,7 @@ def test_router_decisions_vllm_disagg(
             "disaggregation_mode": "decode",
         },
     )
+
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1

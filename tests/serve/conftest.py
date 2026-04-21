@@ -9,7 +9,11 @@ from pytest_httpserver import HTTPServer
 
 from dynamo.common.utils.paths import WORKSPACE_DIR
 from tests.serve.lora_utils import MinioLoraConfig, MinioService
-from tests.utils.port_utils import allocate_port, deallocate_port, release_reserved_ports
+from tests.utils.port_utils import (
+    allocate_port,
+    deallocate_port,
+    release_reserved_ports,
+)
 
 # Shared constants for multimodal testing
 IMAGE_SERVER_PORT = allocate_port(8765)

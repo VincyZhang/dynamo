@@ -51,7 +51,7 @@ class ManagedEngineProcessMixin:
     cleanup_name = "worker resources"
     init_delay_seconds = 5
     init_delay_reason = "initialize before starting next worker"
-    cleanup_delay_seconds = 5
+    cleanup_delay_seconds = 2
 
     def __enter__(self):
         logger.info(
@@ -90,27 +90,6 @@ class ManagedEngineProcessMixin:
                 )
                 time.sleep(process.delayed_start)
 
-                # Wait for this worker's health check BEFORE launching the next
-                # worker.  On shared-GPU setups (single_gpu=True) workers do
-                # memory profiling during engine init; if two workers profile
-                # concurrently they see each other's allocations and one crashes
-                # with GPU OOM.  By waiting here we guarantee Worker N's engine
-                # init (including memory profiling) completes before Worker N+1
-                # starts.
-                logger.info(
-                    "[%s] Checking health for worker %d before launching next...",
-                    self.__class__.__name__,
-                    i,
-                )
-                elapsed = process._check_ports(process.timeout)
-                process._check_urls(process.timeout - elapsed)
-                process._check_funcs(process.timeout - elapsed)
-                logger.info(
-                    "[%s] Worker %d health checks passed",
-                    self.__class__.__name__,
-                    i,
-                )
-
                 if i < len(self.worker_processes) - 1:
                     logger.info(
                         "[%s] Waiting %ss for worker %d to %s...",
@@ -123,90 +102,58 @@ class ManagedEngineProcessMixin:
 
             except Exception:
                 logger.exception(
-                    "[%s] Failed to start/health-check worker %d",
-                    self.__class__.__name__,
-                    i,
+                    "[%s] Failed to start worker %d", self.__class__.__name__, i
+                )
+                try:
+                    process.__exit__(None, None, None)
+                except Exception as cleanup_err:
+                    logger.warning(
+                        "[%s] Error during cleanup: %s",
+                        self.__class__.__name__,
+                        cleanup_err,
+                    )
+                raise
+
+        logger.info(
+            "[%s] All %d workers launched with sequential initialization.",
+            self.__class__.__name__,
+            len(self.worker_processes),
+        )
+        logger.info(
+            "[%s] Waiting for health checks to complete...", self.__class__.__name__
+        )
+
+        for i, process in enumerate(self.worker_processes):
+            logger.info(
+                "[%s] Checking health for worker %d...", self.__class__.__name__, i
+            )
+            try:
+                elapsed = process._check_ports(process.timeout)
+                process._check_urls(process.timeout - elapsed)
+                process._check_funcs(process.timeout - elapsed)
+                logger.info(
+                    "[%s] Worker %d health checks passed", self.__class__.__name__, i
+                )
+            except Exception:
+                logger.error(
+                    "[%s] Worker %d health check failed", self.__class__.__name__, i
                 )
                 self.__exit__(None, None, None)
                 raise
 
         logger.info(
-            "[%s] All %d workers started successfully and passed health checks!",
+            "[%s] All workers started successfully and passed health checks!",
             self.__class__.__name__,
-            len(self.worker_processes),
         )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Collect all ports across all workers BEFORE termination so we can
-        # verify they are released afterwards.
-        all_ports: list[int] = []
-        for process in self.worker_processes:
-            all_ports.extend(process.reserved_ports or [])
-            all_ports.extend(process.health_check_ports or [])
-        # Deduplicate while preserving order
-        seen: set[int] = set()
-        unique_ports: list[int] = []
-        for p in all_ports:
-            if p not in seen:
-                seen.add(p)
-                unique_ports.append(p)
-
         for i, process in enumerate(self.worker_processes):
             logger.info("Stopping %s %d", self.process_name, i)
             process.__exit__(exc_type, exc_val, exc_tb)
 
-        # Actively verify all ports are released instead of a fixed sleep.
-        # Previous tests' Rust runtime (system_status_server) can take
-        # several seconds to fully release ports after process termination.
-        self._wait_ports_released(unique_ports)
-
-    def _wait_ports_released(
-        self, ports: list[int], timeout: float = 15.0, poll_interval: float = 0.5
-    ):
-        """Poll until none of *ports* are connectable, or *timeout* expires.
-
-        Replaces a fixed ``cleanup_delay_seconds`` sleep with an active check
-        that verifies Rust runtime / ZMQ sockets have fully released their
-        ports.  This prevents the next test from hitting EADDRINUSE when it
-        allocates or binds the same port numbers.
-        """
-        if not ports:
-            time.sleep(self.cleanup_delay_seconds)
-            return
-
-        from tests.utils.managed_process import ManagedProcess
-
-        start = time.time()
-        remaining = set(ports)
-        while remaining and (time.time() - start) < timeout:
-            still_held = {
-                p for p in remaining if ManagedProcess._is_port_connectable(p)
-            }
-            if not still_held:
-                logger.info(
-                    "All %d worker ports verified free in %.1fs",
-                    len(ports),
-                    time.time() - start,
-                )
-                break
-            remaining = still_held
-            logger.info(
-                "%d port(s) still held after cleanup: %s — waiting...",
-                len(remaining),
-                sorted(remaining),
-            )
-            time.sleep(poll_interval)
-        else:
-            if remaining:
-                logger.warning(
-                    "Ports still connectable after %.1fs timeout: %s",
-                    timeout,
-                    sorted(remaining),
-                )
-
-        # Small grace period for kernel socket teardown (TIME_WAIT, etc.)
-        time.sleep(1)
+        logger.info("Waiting for %s to fully clean up...", self.cleanup_name)
+        time.sleep(self.cleanup_delay_seconds)
 
 
 def get_engine_endpoint(engine_workers, request_plane: str, component_name: str):

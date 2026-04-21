@@ -9,6 +9,7 @@ try:
 except ImportError:
     torch = None
 
+
 def detect_target_device() -> str:
     """Detect the runtime accelerator expected by the current test environment."""
     if torch is None:
