@@ -27,11 +27,6 @@ _PORT_REGISTRY_FILE = Path(tempfile.gettempdir()) / "pytest_port_allocations.jso
 _PORT_MIN = 1024
 _PORT_MAX = 32767
 
-# Sockets held open to reserve allocated ports at the OS level.
-# Prevents other processes from binding to them between allocation and use.
-# Closed by release_reserved_ports() before subprocess launch.
-_reserved_sockets: dict[int, socket.socket] = {}
-
 
 @dataclass(frozen=True)
 class ServicePorts:
@@ -174,13 +169,11 @@ def allocate_ports(count: int, start_port: int) -> list[int]:
                 if port in allocated_ports or port in ports:
                     continue
 
-                # Try to bind to verify it's actually free.
-                # Keep the socket open to reserve the port at the OS level;
-                # release_reserved_ports() closes it just before subprocess launch.
+                # Try to bind to verify it's actually free
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     sock.bind(("", port))
-                    _reserved_sockets[port] = sock
+                    sock.close()
                     ports.append(port)
                     registry[str(port)] = {
                         "timestamp": time.time(),
@@ -300,8 +293,8 @@ def allocate_contiguous_ports(
                         sock.close()
                     continue
 
-                for port_val, sock in zip(candidate_ports, sockets):
-                    _reserved_sockets[port_val] = sock
+                for sock in sockets:
+                    sock.close()
 
                 ports.extend(candidate_ports)
                 timestamp = time.time()
@@ -338,33 +331,6 @@ def allocate_port(start_port: int) -> int:
     return allocate_ports(1, start_port)[0]
 
 
-def release_reserved_ports(ports: list[int] | None = None) -> None:
-    """Close sockets held open to reserve allocated ports.
-
-    Call this just before launching a subprocess that needs to bind
-    to previously allocated ports.  Minimises the TOCTOU window between
-    the OS releasing the port and the child process binding to it.
-
-    Args:
-        ports: Specific ports to release, or ``None`` to release all.
-    """
-    if ports is None:
-        for sock in _reserved_sockets.values():
-            try:
-                sock.close()
-            except OSError:
-                pass
-        _reserved_sockets.clear()
-    else:
-        for port in ports:
-            sock = _reserved_sockets.pop(port, None)
-            if sock is not None:
-                try:
-                    sock.close()
-                except OSError:
-                    pass
-
-
 def deallocate_ports(ports: list[int]) -> None:
     """Release previously allocated ports back to the pool.
 
@@ -373,9 +339,6 @@ def deallocate_ports(ports: list[int]) -> None:
     """
     if not ports:
         return
-
-    # Close any sockets still held for these ports
-    release_reserved_ports(ports)
 
     # Ensure lock file exists
     _PORT_LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
