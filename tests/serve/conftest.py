@@ -19,8 +19,7 @@ _IMAGE_SERVER_PORT_HINT = 8765
 MULTIMODAL_IMG_PATH = os.path.join(
     WORKSPACE_DIR, "lib/llm/tests/data/media/llm-optimize-deploy-graphic.png"
 )
-# TODO: MULTIMODAL_IMG_URL must become a fixture when multimodal tests are enabled,
-# since the actual port is only known after httpserver_listen_address allocates it.
+# Placeholder URL; updated with the real allocated port by httpserver_listen_address.
 MULTIMODAL_IMG_URL = f"http://localhost:{_IMAGE_SERVER_PORT_HINT}/llm-graphic.png"
 
 
@@ -48,7 +47,14 @@ def get_multimodal_test_image_bytes() -> bytes:
 
 @pytest.fixture(scope="session")
 def httpserver_listen_address():
+    import tests.serve.conftest as _self_module
+
     port = allocate_port(_IMAGE_SERVER_PORT_HINT)
+    # Update the module-level URL so tests that read MULTIMODAL_IMG_URL
+    # after fixture setup see the real allocated port.
+    _self_module.MULTIMODAL_IMG_URL = (
+        f"http://localhost:{port}/llm-graphic.png"
+    )
     yield ("127.0.0.1", port)
     deallocate_port(port)
 
