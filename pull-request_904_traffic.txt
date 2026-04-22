@@ -1,5 +1,0 @@
-Parallel commit 1
-Parallel commit 2
-Parallel commit 3
-Parallel commit 4
-Parallel commit 5
