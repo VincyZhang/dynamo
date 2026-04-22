@@ -28,13 +28,6 @@ from tests.router.helper import (
     wait_for_indexer_workers_active,
 )
 from tests.utils.constants import DefaultPort
-from tests.utils.device import (
-    build_nixl_kv_transfer_config_json,
-    detect_target_device,
-    get_default_vllm_block_size,
-    get_device_visibility_env_var,
-    get_gpu_memory_utilization,
-)
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.port_utils import allocate_ports, deallocate_ports
 
@@ -49,24 +42,22 @@ pytestmark = [
     pytest.mark.model(MODEL_NAME),
 ]
 SPEEDUP_RATIO = 10.0
-BLOCK_SIZE = get_default_vllm_block_size()  # 64 on XPU (fmha requirement), 16 on CUDA
-_GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=True)
-_MAX_MODEL_LEN = 768 if detect_target_device() == "xpu" else 1024
+BLOCK_SIZE = 16
 
 # Shared vLLM configuration for all tests
 # gpu_memory_utilization limits actual VRAM allocation (required for multi-worker on same GPU)
 VLLM_ARGS: Dict[str, Any] = {
     "block_size": BLOCK_SIZE,
     "model": MODEL_NAME,
-    "gpu_memory_utilization": _GPU_MEM_UTIL,
-    "max_model_len": _MAX_MODEL_LEN,  # Limit context length to reduce KV cache size
+    "gpu_memory_utilization": 0.4,  # Limit VRAM allocation per worker
+    "max_model_len": 1024,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }
 
 VLLM_ARGS_NO_BLOCK_SIZE: Dict[str, Any] = {
     "model": MODEL_NAME,
-    "gpu_memory_utilization": _GPU_MEM_UTIL,
-    "max_model_len": _MAX_MODEL_LEN,  # Limit context length to reduce KV cache size
+    "gpu_memory_utilization": 0.4,  # Limit VRAM allocation per worker
+    "max_model_len": 1024,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }
 
@@ -77,7 +68,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
     This is a drop-in replacement for MockerProcess that uses real vLLM workers.
     The key difference: dynamo.vllm automatically handles:
     - HTTP API serving
-    - KV cache event publishing (ZMQ ΓåÆ NATS bridge)
+    - KV cache event publishing (ZMQ → NATS bridge)
     - Integration with dynamo.frontend router
     """
 
@@ -178,24 +169,14 @@ class VLLMProcess(ManagedEngineProcessMixin):
         # Matches test.sh behavior:
         # - When data_parallel_size is set, launch one process per DP rank
         # - Each process gets --data-parallel-rank and --data-parallel-size
-        # - Each process runs on its assigned device visibility env var
+        # - Each process runs on its own GPU via CUDA_VISIBLE_DEVICES
         # - --kv-transfer-config enables KV cache transfer between ranks
 
         for worker_idx in range(num_workers):
-            visibility_env_var = get_device_visibility_env_var()
-            inherited_visibility = os.environ.get(visibility_env_var)
-
             # Calculate GPU device for this process
             if single_gpu:
-                # On XPU, prefer externally pinned affinity when provided by CI/runtime,
-                # but do not override an explicit non-default gpu_start_index.
-                if (
-                    visibility_env_var == "ZE_AFFINITY_MASK"
-                    and inherited_visibility
-                ):
-                    gpu_device = inherited_visibility
-                else:
-                    gpu_device = str(gpu_start_index)
+                # Force all processes to GPU 0 (for single-GPU testing)
+                gpu_device = str(gpu_start_index)
             elif data_parallel_size is not None:
                 # Worker sees dp_rank GPUs (each DP rank gets its own GPU)
                 worker_start_gpu = gpu_start_index + worker_idx * data_parallel_size
@@ -219,7 +200,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
                 command.extend(
                     [
                         "--kv-transfer-config",
-                        build_nixl_kv_transfer_config_json(),
+                        '{"kv_connector":"NixlConnector","kv_role":"kv_both"}',
                     ]
                 )
 
@@ -283,7 +264,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
             env = os.environ.copy()  # Copy parent environment
             env_vars = {
-                visibility_env_var: gpu_device,
+                "CUDA_VISIBLE_DEVICES": gpu_device,
                 "DYN_NAMESPACE": self.namespace,
                 "DYN_REQUEST_PLANE": request_plane,
                 "DYN_SYSTEM_PORT": str(system_port),
@@ -297,27 +278,14 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
             env.update(env_vars)
 
-            # Collect all ports owned by this worker for targeted release
-            worker_ports = [system_port, kv_event_port, nixl_port]
-            if replay_port is not None:
-                worker_ports.append(replay_port)
-
-            # Create managed process for the worker.
-            # Use system_port HTTP health endpoint for readiness check instead
-            # of kv_event_port TCP probe.  The kv_event_port ZMQ socket may be
-            # bound by the parent vLLM process before EngineCore spawns, causing
-            # a false-positive health check followed by EngineCore bind failure.
-            # The system_port /health endpoint is served by the Rust runtime and
-            # reliably indicates the worker is initialized.
+            # Create managed process for the worker
             process = ManagedProcess(
                 command=command,
                 env=env,
                 timeout=120,  # Allow time for model loading
                 display_output=True,
                 health_check_ports=[],
-                health_check_urls=[
-                    f"http://localhost:{system_port}/health",
-                ],
+                health_check_urls=[],
                 log_dir=request.node.name,
                 terminate_all_matching_process_names=False,
             )
@@ -358,49 +326,20 @@ class VLLMProcess(ManagedEngineProcessMixin):
             "--port",
             str(self._standalone_indexer_port),
         ]
-        indexer_env = os.environ.copy()
-        indexer_env.pop("DYN_SYSTEM_PORT", None)  # Indexer has no system server
-
-        # Retry indexer startup: the Rust binary takes ~5s for Python/FFI init,
-        # during which the reserved port socket has been released and another
-        # process *may* transiently occupy it.
-        max_retries = 3
-        for attempt in range(1, max_retries + 1):
-            self._indexer_process = ManagedProcess(
-                command=indexer_cmd,
-                env=indexer_env,
-                timeout=120,
-                display_output=True,
-                health_check_ports=[self._standalone_indexer_port],
-                health_check_urls=[],
-                log_dir=self._request.node.name,
-                terminate_all_matching_process_names=False,
-                display_name="dynamo-kv-indexer",
-            )
-            logger.info(
-                "Starting standalone indexer on port %s (attempt %d/%d)",
-                self._standalone_indexer_port,
-                attempt,
-                max_retries,
-            )
-            try:
-                self._indexer_process.__enter__()
-                break
-            except RuntimeError:
-                if attempt == max_retries:
-                    raise
-                logger.warning(
-                    "Indexer startup failed (attempt %d/%d), retrying...",
-                    attempt,
-                    max_retries,
-                )
-                try:
-                    self._indexer_process.__exit__(None, None, None)
-                except Exception:
-                    pass
-                import time as _time
-
-                _time.sleep(2)
+        self._indexer_process = ManagedProcess(
+            command=indexer_cmd,
+            timeout=120,
+            display_output=True,
+            health_check_ports=[self._standalone_indexer_port],
+            health_check_urls=[],
+            log_dir=self._request.node.name,
+            terminate_all_matching_process_names=False,
+            display_name="dynamo-kv-indexer",
+        )
+        logger.info(
+            "Starting standalone indexer on port %s", self._standalone_indexer_port
+        )
+        self._indexer_process.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -433,13 +372,6 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
                 new_worker_id = None
                 for _ in range(120):
-                    # Check if worker process died (e.g. ZMQ port conflict)
-                    if process.proc and process.proc.poll() is not None:
-                        raise RuntimeError(
-                            f"vLLM worker {worker_idx} exited with code "
-                            f"{process.proc.returncode} during startup "
-                            f"(check worker logs for ZMQ/port errors)"
-                        )
                     ids = set(client.instance_ids())
                     new = ids - known_ids
                     if new:
@@ -526,12 +458,8 @@ class VLLMProcess(ManagedEngineProcessMixin):
             "--model-name",
             self.model_name,
         ]
-        indexer_b_env = os.environ.copy()
-        indexer_b_env.pop("DYN_SYSTEM_PORT", None)  # Indexer has no system server
-
         self._indexer_b_process = ManagedProcess(
             command=indexer_b_cmd,
-            env=indexer_b_env,
             timeout=120,
             display_output=True,
             health_check_ports=[self._standalone_indexer_b_port],
@@ -549,18 +477,12 @@ class VLLMProcess(ManagedEngineProcessMixin):
 
     process_name = "vLLM worker"
     cleanup_name = "vLLM worker resources"
-    init_delay_reason = "finish post-init registration before starting next worker"
-    # Health check now runs per-worker in __enter__, guaranteeing engine init
-    # (including GPU memory profiling) completes before the next worker starts.
-    # The remaining delay only needs to cover post-health-check registration
-    # (e.g. NIXL metadata, etcd lease).
-    init_delay_seconds = 5
+    init_delay_reason = "initialize NIXL before starting next worker"
 
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
-@pytest.mark.xpu_1
-@pytest.mark.timeout(300)  # XPU CI observed >160s; raise timeout to reduce false failures
+@pytest.mark.timeout(150)  # ~3x average (~43s/test), rounded up
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_vllm_kv_router_basic(
     request,
@@ -608,8 +530,7 @@ def test_vllm_kv_router_without_block_size_specified_in_vllm_args(
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
-@pytest.mark.xpu_1
-@pytest.mark.timeout(600)  # XPU model loading can take 4+ min
+@pytest.mark.timeout(150)  # ~3x average (~43s/test), rounded up
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_router_decisions_vllm_multiple_workers(
     request,
@@ -634,7 +555,6 @@ def test_router_decisions_vllm_multiple_workers(
 
 
 @pytest.mark.gpu_2
-@pytest.mark.xpu_2
 @pytest.mark.nightly
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 @pytest.mark.timeout(600)  # 10 min max (multi-GPU + DP startup variance)
@@ -669,7 +589,6 @@ def test_router_decisions_vllm_dp(
 
 
 @pytest.mark.gpu_2
-@pytest.mark.xpu_2
 @pytest.mark.nightly
 @pytest.mark.timeout(600)
 @pytest.mark.parametrize("request_plane", ["nats"], indirect=True)
@@ -701,6 +620,7 @@ def test_router_decisions_vllm_disagg(
             "disaggregation_mode": "decode",
         },
     )
+
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
