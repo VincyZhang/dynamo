@@ -226,58 +226,22 @@ pub async fn spawn_system_status_server(
     let address = format!("{}:{}", host, port);
     tracing::info!("[spawn_system_status_server] binding to: {address}");
 
-    // Retry bind with exponential backoff to mitigate TOCTOU races when
-    // dynamically allocated ports are briefly occupied by other processes.
-    const MAX_BIND_RETRIES: u32 = 5;
-    const INITIAL_BACKOFF_MS: u64 = 100;
-
-    let mut bind_result: Option<(TcpListener, std::net::SocketAddr)> = None;
-    for attempt in 0..MAX_BIND_RETRIES {
-        match TcpListener::bind(&address).await {
-            Ok(listener) => {
-                let actual_address = listener.local_addr()?;
-                if attempt > 0 {
-                    tracing::info!(
-                        "[spawn_system_status_server] bound on retry attempt {}",
-                        attempt + 1
-                    );
-                }
-                tracing::info!(
-                    "[spawn_system_status_server] system status server bound to: {}",
-                    actual_address
-                );
-                bind_result = Some((listener, actual_address));
-                break;
-            }
-            Err(e) => {
-                if attempt + 1 >= MAX_BIND_RETRIES {
-                    tracing::error!(
-                        "Failed to bind to address {} after {} attempts: {}",
-                        address,
-                        MAX_BIND_RETRIES,
-                        e
-                    );
-                    return Err(anyhow::anyhow!(
-                        "Failed to bind to address {} after {} attempts: {}",
-                        address,
-                        MAX_BIND_RETRIES,
-                        e
-                    ));
-                }
-                let backoff_ms = INITIAL_BACKOFF_MS * 2u64.pow(attempt);
-                tracing::warn!(
-                    "[spawn_system_status_server] bind attempt {}/{} failed for {}: {}. Retrying in {}ms",
-                    attempt + 1,
-                    MAX_BIND_RETRIES,
-                    address,
-                    e,
-                    backoff_ms
-                );
-                tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
-            }
+    let listener = match TcpListener::bind(&address).await {
+        Ok(listener) => {
+            // get the actual address and port, print in debug level
+            let actual_address = listener.local_addr()?;
+            tracing::info!(
+                "[spawn_system_status_server] system status server bound to: {}",
+                actual_address
+            );
+            (listener, actual_address)
         }
-    }
-    let (listener, actual_address) = bind_result.expect("bind retry loop exited without result");
+        Err(e) => {
+            tracing::error!("Failed to bind to address {}: {}", address, e);
+            return Err(anyhow::anyhow!("Failed to bind to address: {}", e));
+        }
+    };
+    let (listener, actual_address) = listener;
 
     let observer = cancel_token.child_token();
     // Spawn the server in the background and return the handle
@@ -798,7 +762,7 @@ mod integration_tests {
                 "System status server should not be running when disabled"
             );
 
-            println!("Γ£ô System status server correctly disabled when not enabled");
+            println!("✓ System status server correctly disabled when not enabled");
         })
         .await;
     }
