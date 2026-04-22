@@ -16,11 +16,7 @@ import psutil
 import requests
 
 from tests.utils.constants import DefaultPort
-from tests.utils.port_utils import (
-    allocate_port,
-    deallocate_port,
-    release_reserved_ports,
-)
+from tests.utils.port_utils import allocate_port, deallocate_port
 from tests.utils.test_output import resolve_test_output_path
 
 
@@ -180,7 +176,6 @@ class ManagedProcess:
     straggler_commands: List[str] = field(default_factory=list)
     log_dir: str = os.getcwd()
     display_name: Optional[str] = None
-    reserved_ports: List[int] = field(default_factory=list)
 
     # Ensure attributes exist even if startup fails early
     proc: Optional[subprocess.Popen] = None
@@ -435,46 +430,6 @@ class ManagedProcess:
         if process.poll() is None:
             raise ManagedProcessStopTimeoutError(attr_name, process.pid, wait_timeout)
 
-    def _wait_ports_free(self, timeout=30):
-        """Wait until health_check_ports are not connectable by stale processes.
-
-        Between tests, a previous worker's process may still hold a port
-        (e.g. system_status_server stuck in Rust runtime teardown).  If we
-        launch our process while the old one still listens, two things break:
-
-        1. The health check ``connect_ex`` succeeds by connecting to the
-           *old* process → false-positive "port ready".
-        2. Our child's ``zmq.bind()`` / ``listen()`` fails with EADDRINUSE.
-
-        This method polls each health_check_port and blocks until no external
-        process is listening (connect_ex returns non-zero).  Our own
-        reservation socket (bind-only, no listen) does NOT make the port
-        connectable, so this check correctly ignores it.
-        """
-        if not self.health_check_ports:
-            return
-
-        start = time.time()
-        for port in self.health_check_ports:
-            while True:
-                elapsed = time.time() - start
-                if elapsed >= timeout:
-                    self._logger.warning(
-                        "Port %d still connectable after %.1fs — a stale "
-                        "process may still hold it; proceeding anyway",
-                        port,
-                        timeout,
-                    )
-                    break
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(1)
-                    if s.connect_ex(("localhost", port)) != 0:
-                        break  # Port is free
-                self._logger.info(
-                    "Port %d still held by a previous process, waiting...", port
-                )
-                time.sleep(0.5)
-
     def _start_process(self):
         assert self._command_name
         assert self._log_path
@@ -488,17 +443,6 @@ class ManagedProcess:
         stdin = subprocess.DEVNULL
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
-
-        # Before launching, ensure no stale process from a previous test is
-        # still listening on any of our health_check_ports.  Must happen
-        # BEFORE releasing reserved sockets so the reservation still blocks
-        # other allocators during the wait.
-        self._wait_ports_free()
-
-        # Release OS-level port reservations so child processes can bind.
-        # Only release ports owned by this process; leave other workers' ports reserved.
-        _ports_to_release = self.reserved_ports if self.reserved_ports else None
-        release_reserved_ports(_ports_to_release)
 
         if self.display_output:
             self.proc = subprocess.Popen(
