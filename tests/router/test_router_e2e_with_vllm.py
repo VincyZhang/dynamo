@@ -77,7 +77,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
     This is a drop-in replacement for MockerProcess that uses real vLLM workers.
     The key difference: dynamo.vllm automatically handles:
     - HTTP API serving
-    - KV cache event publishing (ZMQ → NATS bridge)
+    - KV cache event publishing (ZMQ ΓåÆ NATS bridge)
     - Integration with dynamo.frontend router
     """
 
@@ -303,18 +303,21 @@ class VLLMProcess(ManagedEngineProcessMixin):
                 worker_ports.append(replay_port)
 
             # Create managed process for the worker.
-            # Include kv_event_port in health_check_ports so that __enter__
-            # waits until ZMQ PUB is actually listening.  _check_port polls
-            # _check_process_alive(), so if the EngineCore crashes during init
-            # (e.g. ZMQ "Address already in use") the health check detects the
-            # process death immediately instead of hanging.
+            # Use system_port HTTP health endpoint for readiness check instead
+            # of kv_event_port TCP probe.  The kv_event_port ZMQ socket may be
+            # bound by the parent vLLM process before EngineCore spawns, causing
+            # a false-positive health check followed by EngineCore bind failure.
+            # The system_port /health endpoint is served by the Rust runtime and
+            # reliably indicates the worker is initialized.
             process = ManagedProcess(
                 command=command,
                 env=env,
                 timeout=120,  # Allow time for model loading
                 display_output=True,
-                health_check_ports=[kv_event_port],
-                health_check_urls=[],
+                health_check_ports=[],
+                health_check_urls=[
+                    f"http://localhost:{system_port}/health",
+                ],
                 log_dir=request.node.name,
                 terminate_all_matching_process_names=False,
                 reserved_ports=worker_ports,
