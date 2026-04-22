@@ -9,7 +9,7 @@ from pytest_httpserver import HTTPServer
 
 from dynamo.common.utils.paths import WORKSPACE_DIR
 from tests.serve.lora_utils import MinioLoraConfig, MinioService
-from tests.utils.port_utils import allocate_port, deallocate_port, release_reserved_ports
+from tests.utils.port_utils import allocate_port, deallocate_port
 
 # Shared constants for multimodal testing
 IMAGE_SERVER_PORT = allocate_port(8765)
@@ -43,7 +43,6 @@ def get_multimodal_test_image_bytes() -> bytes:
 
 @pytest.fixture(scope="session")
 def httpserver_listen_address():
-    release_reserved_ports([IMAGE_SERVER_PORT])
     yield ("127.0.0.1", IMAGE_SERVER_PORT)
     deallocate_port(IMAGE_SERVER_PORT)
 
