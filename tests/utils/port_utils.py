@@ -27,14 +27,6 @@ _PORT_REGISTRY_FILE = Path(tempfile.gettempdir()) / "pytest_port_allocations.jso
 _PORT_MIN = 1024
 _PORT_MAX = 32767
 
-# Port allocation tuning for high-contention CI environments.
-# These defaults intentionally bias toward a wide search space and higher retry
-# budget to reduce collisions with unrelated host-level processes.
-_PORT_ALLOC_SPREAD_MAX = int(
-    os.environ.get("PYTEST_PORT_ALLOC_SPREAD_MAX", str(_PORT_MAX - _PORT_MIN))
-)
-_PORT_ALLOC_MAX_RETRIES = int(os.environ.get("PYTEST_PORT_ALLOC_MAX_RETRIES", "1500"))
-
 
 @dataclass(frozen=True)
 class ServicePorts:
@@ -103,8 +95,8 @@ def allocate_ports(count: int, start_port: int) -> list[int]:
 
     Port range is limited to i16 (1024-32767) due to Rust backend expecting i16.
 
-    Searches from a randomized offset in a widened range and walks up incrementally.
-    Wraps around to candidate_min when exceeding _PORT_MAX.
+    Searches from a random offset (start_port + random(100)) and walks up incrementally.
+    Wraps around to _PORT_MIN (1024) when exceeding _PORT_MAX. Retries up to 100 times.
 
     Args:
         count: Number of unique ports to allocate
@@ -153,14 +145,13 @@ def allocate_ports(count: int, start_port: int) -> list[int]:
             allocated_ports = set(int(p) for p in registry.keys())
             ports: list[int] = []
 
-            # Start searching from desired port + widened random offset to avoid
-            # clustering around the low 8xxx range under host-network CI contention.
-            candidate_min = start_port
-            spread_max = max(0, min(_PORT_ALLOC_SPREAD_MAX, _PORT_MAX - candidate_min))
-            current_port = candidate_min + random.randint(0, spread_max)
+            # Start searching from desired port + random offset
+            current_port = start_port + random.randint(0, 100)
+            if current_port > _PORT_MAX:
+                current_port = _PORT_MIN + (current_port - _PORT_MAX - 1)
 
-            # Retry budget: configurable and scaled by requested port count.
-            max_retries = max(_PORT_ALLOC_MAX_RETRIES, count * 400)
+            # Retry limit
+            max_retries = 100
             attempts = 0
 
             while len(ports) < count and attempts < max_retries:
@@ -169,10 +160,10 @@ def allocate_ports(count: int, start_port: int) -> list[int]:
                 # Try current port
                 port = current_port
 
-                # Increment and wrap around to candidate_min
+                # Increment and wrap around to _PORT_MIN
                 current_port += 1
                 if current_port > _PORT_MAX:
-                    current_port = candidate_min
+                    current_port = _PORT_MIN
 
                 # Skip if already allocated or in our current list
                 if port in allocated_ports or port in ports:
@@ -266,12 +257,11 @@ def allocate_contiguous_ports(
             allocated_ports = set(int(p) for p in registry.keys())
             ports: list[int] = []
 
-            candidate_min = start_port
-            spread_ceiling = _PORT_MAX - block_size + 1
-            spread_max = max(0, min(_PORT_ALLOC_SPREAD_MAX, spread_ceiling - candidate_min))
-            current_port = candidate_min + random.randint(0, spread_max)
+            current_port = start_port + random.randint(0, 100)
+            if current_port + block_size - 1 > _PORT_MAX:
+                current_port = _PORT_MIN
 
-            max_retries = max(_PORT_ALLOC_MAX_RETRIES, count * block_size * 300)
+            max_retries = 500
             attempts = 0
 
             while len(ports) < count * block_size and attempts < max_retries:
@@ -280,7 +270,7 @@ def allocate_contiguous_ports(
 
                 current_port += 1
                 if current_port + block_size - 1 > _PORT_MAX:
-                    current_port = candidate_min
+                    current_port = _PORT_MIN
 
                 candidate_ports = list(range(base_port, base_port + block_size))
 
