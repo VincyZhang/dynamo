@@ -51,7 +51,7 @@ class ManagedEngineProcessMixin:
     cleanup_name = "worker resources"
     init_delay_seconds = 5
     init_delay_reason = "initialize before starting next worker"
-    cleanup_delay_seconds = 5
+    cleanup_delay_seconds = 2
 
     def __enter__(self):
         logger.info(
@@ -90,27 +90,6 @@ class ManagedEngineProcessMixin:
                 )
                 time.sleep(process.delayed_start)
 
-                # Wait for this worker's health check BEFORE launching the next
-                # worker.  On shared-GPU setups (single_gpu=True) workers do
-                # memory profiling during engine init; if two workers profile
-                # concurrently they see each other's allocations and one crashes
-                # with GPU OOM.  By waiting here we guarantee Worker N's engine
-                # init (including memory profiling) completes before Worker N+1
-                # starts.
-                logger.info(
-                    "[%s] Checking health for worker %d before launching next...",
-                    self.__class__.__name__,
-                    i,
-                )
-                elapsed = process._check_ports(process.timeout)
-                process._check_urls(process.timeout - elapsed)
-                process._check_funcs(process.timeout - elapsed)
-                logger.info(
-                    "[%s] Worker %d health checks passed",
-                    self.__class__.__name__,
-                    i,
-                )
-
                 if i < len(self.worker_processes) - 1:
                     logger.info(
                         "[%s] Waiting %ss for worker %d to %s...",
@@ -123,17 +102,48 @@ class ManagedEngineProcessMixin:
 
             except Exception:
                 logger.exception(
-                    "[%s] Failed to start/health-check worker %d",
-                    self.__class__.__name__,
-                    i,
+                    "[%s] Failed to start worker %d", self.__class__.__name__, i
+                )
+                try:
+                    process.__exit__(None, None, None)
+                except Exception as cleanup_err:
+                    logger.warning(
+                        "[%s] Error during cleanup: %s",
+                        self.__class__.__name__,
+                        cleanup_err,
+                    )
+                raise
+
+        logger.info(
+            "[%s] All %d workers launched with sequential initialization.",
+            self.__class__.__name__,
+            len(self.worker_processes),
+        )
+        logger.info(
+            "[%s] Waiting for health checks to complete...", self.__class__.__name__
+        )
+
+        for i, process in enumerate(self.worker_processes):
+            logger.info(
+                "[%s] Checking health for worker %d...", self.__class__.__name__, i
+            )
+            try:
+                elapsed = process._check_ports(process.timeout)
+                process._check_urls(process.timeout - elapsed)
+                process._check_funcs(process.timeout - elapsed)
+                logger.info(
+                    "[%s] Worker %d health checks passed", self.__class__.__name__, i
+                )
+            except Exception:
+                logger.error(
+                    "[%s] Worker %d health check failed", self.__class__.__name__, i
                 )
                 self.__exit__(None, None, None)
                 raise
 
         logger.info(
-            "[%s] All %d workers started successfully and passed health checks!",
+            "[%s] All workers started successfully and passed health checks!",
             self.__class__.__name__,
-            len(self.worker_processes),
         )
         return self
 
