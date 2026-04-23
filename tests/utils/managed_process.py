@@ -16,7 +16,11 @@ import psutil
 import requests
 
 from tests.utils.constants import DefaultPort
-from tests.utils.port_utils import allocate_port, deallocate_port, release_reserved_ports
+from tests.utils.port_utils import (
+    allocate_port,
+    deallocate_port,
+    release_reserved_ports,
+)
 from tests.utils.test_output import resolve_test_output_path
 
 

@@ -189,10 +189,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
             if single_gpu:
                 # On XPU, prefer externally pinned affinity when provided by CI/runtime,
                 # but do not override an explicit non-default gpu_start_index.
-                if (
-                    visibility_env_var == "ZE_AFFINITY_MASK"
-                    and inherited_visibility
-                ):
+                if visibility_env_var == "ZE_AFFINITY_MASK" and inherited_visibility:
                     gpu_device = inherited_visibility
                 else:
                     gpu_device = str(gpu_start_index)
@@ -559,7 +556,9 @@ class VLLMProcess(ManagedEngineProcessMixin):
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
-@pytest.mark.timeout(300)  # XPU CI observed >160s; raise timeout to reduce false failures
+@pytest.mark.timeout(
+    300
+)  # XPU CI observed >160s; raise timeout to reduce false failures
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_vllm_kv_router_basic(
     request,

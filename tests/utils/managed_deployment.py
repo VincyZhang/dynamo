@@ -1223,6 +1223,11 @@ class ManagedDeployment:
             return None
 
     async def _cleanup(self):
+        keep_deployment = os.environ.get("KEEP_DEPLOYMENT_ON_EXIT", "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
         try:
             # Collect logs/metrics first; any PFs opened here will be tracked and stopped below.
             self._get_service_logs()
@@ -1245,7 +1250,12 @@ class ManagedDeployment:
                     self._logger.debug(f"Error stopping port forward: {e}")
             self._active_port_forwards.clear()
         finally:
-            await self._delete_deployment()
+            if keep_deployment:
+                self._logger.info(
+                    "KEEP_DEPLOYMENT_ON_EXIT is enabled; skipping deployment deletion for debugging"
+                )
+            else:
+                await self._delete_deployment()
 
     async def __aenter__(self):
         try:
