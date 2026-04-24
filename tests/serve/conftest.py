@@ -9,7 +9,11 @@ from pytest_httpserver import HTTPServer
 
 from dynamo.common.utils.paths import WORKSPACE_DIR
 from tests.serve.lora_utils import MinioLoraConfig, MinioService
-from tests.utils.port_utils import allocate_port, deallocate_port
+from tests.utils.port_utils import (
+    allocate_port,
+    deallocate_port,
+    release_reserved_ports,
+)
 
 # Port hint for image server; actual allocation deferred to httpserver_listen_address
 # fixture to avoid TOCTOU races (module import happens minutes before first bind).
@@ -50,11 +54,12 @@ def httpserver_listen_address():
     import tests.serve.conftest as _self_module
 
     port = allocate_port(_IMAGE_SERVER_PORT_HINT)
+    # pytest-httpserver binds this port in-process, so release the OS-level
+    # reservation before yielding the listen address.
+    release_reserved_ports([port])
     # Update the module-level URL so tests that read MULTIMODAL_IMG_URL
     # after fixture setup see the real allocated port.
-    _self_module.MULTIMODAL_IMG_URL = (
-        f"http://localhost:{port}/llm-graphic.png"
-    )
+    _self_module.MULTIMODAL_IMG_URL = f"http://localhost:{port}/llm-graphic.png"
     yield ("127.0.0.1", port)
     deallocate_port(port)
 
