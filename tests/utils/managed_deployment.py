@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import secrets
+import subprocess
 import time
 from dataclasses import dataclass, field
 from typing import Any, List, Literal, Optional
@@ -182,9 +183,33 @@ class DeploymentSpec:
     def __init__(
         self, base: str, endpoint="/v1/chat/completions", port=8000, system_port=9090
     ):
-        """Load the deployment YAML file"""
+        """Load the deployment YAML file.
+
+        Supports multi-document YAML files (e.g. ResourceClaimTemplate + DynamoGraphDeployment).
+        The DynamoGraphDeployment document is used as the main spec; all other documents
+        are stored as pre-requisite resources that must be applied before the deployment.
+        """
         with open(base, "r") as f:
-            self._deployment_spec = yaml.safe_load(f)
+            docs = list(yaml.safe_load_all(f))
+
+        # Separate the DynamoGraphDeployment from any pre-requisite resources
+        self._pre_resources: list[dict] = []
+        self._deployment_spec: dict = {}
+        for doc in docs:
+            if doc is None:
+                continue
+            if doc.get("kind") == "DynamoGraphDeployment":
+                self._deployment_spec = doc
+            else:
+                self._pre_resources.append(doc)
+
+        if not self._deployment_spec:
+            # Fallback: if no DynamoGraphDeployment found, treat the first doc as the spec
+            if self._pre_resources:
+                self._deployment_spec = self._pre_resources.pop(0)
+            else:
+                raise ValueError(f"No valid YAML documents found in {base}")
+
         self._endpoint = endpoint
         self._port = port
         self._system_port = system_port
@@ -426,9 +451,17 @@ class DeploymentSpec:
         service = self.get_service(service_name)
         service.replicas = replicas
 
+    @property
+    def pre_resources(self) -> list[dict]:
+        """Pre-requisite resources (e.g. ResourceClaimTemplate) that must be applied before the deployment."""
+        return self._pre_resources
+
     def save(self, out_file: str):
         """Save updated deployment to file"""
         with open(out_file, "w") as f:
+            for res in self._pre_resources:
+                yaml.safe_dump(res, f, default_flow_style=False)
+                f.write("---\n")
             yaml.safe_dump(self._deployment_spec, f, default_flow_style=False)
 
 
@@ -831,13 +864,71 @@ class ManagedDeployment:
 
         await self._restart_stateful(ETCD_STS_NAME, ETCD_LABEL)
 
+    async def _apply_pre_resources(self):
+        """Apply pre-requisite resources (e.g. ResourceClaimTemplate) before creating the deployment."""
+        for resource in self.deployment_spec.pre_resources:
+            kind = resource.get("kind", "unknown")
+            name = resource.get("metadata", {}).get("name", "unknown")
+            # Set namespace on pre-resources to match deployment namespace
+            resource.setdefault("metadata", {})["namespace"] = self.namespace
+            self._logger.info(
+                f"Applying pre-resource {kind}/{name} in {self.namespace}"
+            )
+            try:
+                result = subprocess.run(
+                    ["kubectl", "apply", "-f", "-", "-n", self.namespace],
+                    input=yaml.safe_dump(resource),
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                self._logger.info(
+                    f"Applied pre-resource {kind}/{name}: {result.stdout.strip()}"
+                )
+            except subprocess.CalledProcessError as e:
+                self._logger.error(
+                    f"Failed to apply pre-resource {kind}/{name}: {e.stderr}"
+                )
+                raise
+
+    async def _delete_pre_resources(self):
+        """Delete pre-requisite resources created by _apply_pre_resources."""
+        for resource in self.deployment_spec.pre_resources:
+            kind = resource.get("kind", "unknown")
+            name = resource.get("metadata", {}).get("name", "unknown")
+            self._logger.info(
+                f"Deleting pre-resource {kind}/{name} in {self.namespace}"
+            )
+            try:
+                subprocess.run(
+                    [
+                        "kubectl",
+                        "delete",
+                        "-f",
+                        "-",
+                        "-n",
+                        self.namespace,
+                        "--ignore-not-found",
+                    ],
+                    input=yaml.safe_dump(resource),
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                self._logger.warning(
+                    f"Failed to delete pre-resource {kind}/{name}: {e.stderr}"
+                )
+
     async def _create_deployment(self):
         """
         Create a DynamoGraphDeployment from either a dict or yaml file path.
-
-        Args:
-            deployment: Either a dict containing the deployment spec or a path to a yaml file
+        Applies any pre-requisite resources (e.g. ResourceClaimTemplate) first.
         """
+
+        # Apply pre-requisite resources (e.g. ResourceClaimTemplate for DRA)
+        if self.deployment_spec.pre_resources:
+            await self._apply_pre_resources()
 
         # Extract service names
 
@@ -1038,7 +1129,7 @@ class ManagedDeployment:
 
     async def _delete_deployment(self):
         """
-        Delete the DynamoGraphDeployment CR.
+        Delete the DynamoGraphDeployment CR and any pre-requisite resources.
         """
         try:
             if self._deployment_name and self._custom_api is not None:
@@ -1052,6 +1143,9 @@ class ManagedDeployment:
         except exceptions.ApiException as e:
             if e.status != 404:  # Ignore if already deleted
                 raise
+        # Clean up pre-requisite resources
+        if self.deployment_spec.pre_resources:
+            await self._delete_pre_resources()
 
     def port_forward(
         self, pod: Pod, remote_port: int, max_connection_attempts: int = 3
@@ -1129,6 +1223,11 @@ class ManagedDeployment:
             return None
 
     async def _cleanup(self):
+        keep_deployment = os.environ.get("KEEP_DEPLOYMENT_ON_EXIT", "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
         try:
             # Collect logs/metrics first; any PFs opened here will be tracked and stopped below.
             self._get_service_logs()
@@ -1151,7 +1250,12 @@ class ManagedDeployment:
                     self._logger.debug(f"Error stopping port forward: {e}")
             self._active_port_forwards.clear()
         finally:
-            await self._delete_deployment()
+            if keep_deployment:
+                self._logger.info(
+                    "KEEP_DEPLOYMENT_ON_EXIT is enabled; skipping deployment deletion for debugging"
+                )
+            else:
+                await self._delete_deployment()
 
     async def __aenter__(self):
         try:

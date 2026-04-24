@@ -16,7 +16,11 @@ import psutil
 import requests
 
 from tests.utils.constants import DefaultPort
-from tests.utils.port_utils import allocate_port, deallocate_port
+from tests.utils.port_utils import (
+    allocate_port,
+    deallocate_port,
+    release_reserved_ports,
+)
 from tests.utils.test_output import resolve_test_output_path
 
 
@@ -176,6 +180,7 @@ class ManagedProcess:
     straggler_commands: List[str] = field(default_factory=list)
     log_dir: str = os.getcwd()
     display_name: Optional[str] = None
+    reserved_ports: List[int] = field(default_factory=list)
 
     # Ensure attributes exist even if startup fails early
     proc: Optional[subprocess.Popen] = None
@@ -443,6 +448,11 @@ class ManagedProcess:
         stdin = subprocess.DEVNULL
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
+
+        # Release OS-level port reservations so child processes can bind.
+        # Only release ports owned by this process; leave other workers' ports reserved.
+        _ports_to_release = self.reserved_ports if self.reserved_ports else None
+        release_reserved_ports(_ports_to_release)
 
         if self.display_output:
             self.proc = subprocess.Popen(
