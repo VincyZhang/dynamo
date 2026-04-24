@@ -662,15 +662,33 @@ impl Drop for RadixTree {
 /// - If endpoint name/component contains "prefill", treat as prefill
 /// - If router_track_active_blocks is disabled, treat as prefill
 /// - Otherwise, default to decode
+#[allow(dead_code)]
 async fn create_kv_router_from_endpoint(
     endpoint: &Endpoint,
     block_size: usize,
     kv_router_config: Option<KvRouterConfig>,
     prefill_load_estimator: Option<Arc<dyn dynamo_kv_router::PrefillLoadEstimator>>,
 ) -> Result<Arc<llm_rs::kv_router::KvRouter>, PyErr> {
+    create_kv_router_from_endpoint_inner(
+        &endpoint.inner,
+        block_size,
+        kv_router_config,
+        prefill_load_estimator,
+    )
+    .await
+}
+
+/// Inner implementation that operates on the Rust endpoint directly,
+/// allowing it to be called from GIL-released contexts.
+async fn create_kv_router_from_endpoint_inner(
+    endpoint_inner: &rs::component::Endpoint,
+    block_size: usize,
+    kv_router_config: Option<KvRouterConfig>,
+    prefill_load_estimator: Option<Arc<dyn dynamo_kv_router::PrefillLoadEstimator>>,
+) -> Result<Arc<llm_rs::kv_router::KvRouter>, PyErr> {
     // Create ModelManager and use it to create KvRouter (ensures registration)
     let model_manager = Arc::new(llm_rs::discovery::ModelManager::new());
-    let endpoint_id = endpoint.inner.id();
+    let endpoint_id = endpoint_inner.id();
     let namespace = endpoint_id.namespace.to_lowercase();
     let component = endpoint_id.component.to_lowercase();
     let name = endpoint_id.name.to_lowercase();
@@ -693,7 +711,7 @@ async fn create_kv_router_from_endpoint(
         .map(|cfg| cfg.use_remote_indexer || cfg.serve_indexer)
         .unwrap_or(false);
     let (model_name, enable_eagle) = {
-        let discovery = endpoint.inner.component().drt().discovery();
+        let discovery = endpoint_inner.component().drt().discovery();
         let instances = discovery
             .list(rs::discovery::DiscoveryQuery::EndpointModels {
                 namespace: endpoint_id.namespace.clone(),
@@ -727,7 +745,7 @@ async fn create_kv_router_from_endpoint(
 
     let kv_router = model_manager
         .kv_chooser_for(
-            &endpoint.inner,
+            endpoint_inner,
             block_size as u32,
             kv_router_config,
             prefill_load_estimator,
@@ -855,6 +873,7 @@ impl KvRouter {
     #[new]
     #[pyo3(signature = (endpoint, block_size, kv_router_config, aic_perf_config=None))]
     fn new(
+        py: Python<'_>,
         endpoint: &Endpoint,
         block_size: usize,
         kv_router_config: &super::entrypoint::KvRouterConfig,
@@ -862,50 +881,57 @@ impl KvRouter {
     ) -> PyResult<Self> {
         let prefill_load_estimator = aic_perf_config
             .map(|config| {
-                Python::with_gil(|py| {
-                    create_aic_prefill_load_estimator(
-                        py,
-                        config.backend_name(),
-                        config.system(),
-                        config.model_path(),
-                        config.tp_size(),
-                        config.backend_version(),
-                    )
-                })
+                create_aic_prefill_load_estimator(
+                    py,
+                    config.backend_name(),
+                    config.system(),
+                    config.model_path(),
+                    config.tp_size(),
+                    config.backend_version(),
+                )
             })
             .transpose()
             .map_err(to_pyerr)?;
 
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-        runtime.block_on(async move {
-            let client = endpoint.inner.client().await.map_err(to_pyerr)?;
+        // Clone/extract all data from Python objects before releasing the GIL.
+        let endpoint_inner = endpoint.inner.clone();
+        let kv_router_config_inner = kv_router_config.inner();
 
-            // Create PushRouter with KV router mode
-            let push_router = rs::pipeline::PushRouter::<
-                llm_rs::protocols::common::preprocessor::PreprocessedRequest,
-                rs::protocols::annotated::Annotated<
-                    llm_rs::protocols::common::llm_backend::LLMEngineOutput,
-                >,
-            >::from_client(
-                client,
-                rs::pipeline::network::egress::push_router::RouterMode::KV,
-            )
-            .await
-            .map_err(to_pyerr)?;
+        // Release the GIL during the blocking Rust runtime call so that other
+        // Python threads (e.g. the worker-liveness monitor in tests) can make
+        // progress while KvRouter waits for workers to register.
+        py.allow_threads(move || {
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            runtime.block_on(async move {
+                let client = endpoint_inner.client().await.map_err(to_pyerr)?;
 
-            // Create KvRouter using helper function (ensures etcd registration)
-            let kv_router = create_kv_router_from_endpoint(
-                endpoint,
-                block_size,
-                Some(kv_router_config.inner()),
-                prefill_load_estimator,
-            )
-            .await?;
+                // Create PushRouter with KV router mode
+                let push_router = rs::pipeline::PushRouter::<
+                    llm_rs::protocols::common::preprocessor::PreprocessedRequest,
+                    rs::protocols::annotated::Annotated<
+                        llm_rs::protocols::common::llm_backend::LLMEngineOutput,
+                    >,
+                >::from_client(
+                    client,
+                    rs::pipeline::network::egress::push_router::RouterMode::KV,
+                )
+                .await
+                .map_err(to_pyerr)?;
 
-            let kv_push_router = RsKvPushRouter::new(push_router, kv_router);
+                // Create KvRouter using helper function (ensures etcd registration)
+                let kv_router = create_kv_router_from_endpoint_inner(
+                    &endpoint_inner,
+                    block_size,
+                    Some(kv_router_config_inner),
+                    prefill_load_estimator,
+                )
+                .await?;
 
-            Ok(Self {
-                inner: Arc::new(kv_push_router),
+                let kv_push_router = RsKvPushRouter::new(push_router, kv_router);
+
+                Ok(Self {
+                    inner: Arc::new(kv_push_router),
+                })
             })
         })
     }
