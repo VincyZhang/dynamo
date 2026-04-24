@@ -339,6 +339,94 @@ class VLLMProcess(ManagedEngineProcessMixin):
                     f"with endpoint: {self.endpoint}"
                 )
 
+    def _reallocate_worker_ports(self, worker_idx: int) -> None:
+        """Deallocate conflicted ports for *worker_idx* and rebuild its
+        ManagedProcess with freshly allocated ports.
+
+        Called by :pymethod:`ManagedEngineProcessMixin.__enter__` when a
+        worker fails to start (typically EADDRINUSE from a TOCTOU race).
+        """
+        old_system = self._system_ports[worker_idx]
+        old_kv = self._kv_event_ports[worker_idx]
+        old_nixl = self._nixl_ports[worker_idx]
+        old_replay = (
+            self._replay_ports[worker_idx]
+            if worker_idx < len(self._replay_ports)
+            else None
+        )
+
+        old_ports = [old_system, old_kv, old_nixl]
+        if old_replay is not None:
+            old_ports.append(old_replay)
+        deallocate_ports(old_ports)
+
+        # Allocate fresh ports
+        new_system, new_kv, new_nixl = allocate_ports(3, DefaultPort.SYSTEM1.value)
+        self._system_ports[worker_idx] = new_system
+        self._kv_event_ports[worker_idx] = new_kv
+        self._nixl_ports[worker_idx] = new_nixl
+
+        new_replay = None
+        if old_replay is not None:
+            new_replay = allocate_ports(1, DefaultPort.SYSTEM1.value)[0]
+            self._replay_ports[worker_idx] = new_replay
+
+        # Register cleanup for the new ports
+        new_ports = [new_system, new_kv, new_nixl]
+        if new_replay is not None:
+            new_ports.append(new_replay)
+        self._request.addfinalizer(lambda ps=new_ports: deallocate_ports(ps))
+
+        # Rebuild the ManagedProcess for this worker, reusing the existing
+        # process object's non-port attributes.
+        old_process = self.worker_processes[worker_idx]
+
+        kv_events_cfg: Dict[str, Any] = {
+            "publisher": "zmq",
+            "topic": "kv-events",
+            "endpoint": f"tcp://*:{new_kv}",
+            "enable_kv_cache_events": True,
+        }
+        if new_replay is not None:
+            kv_events_cfg["replay_endpoint"] = f"tcp://*:{new_replay}"
+
+        # Rebuild command: replace --kv-events-config value
+        new_command = list(old_process.command)
+        for idx, arg in enumerate(new_command):
+            if arg == "--kv-events-config" and idx + 1 < len(new_command):
+                new_command[idx + 1] = json.dumps(kv_events_cfg)
+                break
+
+        # Rebuild env with new ports
+        new_env = dict(old_process.env) if old_process.env else os.environ.copy()
+        new_env["DYN_SYSTEM_PORT"] = str(new_system)
+        new_env["VLLM_NIXL_SIDE_CHANNEL_PORT"] = str(new_nixl)
+
+        worker_ports = [new_system, new_kv, new_nixl]
+        if new_replay is not None:
+            worker_ports.append(new_replay)
+
+        new_process = ManagedProcess(
+            command=new_command,
+            env=new_env,
+            timeout=old_process.timeout,
+            display_output=old_process.display_output,
+            health_check_ports=[new_kv],
+            health_check_urls=[],
+            log_dir=old_process.log_dir,
+            terminate_all_matching_process_names=False,
+            reserved_ports=worker_ports,
+        )
+        self.worker_processes[worker_idx] = new_process
+        logger.info(
+            "Reallocated ports for worker %d: system=%d kv=%d nixl=%d replay=%s",
+            worker_idx,
+            new_system,
+            new_kv,
+            new_nixl,
+            new_replay,
+        )
+
     @property
     def standalone_indexer_url(self) -> Optional[str]:
         if self._standalone_indexer_port is not None:

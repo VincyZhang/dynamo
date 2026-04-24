@@ -75,8 +75,13 @@ def _save_port_registry(registry: dict) -> None:
         json.dump(registry, f)
 
 
-def _cleanup_stale_allocations(registry: dict, max_age: float = 900.0) -> dict:
-    """Remove port allocations older than max_age seconds."""
+def _cleanup_stale_allocations(registry: dict, max_age: float = 1800.0) -> dict:
+    """Remove port allocations older than max_age seconds.
+
+    The default of 1800s (30 min) accommodates long-running XPU tests where
+    model loading alone can exceed 120s and the full test may run 600s+.
+    A shorter window risks another test reclaiming a still-in-use port.
+    """
     current_time = time.time()
     cleaned = {}
     for port, info in registry.items():

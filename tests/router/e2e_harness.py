@@ -52,6 +52,10 @@ class ManagedEngineProcessMixin:
     init_delay_seconds = 5
     init_delay_reason = "initialize before starting next worker"
     cleanup_delay_seconds = 5
+    # Max attempts to start a worker before giving up.  Port TOCTOU races
+    # (EADDRINUSE) are transient — a retry with freshly allocated ports
+    # almost always succeeds.
+    max_port_retries = 3
 
     def __enter__(self):
         logger.info(
@@ -64,71 +68,102 @@ class ManagedEngineProcessMixin:
             logger.info(
                 "[%s] Starting %s %d...", self.__class__.__name__, self.process_name, i
             )
-            try:
-                process._logger = logging.getLogger(process.__class__.__name__)
-                process._command_name = process.command[0]
-                process.log_dir = resolve_test_output_path(process.log_dir)
-                os.makedirs(process.log_dir, exist_ok=True)
-                log_name = f"{process._command_name}.log.txt"
-                process._log_path = os.path.join(process.log_dir, log_name)
+            last_error: Exception | None = None
+            for attempt in range(1, self.max_port_retries + 1):
+                try:
+                    process._logger = logging.getLogger(process.__class__.__name__)
+                    process._command_name = process.command[0]
+                    process.log_dir = resolve_test_output_path(process.log_dir)
+                    os.makedirs(process.log_dir, exist_ok=True)
+                    log_name = f"{process._command_name}.log.txt"
+                    process._log_path = os.path.join(process.log_dir, log_name)
 
-                if process.data_dir:
-                    process._remove_directory(process.data_dir)
+                    if process.data_dir:
+                        process._remove_directory(process.data_dir)
 
-                process._terminate_all_matching_process_names()
-                logger.info(
-                    "[%s] Launching process %d (pid will be assigned)...",
-                    self.__class__.__name__,
-                    i,
-                )
-                process._start_process()
-                logger.info(
-                    "[%s] Worker %d launched with PID: %s",
-                    self.__class__.__name__,
-                    i,
-                    process.proc.pid if process.proc else "unknown",
-                )
-                time.sleep(process.delayed_start)
-
-                # Wait for this worker's health check BEFORE launching the next
-                # worker.  On shared-GPU setups (single_gpu=True) workers do
-                # memory profiling during engine init; if two workers profile
-                # concurrently they see each other's allocations and one crashes
-                # with GPU OOM.  By waiting here we guarantee Worker N's engine
-                # init (including memory profiling) completes before Worker N+1
-                # starts.
-                logger.info(
-                    "[%s] Checking health for worker %d before launching next...",
-                    self.__class__.__name__,
-                    i,
-                )
-                elapsed = process._check_ports(process.timeout)
-                process._check_urls(process.timeout - elapsed)
-                process._check_funcs(process.timeout - elapsed)
-                logger.info(
-                    "[%s] Worker %d health checks passed",
-                    self.__class__.__name__,
-                    i,
-                )
-
-                if i < len(self.worker_processes) - 1:
+                    process._terminate_all_matching_process_names()
                     logger.info(
-                        "[%s] Waiting %ss for worker %d to %s...",
+                        "[%s] Launching process %d (attempt %d/%d, pid will be assigned)...",
                         self.__class__.__name__,
-                        self.init_delay_seconds,
                         i,
-                        self.init_delay_reason,
+                        attempt,
+                        self.max_port_retries,
                     )
-                    time.sleep(self.init_delay_seconds)
+                    process._start_process()
+                    logger.info(
+                        "[%s] Worker %d launched with PID: %s",
+                        self.__class__.__name__,
+                        i,
+                        process.proc.pid if process.proc else "unknown",
+                    )
+                    time.sleep(process.delayed_start)
 
-            except Exception:
-                logger.exception(
-                    "[%s] Failed to start/health-check worker %d",
+                    # Wait for this worker's health check BEFORE launching the next
+                    # worker.  On shared-GPU setups (single_gpu=True) workers do
+                    # memory profiling during engine init; if two workers profile
+                    # concurrently they see each other's allocations and one crashes
+                    # with GPU OOM.  By waiting here we guarantee Worker N's engine
+                    # init (including memory profiling) completes before Worker N+1
+                    # starts.
+                    logger.info(
+                        "[%s] Checking health for worker %d before launching next...",
+                        self.__class__.__name__,
+                        i,
+                    )
+                    elapsed = process._check_ports(process.timeout)
+                    process._check_urls(process.timeout - elapsed)
+                    process._check_funcs(process.timeout - elapsed)
+                    logger.info(
+                        "[%s] Worker %d health checks passed",
+                        self.__class__.__name__,
+                        i,
+                    )
+                    last_error = None
+                    break  # success — exit retry loop
+
+                except Exception as exc:
+                    last_error = exc
+                    if attempt < self.max_port_retries:
+                        logger.warning(
+                            "[%s] Worker %d start failed (attempt %d/%d): %s  "
+                            "— reallocating ports and retrying...",
+                            self.__class__.__name__,
+                            i,
+                            attempt,
+                            self.max_port_retries,
+                            exc,
+                        )
+                        # Tear down the failed attempt
+                        try:
+                            process.__exit__(None, None, None)
+                        except Exception:
+                            pass
+                        # Ask the owning engine object to reallocate ports for
+                        # this worker and rebuild its ManagedProcess.
+                        if hasattr(self, "_reallocate_worker_ports"):
+                            self._reallocate_worker_ports(i)
+                            process = self.worker_processes[i]
+                        time.sleep(2)
+                    else:
+                        logger.exception(
+                            "[%s] Failed to start/health-check worker %d "
+                            "after %d attempts",
+                            self.__class__.__name__,
+                            i,
+                            self.max_port_retries,
+                        )
+                        self.__exit__(None, None, None)
+                        raise
+
+            if i < len(self.worker_processes) - 1:
+                logger.info(
+                    "[%s] Waiting %ss for worker %d to %s...",
                     self.__class__.__name__,
+                    self.init_delay_seconds,
                     i,
+                    self.init_delay_reason,
                 )
-                self.__exit__(None, None, None)
-                raise
+                time.sleep(self.init_delay_seconds)
 
         logger.info(
             "[%s] All %d workers started successfully and passed health checks!",
