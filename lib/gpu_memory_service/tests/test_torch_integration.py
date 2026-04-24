@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+# ruff: noqa: E402
 
 """Torch integration coverage for GMS-backed tensors and modules.
 
@@ -16,6 +17,9 @@ import time
 from typing import cast
 
 import pytest
+
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service is required")
+
 from gpu_memory_service.client.memory_manager import GMSClientMemoryManager
 from gpu_memory_service.client.torch.module import (
     materialize_module_from_gms,
