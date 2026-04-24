@@ -89,8 +89,8 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.cuda_version == 'xpu' && 'xpu' || matrix.cuda_version == 'cpu' && 'cpu' || format('cuda{0}', matrix.cuda_version) }}
-    runs-on: ${{ matrix.cuda_version == 'xpu' && 'xpu' || 'prod-builder-v3' }}
+    name: Build cuda${{ matrix.cuda_version }}
+    runs-on: prod-builder-v3
     timeout-minutes: ${{ inputs.build_timeout_minutes }}
     strategy:
       fail-fast: false
@@ -130,10 +130,10 @@ jobs:
         with:
           source_registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
           source_image: ai-dynamo/dynamo
-          source_tag: ${{ steps.build.outputs.target_tag_plain }}${{ steps.build.outputs.image_tag_suffix }}
+          source_tag: ${{ steps.build.outputs.target_tag_plain }}-cuda${{ steps.build.outputs.cuda_version_plain }}
           target_registry: ${{ secrets.AZURE_ACR_HOSTNAME }}
           target_image: ai-dynamo/dynamo
-          target_tag: ${{ steps.build.outputs.target_tag_plain }}${{ steps.build.outputs.image_tag_suffix }}
+          target_tag: ${{ steps.build.outputs.target_tag_plain }}-cuda${{ steps.build.outputs.cuda_version_plain }}
           source_aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
           source_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
           target_azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
