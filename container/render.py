@@ -16,8 +16,7 @@ def parse_platform(platform_str: str) -> str:
     """Normalize a --platform value to the template variable used by Jinja2.
 
     Accepts Docker-style values (linux/amd64, linux/arm64) or short form (amd64,
-    arm64, x86_64), and comma-separated lists for multi-arch
-    (linux/amd64,linux/arm64).
+    arm64), and comma-separated lists for multi-arch (linux/amd64,linux/arm64).
 
     Returns one of: 'amd64', 'arm64', or 'multi'.
 
@@ -78,8 +77,9 @@ def parse_args():
     parser.add_argument(
         "--cuda-version",
         type=str,
-        default="",
-        help="CUDA version to use. [12.9 or 13.0 for vllm and sglang, 13.1 for trtllm]. Not required for non-cuda devices.",
+        default="12.9",
+        choices=["12.9", "13.0", "13.1"],
+        help="CUDA version to use. [12.9 or 13.0 for vllm and sglang, 13.1 for trtllm]",
     )
     parser.add_argument("--make-efa", action="store_true", help="Enable AWS EFA")
     parser.add_argument(
@@ -149,13 +149,9 @@ def validate_args(args):
     }
 
     if args.framework in valid_inputs:
-        cuda_version_valid = (
-            args.device != "cuda"
-            or args.cuda_version in valid_inputs[args.framework]["cuda_version"]
-        )
         if (
             args.target in valid_inputs[args.framework]["target"]
-            and cuda_version_valid
+            and args.cuda_version in valid_inputs[args.framework]["cuda_version"]
             and args.device in valid_inputs[args.framework]["device"]
         ):
             return
