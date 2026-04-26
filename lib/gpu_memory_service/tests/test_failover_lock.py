@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+# ruff: noqa: E402
 
 """Tests for the flock-based failover lock.
 
@@ -16,10 +17,9 @@ import time
 
 import pytest
 
-try:
-    from gpu_memory_service.failover_lock.flock import FlockFailoverLock
-except ModuleNotFoundError:
-    pytest.skip("gpu_memory_service not installed", allow_module_level=True)
+pytest.importorskip("gpu_memory_service", reason="gpu_memory_service is required")
+
+from gpu_memory_service.failover_lock.flock import FlockFailoverLock
 
 pytestmark = [
     pytest.mark.pre_merge,
