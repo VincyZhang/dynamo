@@ -68,7 +68,6 @@ class ManagedEngineProcessMixin:
             logger.info(
                 "[%s] Starting %s %d...", self.__class__.__name__, self.process_name, i
             )
-            last_error: Exception | None = None
             for attempt in range(1, self.max_port_retries + 1):
                 try:
                     process._logger = logging.getLogger(process.__class__.__name__)
@@ -118,11 +117,9 @@ class ManagedEngineProcessMixin:
                         self.__class__.__name__,
                         i,
                     )
-                    last_error = None
                     break  # success — exit retry loop
 
                 except Exception as exc:
-                    last_error = exc
                     if attempt < self.max_port_retries:
                         logger.warning(
                             "[%s] Worker %d start failed (attempt %d/%d): %s  "

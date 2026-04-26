@@ -191,10 +191,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
                 # For 1-card tests (ZE_AFFINITY_MASK="0"), gpu_start_index=0 → "0".
                 # For 2-card disagg (ZE_AFFINITY_MASK="0,1"), gpu_start_index
                 # maps to the corresponding device in the mask.
-                if (
-                    visibility_env_var == "ZE_AFFINITY_MASK"
-                    and inherited_visibility
-                ):
+                if visibility_env_var == "ZE_AFFINITY_MASK" and inherited_visibility:
                     devices = [d.strip() for d in inherited_visibility.split(",")]
                     if gpu_start_index < len(devices):
                         gpu_device = devices[gpu_start_index]
@@ -654,7 +651,9 @@ class VLLMProcess(ManagedEngineProcessMixin):
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
-@pytest.mark.timeout(600)  # Session-scoped model download (~4min) + worker startup (~2min) on XPU
+@pytest.mark.timeout(
+    600
+)  # Session-scoped model download (~4min) + worker startup (~2min) on XPU
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_vllm_kv_router_basic(
     request,
@@ -795,6 +794,7 @@ def test_router_decisions_vllm_disagg(
             "disaggregation_mode": "decode",
         },
     )
+
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
