@@ -291,7 +291,8 @@ COPY --chmod=775 --chown=dynamo:0 --from=wheel_builder /opt/dynamo/dist/*.whl /o
 # Install dynamo, NIXL, and dynamo-specific dependencies
 ARG ENABLE_KVBM
 RUN --mount=type=cache,target=/home/dynamo/.cache/uv,uid=1000,gid=0,mode=0775 \
-    export UV_CACHE_DIR=/home/dynamo/.cache/uv && \
+        export UV_CACHE_DIR=/home/dynamo/.cache/uv/vllm-runtime \
+                     UV_LOCK_TIMEOUT=900 && \
     uv pip install \
       /opt/dynamo/wheelhouse/ai_dynamo_runtime*.whl \
       /opt/dynamo/wheelhouse/ai_dynamo*any.whl \
