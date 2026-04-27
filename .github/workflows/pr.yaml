@@ -30,6 +30,8 @@ jobs:
       vllm: ${{ steps.changes.outputs.vllm }}
       sglang: ${{ steps.changes.outputs.sglang }}
       trtllm: ${{ steps.changes.outputs.trtllm }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      benchmarks: ${{ steps.changes.outputs.benchmarks }}
       builder_name: ${{ steps.export-builder-name.outputs.builder_name }}
     steps:
       - name: Checkout code
@@ -412,6 +414,29 @@ jobs:
       cpu_only_test_markers: 'pre_merge and planner and gpu_0'
       cpu_only_test_timeout_minutes: 30
       run_gpu_tests: false
+    secrets: inherit
+
+  # ============================================================================
+  # DYNAMO RUNTIME PIPELINE
+  # ============================================================================
+
+  dynamo-pipeline:
+    name: dynamo-runtime
+    needs: [changed-files]
+    if: |
+      needs.changed-files.outputs.core == 'true' ||
+      needs.changed-files.outputs.planner == 'true' ||
+      needs.changed-files.outputs.frontend == 'true' ||
+      needs.changed-files.outputs.vllm == 'true' ||
+      needs.changed-files.outputs.sglang == 'true' ||
+      needs.changed-files.outputs.trtllm == 'true' ||
+      needs.changed-files.outputs.benchmarks == 'true'
+    uses: ./.github/workflows/dynamo-pipeline.yml
+    with:
+      builder_name: ${{ needs.changed-files.outputs.builder_name }}
+      cpu_parallel_test_markers: 'pre_merge and parallel and not (vllm or sglang or trtllm) and (gpu_0)'
+      cpu_sequential_test_markers: 'pre_merge and not parallel and not (vllm or sglang or trtllm) and (gpu_0)'
+      gpu_test_markers: 'pre_merge and none and gpu_1'
     secrets: inherit
 
   # ============================================================================
