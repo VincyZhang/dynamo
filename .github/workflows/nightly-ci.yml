@@ -43,6 +43,23 @@ jobs:
           fresh_builder: false
           use_runner_docker_builder: true
 
+  # ============================================================================
+  # COMPUTE DEV VERSION
+  # ============================================================================
+  compute-dev-version:
+    name: Compute dev version suffix
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    outputs:
+      dev_suffix: ${{ steps.compute.outputs.dev_suffix }}
+    steps:
+      - id: compute
+        shell: bash
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          echo "dev_suffix=.dev${DATE}" >> $GITHUB_OUTPUT
+
 
   # ============================================================================
   # FRAMEWORK PIPELINES (Build → Test → Copy)
@@ -52,7 +69,7 @@ jobs:
   # ============================================================================
   vllm-pipeline:
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
-    needs: [create-fresh-builder]
+    needs: [create-fresh-builder, compute-dev-version]
     with:
       framework: vllm
       target: runtime
@@ -72,6 +89,8 @@ jobs:
       single_xpu_test_timeout_minutes: 180
       multi_gpu_test_markers: 'vllm and (gpu_2 or gpu_4)'
       multi_gpu_test_timeout_minutes: 120
+      enable_coverage: true
+      dev_version_suffix: ${{ needs.compute-dev-version.outputs.dev_suffix }}
     secrets: inherit
 
   # ============================================================================
@@ -79,7 +98,7 @@ jobs:
   # ============================================================================
   sglang-pipeline:
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
-    needs: [create-fresh-builder]
+    needs: [create-fresh-builder, compute-dev-version]
     if: false
     with:
       framework: sglang
@@ -97,6 +116,8 @@ jobs:
       single_gpu_test_timeout_minutes: 300
       multi_gpu_test_markers: 'sglang and (gpu_2 or gpu_4)'
       multi_gpu_test_timeout_minutes: 120
+      enable_coverage: true
+      dev_version_suffix: ${{ needs.compute-dev-version.outputs.dev_suffix }}
     secrets: inherit
 
   # ============================================================================
@@ -104,7 +125,7 @@ jobs:
   # ============================================================================
   trtllm-pipeline:
     uses: ./.github/workflows/build-test-distribute-flavor-matrix.yml
-    needs: [create-fresh-builder]
+    needs: [create-fresh-builder, compute-dev-version]
     if: false
     with:
       framework: trtllm
@@ -122,6 +143,8 @@ jobs:
       single_gpu_test_timeout_minutes: 300
       multi_gpu_test_markers: 'trtllm and (gpu_2 or gpu_4)'
       multi_gpu_test_timeout_minutes: 120
+      enable_coverage: true
+      dev_version_suffix: ${{ needs.compute-dev-version.outputs.dev_suffix }}
     secrets: inherit
 
   # ============================================================================
@@ -129,7 +152,8 @@ jobs:
   # ============================================================================
   dynamo-pipeline:
     name: dynamo-runtime
-    needs: [create-fresh-builder]
+    if: false
+    needs: [create-fresh-builder, compute-dev-version]
     uses: ./.github/workflows/dynamo-pipeline.yml
     with:
       builder_name: ${{ needs.create-fresh-builder.outputs.builder_name }}
@@ -139,6 +163,7 @@ jobs:
       cpu_parallel_test_markers: 'pre_merge and parallel and not (vllm or sglang or trtllm) and (gpu_0)'
       cpu_sequential_test_markers: 'pre_merge and not parallel and not (vllm or sglang or trtllm) and (gpu_0)'
       gpu_test_markers: 'pre_merge and none and gpu_1'
+      dev_version_suffix: ${{ needs.compute-dev-version.outputs.dev_suffix }}
     secrets: inherit
 
   # ============================================================================

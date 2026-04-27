@@ -192,10 +192,10 @@ jobs:
     runs-on: ${{ inputs.device == 'xpu' && 'xpu' || 'prod-builder-v3' }}
     timeout-minutes: ${{ inputs.build_timeout_minutes }}
     outputs:
-      target_tag_plain: ${{ steps.derive-tags.outputs.target_tag_plain }}
-      test_tag_plain: ${{ steps.derive-tags.outputs.test_tag_plain }}
-      image_variant_label: ${{ steps.derive-tags.outputs.image_variant_label }}
-      image_tag_suffix: ${{ steps.derive-tags.outputs.image_tag_suffix }}
+      target_tag_plain: ${{ steps.build.outputs.target_tag_plain }}
+      test_tag_plain: ${{ steps.build.outputs.test_tag_plain }}
+      image_variant_label: ${{ steps.build.outputs.image_variant_label }}
+      image_tag_suffix: ${{ steps.build.outputs.image_tag_suffix }}
       compliance_arches: ${{ steps.compliance-arches.outputs.arches }}
       test_runners: ${{ steps.test-runners.outputs.runners }}
     env:
@@ -233,39 +233,6 @@ jobs:
           else
             echo 'runners=[{"arch":"amd64","runner":"prod-tester-amd-gpu-v1"}]' >> $GITHUB_OUTPUT
           fi
-      - name: Derive image tags
-        id: derive-tags
-        shell: bash
-        run: |
-          if [[ "${{ inputs.cpu_only }}" == "true" ]]; then
-            IMAGE_VARIANT_LABEL="cpu"
-            IMAGE_TAG_SUFFIX="-cpu"
-          elif [[ "${{ inputs.device }}" == "xpu" ]]; then
-            IMAGE_VARIANT_LABEL="xpu"
-            IMAGE_TAG_SUFFIX="-xpu"
-          else
-            CUDA_VERSION_RAW="${{ inputs.cuda_version }}"
-            if [[ -z "$CUDA_VERSION_RAW" ]]; then
-              echo "cuda_version is required unless cpu_only=true or device=xpu" >&2
-              exit 1
-            fi
-            CUDA_VERSION="${CUDA_VERSION_RAW%%.*}"
-            IMAGE_VARIANT_LABEL="cuda${CUDA_VERSION}"
-            IMAGE_TAG_SUFFIX="-cuda${CUDA_VERSION}"
-          fi
-
-          EFA_SUFFIX=""
-          if [[ "${{ inputs.make_efa }}" == "true" ]]; then
-            EFA_SUFFIX="-efa"
-          fi
-
-          TARGET_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}"
-          TEST_TAG_PLAIN="${{ github.sha }}-${{ inputs.framework }}-${{ inputs.target }}${EFA_SUFFIX}-test"
-
-          echo "target_tag_plain=${TARGET_TAG_PLAIN}" >> $GITHUB_OUTPUT
-          echo "test_tag_plain=${TEST_TAG_PLAIN}" >> $GITHUB_OUTPUT
-          echo "image_variant_label=${IMAGE_VARIANT_LABEL}" >> $GITHUB_OUTPUT
-          echo "image_tag_suffix=${IMAGE_TAG_SUFFIX}" >> $GITHUB_OUTPUT
       - name: Build
         id: build
         uses: ./.github/actions/build-flavor
@@ -292,6 +259,7 @@ jobs:
           make_efa: ${{ inputs.make_efa }}
           fresh_builder: ${{ inputs.fresh_builder }}
           extra_tags: ${{ inputs.extra_tags }}
+          dev_version_suffix: ${{ inputs.dev_version_suffix }}
           show_summary: ${{ inputs.push_image && inputs.show_summary }}
 
 
@@ -381,6 +349,7 @@ jobs:
           test_type: "pre_merge_cpu"
           platform_arch: ${{ matrix.arch }}
           hf_token: ${{ secrets.HF_TOKEN }}
+          enable_coverage: ${{ inputs.enable_coverage }}
           parallel_mode: 'auto'
           dind_as_sidecar: 'true'
           device: ${{ inputs.device }}
@@ -398,6 +367,7 @@ jobs:
           test_type: "pre_merge_gpu"
           platform_arch: ${{ matrix.arch }}
           hf_token: ${{ secrets.HF_TOKEN }}
+          enable_coverage: ${{ inputs.enable_coverage }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           device: ${{ inputs.device }}
@@ -414,6 +384,7 @@ jobs:
           test_type: "pre_merge_xpu"
           platform_arch: ${{ matrix.arch }}
           hf_token: ${{ secrets.HF_TOKEN }}
+          enable_coverage: ${{ inputs.enable_coverage }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           device: ${{ inputs.device }}
@@ -510,6 +481,7 @@ jobs:
           test_type: "pre_merge_gpu"
           platform_arch: amd64
           hf_token: ${{ secrets.HF_TOKEN }}
+          enable_coverage: ${{ inputs.enable_coverage }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           device: ${{ inputs.device }}
