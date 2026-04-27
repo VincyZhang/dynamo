@@ -604,6 +604,9 @@ class EtcdServer(ManagedProcess):
         self.port = port
         self.peer_port = peer_port  # Store for cleanup
         self.use_random_port = use_random_port  # Track if we allocated the port
+        reserved_ports = [port]
+        if peer_port is not None:
+            reserved_ports.append(peer_port)
         port_string = str(port)
         etcd_env = os.environ.copy()
         etcd_env["ALLOW_NONE_AUTHENTICATION"] = "yes"
@@ -644,6 +647,7 @@ class EtcdServer(ManagedProcess):
             display_output=False,
             terminate_all_matching_process_names=not use_random_port,  # For distributed tests, do not terminate all matching processes
             health_check_ports=[port],
+            reserved_ports=reserved_ports,
             data_dir=data_dir,
             log_dir=request.node.name,
         )
@@ -693,6 +697,7 @@ class NatsServer(ManagedProcess):
             data_dir=data_dir,
             health_check_ports=[port],
             health_check_funcs=[self._nats_ready],
+            reserved_ports=[port],
             log_dir=request.node.name,
         )
 
