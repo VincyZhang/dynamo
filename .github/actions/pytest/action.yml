@@ -138,8 +138,6 @@ runs:
           PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
         else
           echo "🚀 Running pytest in normal mode"
-          # --durations=0: show ALL test/setup/teardown durations (0 = no limit)
-          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=0 -m \"${{ inputs.pytest_marks }}\""
 
           # Add coverage flags if enabled
           COVERAGE_FLAGS=""
@@ -149,6 +147,8 @@ runs:
             COVERAGE_FLAGS="--cov=components/src/dynamo --cov=lib/bindings/python/src/dynamo --cov-report="
             COVERAGE_ENV="--env COVERAGE_FILE=/workspace/test-results/.coverage --env PYTHONPATH=/workspace/components/src:/workspace/lib/bindings/python/src"
           fi
+
+          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\""
 
           PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\""
 
