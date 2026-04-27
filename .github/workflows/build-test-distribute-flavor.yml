@@ -153,6 +153,16 @@ on:
         required: false
         type: boolean
         default: false
+      enable_coverage:
+        description: 'Enable test coverage collection (true/false)'
+        required: false
+        type: boolean
+        default: false
+      dev_version_suffix:
+        description: 'PEP 440 dev suffix (e.g. .dev20260423+g1234567). Empty = stable build.'
+        required: false
+        type: string
+        default: ''
     secrets:
       AWS_DEFAULT_REGION:
         required: false
