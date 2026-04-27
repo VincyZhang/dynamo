@@ -22,6 +22,29 @@ FRONTEND_PORT = (
 )  # Do NOT use this in tests! Use allocate_port() instead.
 
 
+def _collect_reserved_ports(env: Dict[str, str]) -> list[int]:
+    """Collect dynamically injected test ports that must be reserved until launch."""
+
+    reserved_ports: list[int] = []
+    for key, value in env.items():
+        if not value.isdigit():
+            continue
+        if key in {
+            "DYN_HTTP_PORT",
+            "DYN_SYSTEM_PORT",
+            "DYN_VLLM_KV_EVENT_PORT",
+            "DYN_DISAGG_BOOTSTRAP_PORT",
+        }:
+            reserved_ports.append(int(value))
+            continue
+        if key.startswith("DYN_SYSTEM_PORT"):
+            suffix = key.removeprefix("DYN_SYSTEM_PORT")
+            if suffix.isdigit():
+                reserved_ports.append(int(value))
+
+    return list(dict.fromkeys(reserved_ports))
+
+
 class EngineResponseError(Exception):
     """Custom exception for engine response errors"""
 
@@ -170,7 +193,7 @@ class EngineProcess(ManagedProcess):
             env.update(config.env)
         if extra_env:
             env.update(extra_env)
-
+        reserved_ports = _collect_reserved_ports(env)
         frontend_checks = [
             (
                 f"http://localhost:{config.frontend_port}/v1/models",
@@ -218,6 +241,7 @@ class EngineProcess(ManagedProcess):
             terminate_all_matching_process_names=False,
             stragglers=config.stragglers,
             log_dir=request.node.name,
+            reserved_ports=reserved_ports,
         )
 
     @classmethod
