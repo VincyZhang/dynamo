@@ -415,6 +415,27 @@ jobs:
     secrets: inherit
 
   # ============================================================================
+  # DYNAMO RUNTIME PIPELINE
+  # ============================================================================
+
+  dynamo-pipeline:
+    name: dynamo-runtime
+    needs: [changed-files]
+    if: |
+      needs.changed-files.outputs.core == 'true' ||
+      needs.changed-files.outputs.planner == 'true' ||
+      needs.changed-files.outputs.vllm == 'true' ||
+      needs.changed-files.outputs.sglang == 'true' ||
+      needs.changed-files.outputs.trtllm == 'true'
+    uses: ./.github/workflows/dynamo-pipeline.yml
+    with:
+      builder_name: ${{ needs.changed-files.outputs.builder_name }}
+      cpu_parallel_test_markers: 'pre_merge and parallel and not (vllm or sglang or trtllm) and (gpu_0)'
+      cpu_sequential_test_markers: 'pre_merge and not parallel and not (vllm or sglang or trtllm) and (gpu_0)'
+      gpu_test_markers: 'pre_merge and none and gpu_1'
+    secrets: inherit
+
+  # ============================================================================
   # IMAGE COMPLIANCE PIPELINES
   # ============================================================================
 
