@@ -69,7 +69,7 @@ jobs:
     with:
       framework: dynamo
       target: runtime
-      cuda_version: '["${{ inputs.cuda_version }}"]'
+      version_selector: '["${{ inputs.cuda_version }}"]'
       platform: 'linux/amd64,linux/arm64'
       builder_name: ${{ inputs.builder_name }}
       fresh_builder: ${{ inputs.fresh_builder }}
