@@ -34,6 +34,7 @@ jobs:
   # OPERATOR BUILD
   # ============================================================================
   operator:
+    if: false
     name: Operator
     runs-on: prod-default-v2
     outputs:
