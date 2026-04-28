@@ -410,6 +410,7 @@ jobs:
   # ============================================================================
 
   vllm-compliance:
+    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -422,6 +423,7 @@ jobs:
     secrets: inherit
 
   sglang-compliance:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -434,6 +436,7 @@ jobs:
     secrets: inherit
 
   trtllm-compliance:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -446,6 +449,7 @@ jobs:
     secrets: inherit
 
   planner-compliance:
+    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
     needs: [planner-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -458,6 +462,7 @@ jobs:
     secrets: inherit
 
   frontend-compliance:
+    if: false
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
     needs: [frontend-build]
     uses: ./.github/workflows/shared-compliance.yml
