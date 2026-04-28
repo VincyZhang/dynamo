@@ -62,6 +62,7 @@ jobs:
 # ============================================================================
 
   snapshot-agent:
+    if: false
     name: Snapshot Agent
     runs-on: prod-default-v2
     steps:
