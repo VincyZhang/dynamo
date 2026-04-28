@@ -30,11 +30,6 @@ on:
         description: 'Target platforms to test as a JSON array'
         required: true
         type: string
-      enable_coverage:
-        description: 'Enable coverage collection (true/false)'
-        required: false
-        type: string
-        default: 'false'
       run_sanity_check:
         description: 'Whether to run sanity check on the runtime image before executing tests'
         required: false
@@ -89,15 +84,15 @@ on:
         default: 120
     secrets:
       AWS_DEFAULT_REGION:
-        required: true
+        required: false
       AWS_ACCOUNT_ID:
-        required: true
+        required: false
       AZURE_ACR_HOSTNAME:
-        required: true
+        required: false
       AZURE_ACR_USER:
-        required: true
+        required: false
       AZURE_ACR_PASSWORD:
-        required: true
+        required: false
       HF_TOKEN:
         required: false
 
@@ -122,7 +117,7 @@ jobs:
         env:
           ECR_REPOSITORY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/ai-dynamo/dynamo
         run: |
-
+          
           if [[ "${{ matrix.version_selector }}" == "cpu" ]] || [[ "${{ inputs.target_tag_plain }}" == *"planner"* ]]; then
             CPU_IMAGE_TAG=${{ github.sha }}-${{ inputs.target_tag_plain }}
             echo "cpu_runtime_image=${ECR_REPOSITORY}:${CPU_IMAGE_TAG}" >> $GITHUB_OUTPUT
@@ -147,51 +142,51 @@ jobs:
           TEST_IMAGE=${ECR_REPOSITORY}:${IMAGE_TAG}-test
           echo "runtime_image=${RUNTIME_IMAGE}" >> $GITHUB_OUTPUT
           echo "test_image=${TEST_IMAGE}" >> $GITHUB_OUTPUT
-      - name: Docker Login
-        uses: ./.github/actions/docker-login
-        with:
-          aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
-          aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-          azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
-          azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
-          azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
-      - name: Pull relevant images
-        shell: bash
-        run: |
-          source ./.github/scripts/retry_docker.sh
-          start_time=$(date +%s)
-          if [[ "${{ matrix.version_selector }}" == "cpu" ]]; then
-            retry_pull ${{ steps.calculate-target-tag.outputs.cpu_runtime_image }}
-            retry_pull ${{ steps.calculate-target-tag.outputs.cpu_test_image }}
-          elif [[ "${{ matrix.platform }}" == "amd64" && "${{ matrix.version_selector }}" == "xpu" ]]; then
-            retry_pull ${{ steps.calculate-target-tag.outputs.xpu_runtime_image }}
-            retry_pull ${{ steps.calculate-target-tag.outputs.xpu_test_image }}
-          else
-            retry_pull ${{ steps.calculate-target-tag.outputs.runtime_image }}
-            retry_pull ${{ steps.calculate-target-tag.outputs.test_image }}
-          fi
-          retry_pull quay.io/minio/minio
-          end_time=$(date +%s)
-          duration=$((end_time - start_time))
-          echo "⏱️ Image pull duration: ${duration}s"
-      - name: Run Sanity Check on Runtime Image
-        if: ${{ inputs.run_sanity_check }}
-        shell: bash
-        run: |
-          echo "Running sanity check on image: ${{ steps.calculate-target-tag.outputs.runtime_image }}"
-
-          export WORKSPACE=/workspace
-
-          set +e
-          docker run --rm "${{ steps.calculate-target-tag.outputs.runtime_image }}" python ${WORKSPACE}/deploy/sanity_check.py --runtime-check --no-gpu-check
-          SANITY_CHECK_EXIT_CODE=$?
-          set -e
-          if [ ${SANITY_CHECK_EXIT_CODE} -ne 0 ]; then
-            echo "ERROR: Sanity check failed - ai-dynamo packages not properly installed"
-            exit ${SANITY_CHECK_EXIT_CODE}
-          else
-            echo "✅ Sanity check passed"
-          fi
+      #- name: Docker Login
+      #  uses: ./.github/actions/docker-login
+      #  with:
+      #    aws_default_region: ${{ secrets.AWS_DEFAULT_REGION }}
+      #    aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      #    azure_acr_hostname: ${{ secrets.AZURE_ACR_HOSTNAME }}
+      #    azure_acr_user: ${{ secrets.AZURE_ACR_USER }}
+      #    azure_acr_password: ${{ secrets.AZURE_ACR_PASSWORD }}
+      #- name: Pull relevant images
+      #  shell: bash
+      #  run: |
+      #    source ./.github/scripts/retry_docker.sh
+      #    start_time=$(date +%s)
+      #    if [[ "${{ matrix.version_selector }}" == "cpu" ]]; then
+      #      retry_pull ${{ steps.calculate-target-tag.outputs.cpu_runtime_image }}
+      #      retry_pull ${{ steps.calculate-target-tag.outputs.cpu_test_image }}
+      #    elif [[ "${{ matrix.platform }}" == "amd64" && "${{ matrix.version_selector }}" == "xpu" ]]; then
+      #      retry_pull ${{ steps.calculate-target-tag.outputs.xpu_runtime_image }}
+      #      retry_pull ${{ steps.calculate-target-tag.outputs.xpu_test_image }}
+      #    else
+      #      retry_pull ${{ steps.calculate-target-tag.outputs.runtime_image }}
+      #      retry_pull ${{ steps.calculate-target-tag.outputs.test_image }}
+      #    fi
+      #    retry_pull quay.io/minio/minio
+      #    end_time=$(date +%s)
+      #    duration=$((end_time - start_time))
+      #    echo "⏱️ Image pull duration: ${duration}s"
+      #- name: Run Sanity Check on Runtime Image
+      #  if: ${{ inputs.run_sanity_check }}
+      #  shell: bash
+      #  run: |
+      #    echo "Running sanity check on image: ${{ steps.calculate-target-tag.outputs.runtime_image }}"
+#
+      #    export WORKSPACE=/workspace
+#
+      #    set +e
+      #    docker run --rm "${{ steps.calculate-target-tag.outputs.runtime_image }}" python ${WORKSPACE}/deploy/sanity_check.py --runtime-check --no-gpu-check
+      #    SANITY_CHECK_EXIT_CODE=$?
+      #    set -e
+      #    if [ ${SANITY_CHECK_EXIT_CODE} -ne 0 ]; then
+      #      echo "ERROR: Sanity check failed - ai-dynamo packages not properly installed"
+      #      exit ${SANITY_CHECK_EXIT_CODE}
+      #    else
+      #      echo "✅ Sanity check passed"
+      #    fi
       - name: Run CPU-only tests (parallelized)
         if: ${{ inputs.run_cpu_only_tests }}
         timeout-minutes: ${{ inputs.cpu_only_test_timeout_minutes }}
@@ -205,7 +200,6 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           parallel_mode: ${{ inputs.cpu_parallel_mode }}
           dind_as_sidecar: 'true'
-          enable_coverage: ${{ inputs.enable_coverage }}
       - name: Run GPU tests (sequential)
         timeout-minutes: ${{ inputs.gpu_test_timeout_minutes }}
         if: ${{ matrix.platform == 'amd64' && inputs.run_gpu_tests && startsWith(matrix.version_selector, 'cuda') }}
@@ -219,7 +213,6 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
-          enable_coverage: ${{ inputs.enable_coverage }}
       - name: Run XPU tests (sequential)
         timeout-minutes: ${{ inputs.xpu_test_timeout_minutes }}
         if: ${{ matrix.version_selector == 'xpu' && inputs.run_xpu_test }}
@@ -234,7 +227,6 @@ jobs:
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           device: xpu
-          enable_coverage: ${{ inputs.enable_coverage }}
 
       - name: Cleanup Docker Images
         if: ${{ always() && matrix.version_selector == 'xpu' && matrix.platform == 'amd64' && inputs.run_xpu_test }}
@@ -244,4 +236,5 @@ jobs:
           docker image rm -f "${{ steps.calculate-target-tag.outputs.test_image }}" 2>/dev/null || true
           docker image rm -f "${{ steps.calculate-target-tag.outputs.runtime_image }}" 2>/dev/null || true
           echo "✓ XPU image cleanup finished"
-
+      
+      

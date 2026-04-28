@@ -28,15 +28,15 @@ on:
         type: string
     secrets:
       AWS_DEFAULT_REGION:
-        required: true
+        required: false
       AWS_ACCOUNT_ID:
-        required: true
+        required: false
       AZURE_ACR_HOSTNAME:
-        required: true
+        required: false
       AZURE_ACR_USER:
-        required: true
+        required: false
       AZURE_ACR_PASSWORD:
-        required: true
+        required: false
 
 jobs:
   compliance:
