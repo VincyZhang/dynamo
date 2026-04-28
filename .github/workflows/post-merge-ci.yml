@@ -35,7 +35,6 @@ jobs:
   # ============================================================================
   operator:
     name: Operator
-    if: false
     runs-on: prod-default-v2
     outputs:
       operator_default_tag: ${{ steps.build.outputs.image_tag }}
@@ -64,7 +63,6 @@ jobs:
 
   snapshot-agent:
     name: Snapshot Agent
-    if: false
     runs-on: prod-default-v2
     steps:
       - name: Checkout code
@@ -292,7 +290,6 @@ jobs:
     secrets: inherit
 
   vllm-efa-test:
-    if: false
     name: vllm-runtime-efa
     needs: [vllm-efa-build]
     uses: ./.github/workflows/shared-test.yml
@@ -309,7 +306,6 @@ jobs:
     secrets: inherit
 
   sglang-test:
-    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-test.yml
@@ -326,7 +322,6 @@ jobs:
     secrets: inherit
 
   sglang-multi-gpu-test:
-    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-test.yml
@@ -343,7 +338,6 @@ jobs:
     secrets: inherit
 
   trtllm-test:
-    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -360,7 +354,6 @@ jobs:
     secrets: inherit
 
   trtllm-multi-gpu-test:
-    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -377,7 +370,6 @@ jobs:
     secrets: inherit
 
   trtllm-efa-test:
-    if: false
     name: trtllm-runtime-efa
     needs: [trtllm-efa-build]
     uses: ./.github/workflows/shared-test.yml
@@ -394,7 +386,6 @@ jobs:
     secrets: inherit
 
   planner-test:
-    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
     needs: [planner-build]
     uses: ./.github/workflows/shared-test.yml
@@ -418,7 +409,6 @@ jobs:
   # ============================================================================
 
   vllm-compliance:
-    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -431,7 +421,6 @@ jobs:
     secrets: inherit
 
   sglang-compliance:
-    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -444,7 +433,6 @@ jobs:
     secrets: inherit
 
   trtllm-compliance:
-    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -457,7 +445,6 @@ jobs:
     secrets: inherit
 
   planner-compliance:
-    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
     needs: [planner-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -470,7 +457,6 @@ jobs:
     secrets: inherit
 
   frontend-compliance:
-    if: false
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
     needs: [frontend-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -487,7 +473,6 @@ jobs:
   # ============================================================================
 
   vllm-copy-to-acr:
-    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build, vllm-test]
     if: false
@@ -500,7 +485,6 @@ jobs:
     secrets: inherit
 
   sglang-copy-to-acr:
-    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build, sglang-test]
     if: false
@@ -513,7 +497,6 @@ jobs:
     secrets: inherit
 
   trtllm-copy-to-acr:
-    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build, trtllm-test]
     if: false
@@ -526,7 +509,6 @@ jobs:
     secrets: inherit
 
   frontend-copy-to-acr:
-    if: false
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
     needs: [frontend-build, frontend-compliance]
     if: false
@@ -621,7 +603,6 @@ jobs:
   # GAIE DEPLOY TEST
   # ============================================================================
   deploy-test-gaie:
-    if: false
     name: GAIE Deploy Test
     runs-on: prod-default-small-v2
     needs: [deploy-operator, frontend-copy-to-acr, vllm-copy-to-acr]
@@ -683,7 +664,6 @@ jobs:
             --image=${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:${{ github.sha }}-vllm-runtime-cuda12
 
   deploy-status-check:
-    if: false
     runs-on: ubuntu-latest
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
     if: false
@@ -697,7 +677,6 @@ jobs:
   # ============================================================================
 
   clean-k8s-builder:
-    if: false
     name: Clean K8s builder if exists
     runs-on: prod-default-small-v2
     if: false
@@ -719,7 +698,6 @@ jobs:
 
   ############################## SLACK NOTIFICATION ##############################
   notify-slack:
-    if: false
     name: Notify Slack
     runs-on: ubuntu-slim
     if: false
