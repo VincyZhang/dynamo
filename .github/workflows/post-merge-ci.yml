@@ -4,18 +4,13 @@
 name: Post-Merge CI Pipeline
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-      - 'release/*.*.*'
-  workflow_dispatch:
-    inputs:
-      framework:
-        description: 'Framework to validate'
-        type: choice
-        options: [all, vllm, sglang, trtllm]
-        default: all
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 
