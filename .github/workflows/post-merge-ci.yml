@@ -26,6 +26,7 @@ jobs:
   # On push, all run flags resolve to true (full pipeline as before).
   # ============================================================================
   config:
+    if: false
     name: Config
     runs-on: ubuntu-latest
     outputs:
@@ -50,8 +51,8 @@ jobs:
   # DYNAMO RUNTIME PIPELINE
   # ============================================================================
   dynamo-pipeline:
+    if: false
     name: dynamo-runtime
-    if: github.event_name != 'workflow_dispatch'
     uses: ./.github/workflows/dynamo-pipeline.yml
     with:
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
@@ -68,6 +69,7 @@ jobs:
   # OPERATOR BUILD
   # ============================================================================
   operator:
+    if: false
     name: Operator
     runs-on: prod-default-v2
     outputs:
@@ -96,8 +98,8 @@ jobs:
 # ============================================================================
 
   snapshot-agent:
+    if: false
     name: Snapshot Agent
-    if: github.event_name != 'workflow_dispatch'
     runs-on: prod-default-v2
     steps:
       - name: Checkout code
@@ -121,9 +123,9 @@ jobs:
   # ============================================================================
 
   vllm-build:
+    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: vllm
@@ -138,9 +140,9 @@ jobs:
     secrets: inherit
 
   vllm-dev-build:
+    if: false
     name: vllm-dev
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: vllm
@@ -156,9 +158,9 @@ jobs:
     secrets: inherit
 
   vllm-efa-build:
+    if: false
     name: vllm-runtime-efa
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: vllm
@@ -174,9 +176,9 @@ jobs:
     secrets: inherit
 
   sglang-build:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_sglang == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: sglang
@@ -191,9 +193,9 @@ jobs:
     secrets: inherit
 
   sglang-dev-build:
+    if: false
     name: sglang-dev
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_sglang == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: sglang
@@ -209,6 +211,7 @@ jobs:
     secrets: inherit
 
   sglang-efa-build:
+    if: false
     name: sglang-runtime-efa
     uses: ./.github/workflows/shared-build-image.yml
     with:
@@ -225,9 +228,9 @@ jobs:
     secrets: inherit
 
   trtllm-build:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_trtllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: trtllm
@@ -242,9 +245,9 @@ jobs:
     secrets: inherit
 
   trtllm-dev-build:
+    if: false
     name: trtllm-dev
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_trtllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: trtllm
@@ -260,9 +263,9 @@ jobs:
     secrets: inherit
 
   trtllm-efa-build:
+    if: false
     name: trtllm-runtime-efa
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_trtllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: trtllm
@@ -278,8 +281,8 @@ jobs:
     secrets: inherit
 
   planner-build:
+    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
-    if: github.event_name != 'workflow_dispatch'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: dynamo
@@ -294,9 +297,9 @@ jobs:
     secrets: inherit
 
   frontend-build:
+    if: false
     name: frontend
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: dynamo
@@ -315,6 +318,7 @@ jobs:
   # ============================================================================
 
   vllm-test:
+    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -337,6 +341,7 @@ jobs:
     secrets: inherit
 
   vllm-multi-gpu-test:
+    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -353,6 +358,7 @@ jobs:
     secrets: inherit
 
   vllm-efa-test:
+    if: false
     name: vllm-runtime-efa
     needs: [vllm-efa-build]
     uses: ./.github/workflows/shared-test.yml
@@ -369,6 +375,7 @@ jobs:
     secrets: inherit
 
   sglang-test:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-test.yml
@@ -386,6 +393,7 @@ jobs:
     secrets: inherit
 
   sglang-multi-gpu-test:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-test.yml
@@ -402,6 +410,7 @@ jobs:
     secrets: inherit
 
   trtllm-test:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -419,6 +428,7 @@ jobs:
     secrets: inherit
 
   trtllm-multi-gpu-test:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -435,6 +445,7 @@ jobs:
     secrets: inherit
 
   trtllm-efa-test:
+    if: false
     name: trtllm-runtime-efa
     needs: [trtllm-efa-build]
     uses: ./.github/workflows/shared-test.yml
@@ -451,6 +462,7 @@ jobs:
     secrets: inherit
 
   planner-test:
+    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
     needs: [planner-build]
     uses: ./.github/workflows/shared-test.yml
@@ -484,6 +496,7 @@ jobs:
   # ============================================================================
 
   vllm-compliance:
+    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -496,6 +509,7 @@ jobs:
     secrets: inherit
 
   sglang-compliance:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -508,6 +522,7 @@ jobs:
     secrets: inherit
 
   trtllm-compliance:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -520,6 +535,7 @@ jobs:
     secrets: inherit
 
   planner-compliance:
+    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
     needs: [planner-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -532,6 +548,7 @@ jobs:
     secrets: inherit
 
   frontend-compliance:
+    if: false
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
     needs: [frontend-build]
     uses: ./.github/workflows/shared-compliance.yml
@@ -548,12 +565,9 @@ jobs:
   # ============================================================================
 
   vllm-copy-to-acr:
+    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build, vllm-test]
-    if: |
-      always() &&
-      needs.vllm-build.result == 'success' &&
-      (needs.vllm-test.result == 'success' || needs.vllm-test.result == 'skipped')
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.vllm-build.outputs.target_tag_plain }}
@@ -563,11 +577,9 @@ jobs:
     secrets: inherit
 
   vllm-dev-copy-to-acr:
+    if: false
     name: vllm-dev # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-dev-build]
-    if: |
-      always() &&
-      needs.vllm-dev-build.result == 'success'
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.vllm-dev-build.outputs.target_tag_plain }}
@@ -577,12 +589,9 @@ jobs:
     secrets: inherit
 
   sglang-copy-to-acr:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build, sglang-test]
-    if: |
-      always() &&
-      needs.sglang-build.result == 'success' &&
-      (needs.sglang-test.result == 'success' || needs.sglang-test.result == 'skipped')
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.sglang-build.outputs.target_tag_plain }}
@@ -592,11 +601,9 @@ jobs:
     secrets: inherit
 
   sglang-dev-copy-to-acr:
+    if: false
     name: sglang-dev # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-dev-build]
-    if: |
-      always() &&
-      needs.sglang-dev-build.result == 'success'
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.sglang-dev-build.outputs.target_tag_plain }}
@@ -606,12 +613,9 @@ jobs:
     secrets: inherit
 
   trtllm-copy-to-acr:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build, trtllm-test]
-    if: |
-      always() &&
-      needs.trtllm-build.result == 'success' &&
-      (needs.trtllm-test.result == 'success' || needs.trtllm-test.result == 'skipped')
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.trtllm-build.outputs.target_tag_plain }}
@@ -621,11 +625,9 @@ jobs:
     secrets: inherit
 
   trtllm-dev-copy-to-acr:
+    if: false
     name: trtllm-dev # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-dev-build]
-    if: |
-      always() &&
-      needs.trtllm-dev-build.result == 'success'
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.trtllm-dev-build.outputs.target_tag_plain }}
@@ -635,12 +637,9 @@ jobs:
     secrets: inherit
 
   frontend-copy-to-acr:
+    if: false
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
     needs: [frontend-build, frontend-compliance]
-    if: |
-      always() &&
-      needs.frontend-build.result == 'success' &&
-      (needs.frontend-compliance.result == 'success' || needs.frontend-compliance.result == 'skipped')
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.frontend-build.outputs.target_tag_plain }}
@@ -655,6 +654,7 @@ jobs:
   # ============================================================================
 
   deploy-operator:
+    if: false
     needs: [operator]
     runs-on: prod-default-small-v2
     outputs:
@@ -675,6 +675,7 @@ jobs:
         dockerhub_password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
 
   deploy-test-vllm:
+    if: false
     needs: [deploy-operator, vllm-copy-to-acr]
     uses: ./.github/workflows/shared-deploy-test.yml
     with:
@@ -687,6 +688,7 @@ jobs:
     secrets: inherit
 
   deploy-test-sglang:
+    if: false
     needs: [deploy-operator, sglang-copy-to-acr]
     uses: ./.github/workflows/shared-deploy-test.yml
     with:
@@ -699,6 +701,7 @@ jobs:
     secrets: inherit
 
   deploy-test-trtllm:
+    if: false
     needs: [deploy-operator, trtllm-copy-to-acr]
     uses: ./.github/workflows/shared-deploy-test.yml
     with:
@@ -711,7 +714,7 @@ jobs:
     secrets: inherit
 
   deploy-cleanup:
-    if: always()
+    if: false
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
     runs-on: prod-default-small-v2
     steps:
@@ -728,6 +731,7 @@ jobs:
   # GAIE DEPLOY TEST
   # ============================================================================
   deploy-test-gaie:
+    if: false
     name: GAIE Deploy Test
     runs-on: prod-default-small-v2
     needs: [deploy-operator, frontend-copy-to-acr, vllm-copy-to-acr]
@@ -789,9 +793,9 @@ jobs:
             --image=${{ secrets.AZURE_ACR_HOSTNAME }}/ai-dynamo/dynamo:${{ github.sha }}-vllm-runtime-cuda12
 
   deploy-status-check:
+    if: false
     runs-on: ubuntu-latest
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
-    if: always()
     steps:
       - name: "Check all deploy test jobs"
         run: |
@@ -802,9 +806,9 @@ jobs:
   # ============================================================================
 
   clean-k8s-builder:
+    if: false
     name: Clean K8s builder if exists
     runs-on: prod-default-small-v2
-    if: always()
     needs: [vllm-build, sglang-build, trtllm-build, vllm-dev-build, sglang-dev-build, trtllm-dev-build, vllm-efa-build, sglang-efa-build, trtllm-efa-build, operator, frontend-build, planner-build]
     steps:
     - name: Checkout repository
@@ -823,9 +827,9 @@ jobs:
 
   ############################## SLACK NOTIFICATION ##############################
   notify-slack:
+    if: false
     name: Notify Slack
     runs-on: ubuntu-slim
-    if: always() && github.event_name != 'workflow_dispatch'
     needs: [ deploy-status-check ]
     permissions:
       contents: read
