@@ -67,6 +67,7 @@ jobs:
   # shared-test, release.yml) builds, tags, and releases against. On schedule
   # and workflow_dispatch from main, this is just github.sha.
   resolve-source-sha:
+    if: false
     name: Resolve source SHA
     runs-on: prod-default-v2
     permissions:
@@ -111,6 +112,7 @@ jobs:
   # Output is consumed by the `release` job below to gate the workflow_call
   # into release.yml.
   compute-release-mode:
+    if: false
     name: Compute release mode
     runs-on: prod-default-v2
     permissions:
@@ -329,12 +331,9 @@ jobs:
 
   vllm-test-xpu:
     name: vllm-xpu
-    needs: [resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
 
   # ============================================================================
   # DYNAMO RUNTIME PIPELINE
