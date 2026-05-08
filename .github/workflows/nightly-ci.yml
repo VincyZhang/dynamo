@@ -4,8 +4,10 @@
 name: Nightly CI Pipeline
 
 on:
-  schedule:
-    - cron: '0 8 * * *' # Every day at 12:00 AM PST (08:00 UTC)
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:  # Allow manual triggering for testing
     inputs:
       release:
@@ -315,6 +317,19 @@ jobs:
       gpu_test_timeout_minutes: 45
       source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
     secrets: inherit
+
+  # ============================================================================
+  # XPU TEST JOBS
+  # ============================================================================
+
+  vllm-test-xpu:
+    name: vllm-xpu
+    needs: [resolve-source-sha, compute-release-mode]
+    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
+    uses: ./.github/workflows/xpu-ci.yaml
+    with:
+      framework: vllm
+      source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
 
   # ============================================================================
   # DYNAMO RUNTIME PIPELINE

@@ -1,16 +1,16 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-name: PR-XPU
+name: PR-XPU (disabled)
 
+# Disabled: XPU CI is now triggered via nightly-ci and post-merge-ci
 on:
-  pull_request:
-    branches:
-      - main
-    types: [opened, synchronize, reopened, labeled]
-  push:
-    branches:
-      - "pull-request/[0-9]+"
+  workflow_dispatch:
+    inputs:
+      placeholder:
+        description: 'This workflow is disabled. Use xpu-ci.yaml directly.'
+        required: false
+        type: string
 
 concurrency:
   group: pr-xpu-${{ github.ref_name }}

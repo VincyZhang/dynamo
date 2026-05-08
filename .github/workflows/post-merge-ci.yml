@@ -4,10 +4,10 @@
 name: Post-Merge CI Pipeline
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-      - 'release/*.*.*'
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
     inputs:
       framework:
@@ -468,6 +468,16 @@ jobs:
       cpu_only_test_timeout_minutes: 30
       run_gpu_tests: false
     secrets: inherit
+
+  # ============================================================================
+  # XPU TEST JOBS
+  # ============================================================================
+
+  vllm-test-xpu:
+    name: vllm-xpu
+    uses: ./.github/workflows/xpu-ci.yaml
+    with:
+      framework: vllm
 
   # ============================================================================
   # IMAGE COMPLIANCE JOBS
