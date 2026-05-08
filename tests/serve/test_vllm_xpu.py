@@ -764,6 +764,7 @@ def lora_chat_payload(
 @pytest.mark.e2e
 @pytest.mark.xpu_1
 @pytest.mark.model("Qwen/Qwen3-0.6B")
+@pytest.mark.model("codelion/Qwen3-0.6B-accuracy-recovery-lora")
 @pytest.mark.timeout(600)
 @pytest.mark.post_merge
 def test_lora_aggregated(
