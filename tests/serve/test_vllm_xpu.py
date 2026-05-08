@@ -272,6 +272,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.profiled_vram_gib(9.6),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_710_490_000
@@ -311,6 +312,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.profiled_vram_gib(19.9),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 922_354_000
@@ -348,6 +350,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.profiled_vram_gib(14.9),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 922_354_000
@@ -471,6 +474,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.pre_merge,
             pytest.mark.skip(
                 reason="Temporary: video stream load failure for local media URI in CI"
@@ -605,6 +609,7 @@ def test_serve_deployment(
 @pytest.mark.e2e
 @pytest.mark.xpu_2
 @pytest.mark.nightly
+@pytest.mark.multimodal
 @pytest.mark.timeout(360)  # Match VLLMConfig.timeout for this multimodal deployment
 def test_multimodal_b64(
     request,
