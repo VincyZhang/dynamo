@@ -125,3 +125,4 @@ jobs:
       - name: Check all XPU jobs
         run: |
           echo '${{ toJson(needs) }}' | jq -e 'to_entries | map(.value.result) | all(. as $result | ["success", "skipped"] | any($result == .))'
+
