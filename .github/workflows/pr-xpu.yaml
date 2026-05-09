@@ -30,7 +30,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Extract PR number from branch name (pull-request/123 → 123)
           PR_NUMBER="${GITHUB_REF_NAME##*/}"
 
           # Check for xpu label
