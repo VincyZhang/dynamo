@@ -39,6 +39,9 @@ jobs:
         env:
           XPU_LIST: ${{ vars.XPU_CONTRIBUTOR_LIST }}
         run: |
+          echo "XPU_LIST length: ${#XPU_LIST}"
+          echo "XPU_LIST is empty: $([[ -z "${XPU_LIST}" ]] && echo YES || echo NO)"
+
           # Mask each contributor username individually
           IFS=',' read -ra USERS <<< "${XPU_LIST}"
           for user in "${USERS[@]}"; do
