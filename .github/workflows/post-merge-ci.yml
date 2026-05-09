@@ -645,14 +645,9 @@ jobs:
   # ============================================================================
 
   vllm-copy-to-acr:
-    if: false
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
     needs: [vllm-build, vllm-test, vllm-unified-test]
-    if: |
-      always() &&
-      needs.vllm-build.result == 'success' &&
-      (needs.vllm-test.result == 'success' || needs.vllm-test.result == 'skipped') &&
-      (needs.vllm-unified-test.result == 'success' || needs.vllm-unified-test.result == 'skipped')
+    if: false
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.vllm-build.outputs.target_tag_plain }}
@@ -674,14 +669,9 @@ jobs:
     secrets: inherit
 
   sglang-copy-to-acr:
-    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build, sglang-test, sglang-unified-test]
-    if: |
-      always() &&
-      needs.sglang-build.result == 'success' &&
-      (needs.sglang-test.result == 'success' || needs.sglang-test.result == 'skipped') &&
-      (needs.sglang-unified-test.result == 'success' || needs.sglang-unified-test.result == 'skipped')
+    if: false
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.sglang-build.outputs.target_tag_plain }}
@@ -703,14 +693,9 @@ jobs:
     secrets: inherit
 
   trtllm-copy-to-acr:
-    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build, trtllm-test, trtllm-unified-test]
-    if: |
-      always() &&
-      needs.trtllm-build.result == 'success' &&
-      (needs.trtllm-test.result == 'success' || needs.trtllm-test.result == 'skipped') &&
-      (needs.trtllm-unified-test.result == 'success' || needs.trtllm-unified-test.result == 'skipped')
+    if: false
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.trtllm-build.outputs.target_tag_plain }}

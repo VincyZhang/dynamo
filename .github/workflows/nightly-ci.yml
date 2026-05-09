@@ -546,11 +546,10 @@ jobs:
   # COVERAGE REPORT
   # ============================================================================
   coverage-report:
-    if: false
     name: Generate Coverage Report
     runs-on: ubuntu-latest
     needs: [vllm-test, vllm-unified-test, vllm-multi-gpu-test, sample-unified-test, sglang-test, sglang-unified-test, sglang-multi-gpu-test, trtllm-test, trtllm-unified-test, trtllm-multi-gpu-test, rust-tests]
-    if: always()
+    if: false
     permissions:
       contents: read
     steps:
@@ -770,10 +769,9 @@ jobs:
 
   ############################## SLACK NOTIFICATION ##############################
   notify-slack:
-    if: false
     name: Notify Slack
     runs-on: prod-default-v2
-    if: always()
+    if: false
     needs: [vllm-test, vllm-unified-test, vllm-multi-gpu-test, sample-unified-test, sglang-test, sglang-unified-test, sglang-multi-gpu-test, trtllm-test, trtllm-unified-test, trtllm-multi-gpu-test, rust-tests]
     permissions:
       contents: read
