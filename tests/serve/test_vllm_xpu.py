@@ -287,6 +287,9 @@ vllm_configs = {
             "Qwen/Qwen2-VL-2B-Instruct",
             "--frontend-decoding",
         ],
+        env={
+            "DYN_MM_ALLOW_INTERNAL": "1",
+        },
         request_payloads=[
             chat_payload(
                 [
