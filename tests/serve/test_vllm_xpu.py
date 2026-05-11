@@ -278,7 +278,7 @@ vllm_configs = {
                 1_710_490_000
             ),  # KV cache cap (2x safety over min=855_244_800)
             pytest.mark.timeout(220),  # ~5x observed 43.7s; 2B model loads slower on CI
-            pytest.mark.post_merge,
+            pytest.mark.pre_merge,
         ],
         model="Qwen/Qwen2-VL-2B-Instruct",
         # Pass --frontend-decoding to enable Rust frontend image decoding + NIXL RDMA transfer
