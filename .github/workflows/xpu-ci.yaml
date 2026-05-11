@@ -194,6 +194,7 @@ jobs:
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           start_minio: 'false'
+          extra_pytest_args: 'tests/router/test_router_e2e_with_vllm_xpu.py'
 
       - name: Cleanup Pytest Containers
         if: always()
