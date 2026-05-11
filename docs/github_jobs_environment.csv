@@ -1,0 +1,98 @@
+workflow_file,job_id,trigger_type,runner,environment_type,classification_basis
+.github/workflows/allure-report.yml,resolve-params,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/allure-report.yml,generate-report,direct,,host,reusable workflow ./.github/workflows/generate-allure-report.yml without docker/k8s patterns
+.github/workflows/build-flavor.yml,build,reusable_only,prod-builder-v3,host,no docker/k8s markers in job
+.github/workflows/build-frontend-image.yaml,changed-files,mixed,ubuntu-slim,host,no docker/k8s markers in job
+.github/workflows/build-frontend-image.yaml,build-frontend-image,mixed,prod-builder-v3,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/build-frontend-image.yaml,compliance,mixed,prod-builder-v3,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/build-frontend-image.yaml,frontend-status-check,mixed,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/build-frontend-image.yaml,clean-k8s-builder,mixed,prod-default-small-v2,mixed,job content includes docker and k8s patterns
+.github/workflows/build-on-demand.yml,init,direct,ubuntu-slim,host,no docker/k8s markers in job
+.github/workflows/build-on-demand.yml,vllm-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/build-on-demand.yml,sglang-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/build-on-demand.yml,trtllm-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/build-on-demand.yml,operator,direct,prod-default-v2,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/build-on-demand.yml,clean-k8s-builder,direct,prod-default-small-v2,mixed,job content includes docker and k8s patterns
+.github/workflows/build-test-distribute-flavor-matrix.yml,pipeline,reusable_only,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor.yml includes docker and k8s patterns
+.github/workflows/build-test-distribute-flavor.yml,build,reusable_only,prod-builder-v3,host,no docker/k8s markers in job
+.github/workflows/build-test-distribute-flavor.yml,test,reusable_only,${{ matrix.runner }},docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/build-test-distribute-flavor.yml,multi-gpu-test,reusable_only,prod-tester-amd-gpu-4-v1,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/build-test-distribute-flavor.yml,compliance,reusable_only,prod-builder-v3,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/build-test-distribute-flavor.yml,copy-to-acr,reusable_only,prod-default-small-v2,host,no docker/k8s markers in job
+.github/workflows/codeql.yml,codeql,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/container-validation-dynamo.yml,changed-files,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/container-validation-dynamo.yml,dynamo-status-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/container-validation-dynamo.yml,build,direct,prod-builder-v3,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/container-validation-dynamo.yml,rust-checks,direct,prod-tester-amd-gpu-v1,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/container-validation-dynamo.yml,mypy,direct,prod-builder-amd-v1,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/container-validation-dynamo.yml,test-parallel,direct,prod-builder-amd-v1,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/container-validation-dynamo.yml,test-sequential,direct,prod-builder-amd-v1,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/copyright-checks.yml,copyright-checks,other,ubuntu-24.04,k8s,job content includes k8s patterns
+.github/workflows/dco_comment.yml,dco-comment,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/docs-link-check.yml,lychee,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/docs-link-check.yml,broken-links-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/fern-docs.yml,changed-files,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/fern-docs.yml,fern-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/fern-docs.yml,fern-broken-links,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/fern-docs.yml,preview-or-publish-docs,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/fern-docs.yml,release-version,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/generate-allure-report.yml,generate-and-deploy,reusable_only,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/label-pr.yml,label,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/lint-pr-title.yaml,conventional-commits,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/nightly-ci.yml,create-fresh-builder,direct,prod-default-small-v2,mixed,job content includes docker and k8s patterns
+.github/workflows/nightly-ci.yml,vllm-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/nightly-ci.yml,sglang-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/nightly-ci.yml,trtllm-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/nightly-ci.yml,clean-k8s-builder,direct,prod-default-small-v2,mixed,job content includes docker and k8s patterns
+.github/workflows/nightly-ci.yml,notify-slack,direct,ubuntu-slim,host,no docker/k8s markers in job
+.github/workflows/post-merge-ci.yml,vllm-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,sglang-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,trtllm-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,vllm-dev-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/post-merge-ci.yml,sglang-dev-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/post-merge-ci.yml,trtllm-dev-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/post-merge-ci.yml,vllm-efa-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,trtllm-efa-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,frontend-image,direct,,mixed,reusable workflow ./.github/workflows/build-frontend-image.yaml includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,operator,direct,prod-default-v2,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/post-merge-ci.yml,deploy-operator,direct,prod-default-small-v2,k8s,job content includes k8s patterns
+.github/workflows/post-merge-ci.yml,deploy-test-vllm,direct,,k8s,reusable workflow ./.github/workflows/shared-deploy-test-framework.yml includes k8s patterns
+.github/workflows/post-merge-ci.yml,deploy-test-sglang,direct,,k8s,reusable workflow ./.github/workflows/shared-deploy-test-framework.yml includes k8s patterns
+.github/workflows/post-merge-ci.yml,deploy-test-trtllm,direct,,k8s,reusable workflow ./.github/workflows/shared-deploy-test-framework.yml includes k8s patterns
+.github/workflows/post-merge-ci.yml,deploy-cleanup,direct,prod-default-small-v2,k8s,job content includes k8s patterns
+.github/workflows/post-merge-ci.yml,deploy-test-gaie,direct,prod-default-small-v2,k8s,job content includes k8s patterns
+.github/workflows/post-merge-ci.yml,deploy-status-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/post-merge-ci.yml,clean-k8s-builder,direct,prod-default-small-v2,mixed,job content includes docker and k8s patterns
+.github/workflows/post-merge-ci.yml,notify-slack,direct,prod-builder-amd-v1,host,no docker/k8s markers in job
+.github/workflows/pr.yaml,changed-files,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pr.yaml,backend-status-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pr.yaml,deploy-status-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pr.yaml,operator,direct,prod-default-v2,docker,job content includes docker/buildx/buildkit patterns
+.github/workflows/pr.yaml,planner-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor.yml includes docker and k8s patterns
+.github/workflows/pr.yaml,vllm-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/pr.yaml,sglang-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/pr.yaml,trtllm-pipeline,direct,,mixed,reusable workflow ./.github/workflows/build-test-distribute-flavor-matrix.yml includes docker and k8s patterns
+.github/workflows/pr.yaml,vllm-dev-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/pr.yaml,sglang-dev-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/pr.yaml,trtllm-dev-pipeline,direct,,docker,reusable workflow ./.github/workflows/build-flavor.yml includes docker patterns
+.github/workflows/pr.yaml,deploy-operator,direct,prod-default-small-v2,k8s,job content includes k8s patterns
+.github/workflows/pr.yaml,deploy-test-vllm,direct,,k8s,reusable workflow ./.github/workflows/shared-deploy-test-framework.yml includes k8s patterns
+.github/workflows/pr.yaml,deploy-test-sglang,direct,,k8s,reusable workflow ./.github/workflows/shared-deploy-test-framework.yml includes k8s patterns
+.github/workflows/pr.yaml,deploy-test-trtllm,direct,,k8s,reusable workflow ./.github/workflows/shared-deploy-test-framework.yml includes k8s patterns
+.github/workflows/pr.yaml,deploy-cleanup,direct,prod-default-small-v2,k8s,job content includes k8s patterns
+.github/workflows/pr.yaml,allure-report,direct,,host,reusable workflow ./.github/workflows/generate-allure-report.yml without docker/k8s patterns
+.github/workflows/pr.yaml,clean-k8s-builder,direct,prod-default-small-v2,mixed,job content includes docker and k8s patterns
+.github/workflows/pr_full_ci_reminder.yaml,pr_reminder,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pre-merge.yml,changed-files,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pre-merge.yml,pre-merge-status-check,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pre-merge.yml,pre-commit,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/pre-merge.yml,rust-tests,direct,{'group': 'Fastchecker'},host,no docker/k8s markers in job
+.github/workflows/pre-merge.yml,rust-clippy,direct,{'group': 'Fastchecker'},host,no docker/k8s markers in job
+.github/workflows/release.yml,prepare-release,direct,prod-default-small-v2,host,no docker/k8s markers in job
+.github/workflows/release.yml,release-publish,direct,prod-builder-amd-v1,k8s,job content includes k8s patterns
+.github/workflows/release_rc_announcement.yml,announce-rc,direct,prod-builder-amd-v1,host,no docker/k8s markers in job
+.github/workflows/shared-deploy-test-framework.yml,deploy-test,reusable_only,prod-default-small-v2,k8s,job content includes k8s patterns
+.github/workflows/stale_cleaner.yml,stale,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/test_report.yaml,test-results,direct,ubuntu-latest,host,no docker/k8s markers in job
+.github/workflows/trigger_ci.yml,mirror_repo,direct,{'group': 'gitlab_ci_runners'},host,no docker/k8s markers in job
+.github/workflows/trigger_ci.yml,trigger-ci,direct,{'group': 'gitlab_ci_runners'},host,no docker/k8s markers in job
