@@ -18,7 +18,6 @@ from tests.serve.common import (
     run_serve_deployment,
 )
 import tests.serve.conftest as _serve_conftest
-from tests.serve.conftest import get_multimodal_test_image_bytes
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -625,7 +624,7 @@ def test_multimodal_b64(
     (not collection time), ensuring it only fails when actually executed.
     """
     # Load B64 image at test execution time (uses real PNG even if MULTIMODAL_IMG is LFS pointer)
-    b64_img = base64.b64encode(get_multimodal_test_image_bytes()).decode()
+    b64_img = base64.b64encode(_serve_conftest.get_multimodal_test_image_bytes()).decode()
 
     # Create payload with B64 image
     b64_payload = chat_payload(
@@ -682,7 +681,7 @@ def test_multimodal_b64_frontend_decoding(
     with inline base64 data: URIs (not HTTP URLs). Verifies that the
     strip_inline_data_urls optimization does not break correctness.
     """
-    b64_img = base64.b64encode(get_multimodal_test_image_bytes()).decode()
+    b64_img = base64.b64encode(_serve_conftest.get_multimodal_test_image_bytes()).decode()
 
     b64_payload = chat_payload(
         [

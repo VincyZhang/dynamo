@@ -47,12 +47,12 @@ def get_multimodal_test_image_bytes() -> bytes:
 
 @pytest.fixture(scope="session")
 def httpserver_listen_address():
-    import tests.serve.conftest as _self_module
+    global MULTIMODAL_IMG_URL
 
     port = allocate_port(_IMAGE_SERVER_PORT_HINT)
     # Update the module-level URL so tests that read MULTIMODAL_IMG_URL
     # after fixture setup see the real allocated port.
-    _self_module.MULTIMODAL_IMG_URL = f"http://localhost:{port}/llm-graphic.png"
+    MULTIMODAL_IMG_URL = f"http://localhost:{port}/llm-graphic.png"
     yield ("127.0.0.1", port)
     deallocate_port(port)
 

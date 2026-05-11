@@ -4,9 +4,9 @@
 name: PR-XPU
 
 on:
-  push:
+  pull_request:
     branches:
-      - "pull-request/[0-9]+"
+      - main
 
 concurrency:
   group: pr-xpu-${{ github.ref_name }}
@@ -30,8 +30,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Extract PR number from branch name (pull-request/123 → 123)
-          PR_NUMBER="${GITHUB_REF_NAME##*/}"
+          # Use github.event.number for pull_request trigger
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.number }}"
+          if [[ -z "$PR_NUMBER" ]]; then
+            # Fallback: extract from branch name (pull-request/123 → 123)
+            PR_NUMBER="${GITHUB_REF_NAME##*/}"
+          fi
 
           # Check for xpu label
           HAS_XPU=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
@@ -78,7 +82,7 @@ jobs:
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      pytest_markers: 'vllm and xpu_1 and pre_merge and not multimodal'
+      pytest_markers: 'vllm and xpu_1 and pre_merge'
 
   # ============================================================================
   # STATUS CHECK
