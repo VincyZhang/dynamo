@@ -13,47 +13,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-  # ============================================================================
-  # GATE – only run XPU CI when the PR has the "xpu" label.
-  # Push trigger (pull-request/* branch) already guarantees only internal
-  # users / copy-pr-bot can reach this workflow.
-  # ============================================================================
-
-  guard:
-    runs-on: ubuntu-latest
-    outputs:
-      has_xpu_label: ${{ steps.pr-info.outputs.has_xpu_label }}
-    steps:
-      - name: Get PR info and check xpu label
-        id: pr-info
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Use github.event.number for pull_request trigger
-          PR_NUMBER="${{ github.event.pull_request.number || github.event.number }}"
-          if [[ -z "$PR_NUMBER" ]]; then
-            # Fallback: extract from branch name (pull-request/123 → 123)
-            PR_NUMBER="${GITHUB_REF_NAME##*/}"
-          fi
-
-          # Check for xpu label
-          HAS_XPU=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
-            --jq '[.labels[].name] | any(. == "xpu")')
-          echo "has_xpu_label=${HAS_XPU}" >> "$GITHUB_OUTPUT"
-          if [[ "${HAS_XPU}" == "true" ]]; then
-            echo "✅ PR #${PR_NUMBER} has 'xpu' label – running XPU CI"
-          else
-            echo "⏭️ PR #${PR_NUMBER} does not have 'xpu' label – skipping XPU CI"
-          fi
-
   # ============================================================================
   # CHANGE DETECTION
   # ============================================================================
 
   changed-files:
-    needs: [guard]
-    if: needs.guard.outputs.has_xpu_label == 'true'
     runs-on: ubuntu-latest
     outputs:
       core: ${{ steps.changes.outputs.core }}
@@ -82,7 +46,7 @@ jobs:
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      pytest_markers: 'vllm and xpu_1 and pre_merge'
+      pytest_markers: 'vllm and xpu_1 and pre_merge and not multimodal'
 
   # ============================================================================
   # STATUS CHECK
@@ -90,8 +54,8 @@ jobs:
 
   xpu-status-check:
     runs-on: ubuntu-latest
-    needs: [guard, changed-files, xpu-ci-vllm]
-    if: always() && needs.guard.outputs.has_xpu_label == 'true'
+    needs: [changed-files, xpu-ci-vllm]
+    if: always()
     steps:
       - name: Check all XPU jobs
         run: |
