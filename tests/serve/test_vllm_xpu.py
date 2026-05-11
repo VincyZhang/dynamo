@@ -17,7 +17,8 @@ from tests.serve.common import (
     params_with_model_mark,
     run_serve_deployment,
 )
-from tests.serve.conftest import MULTIMODAL_IMG_URL, get_multimodal_test_image_bytes
+import tests.serve.conftest as _serve_conftest
+from tests.serve.conftest import get_multimodal_test_image_bytes
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -272,6 +273,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.profiled_vram_gib(9.6),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 1_710_490_000
@@ -295,7 +297,7 @@ vllm_configs = {
                     },
                     {
                         "type": "image_url",
-                        "image_url": {"url": MULTIMODAL_IMG_URL},
+                        "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
                     },
                 ],
                 repeat_count=1,
@@ -311,6 +313,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.profiled_vram_gib(19.9),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 922_354_000
@@ -333,7 +336,7 @@ vllm_configs = {
                     },
                     {
                         "type": "image_url",
-                        "image_url": {"url": MULTIMODAL_IMG_URL},
+                        "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
                     },
                 ],
                 repeat_count=1,
@@ -348,6 +351,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.profiled_vram_gib(14.9),  # actual profiled peak with kv-bytes
             pytest.mark.requested_vllm_kv_cache_bytes(
                 922_354_000
@@ -419,7 +423,7 @@ vllm_configs = {
                                 },
                                 {
                                     "type": "image_url",
-                                    "image_url": {"url": MULTIMODAL_IMG_URL},
+                                    "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
                                 },
                             ],
                         }
@@ -471,6 +475,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
+            pytest.mark.multimodal,
             pytest.mark.pre_merge,
             pytest.mark.skip(
                 reason="Temporary: video stream load failure for local media URI in CI"
@@ -605,6 +610,7 @@ def test_serve_deployment(
 @pytest.mark.e2e
 @pytest.mark.xpu_2
 @pytest.mark.nightly
+@pytest.mark.multimodal
 @pytest.mark.timeout(360)  # Match VLLMConfig.timeout for this multimodal deployment
 def test_multimodal_b64(
     request,
@@ -759,6 +765,7 @@ def lora_chat_payload(
 @pytest.mark.e2e
 @pytest.mark.xpu_1
 @pytest.mark.model("Qwen/Qwen3-0.6B")
+@pytest.mark.model("codelion/Qwen3-0.6B-accuracy-recovery-lora")
 @pytest.mark.timeout(600)
 @pytest.mark.post_merge
 def test_lora_aggregated(

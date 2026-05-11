@@ -15,7 +15,7 @@ from tests.serve.common import (
     params_with_model_mark,
     run_serve_deployment,
 )
-from tests.serve.conftest import MULTIMODAL_IMG_URL
+import tests.serve.conftest as _serve_conftest
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.serve.multimodal_profiles.vllm import (
     VLLM_MULTIMODAL_PROFILES,
@@ -415,7 +415,7 @@ vllm_configs = {
                                 },
                                 {
                                     "type": "image_url",
-                                    "image_url": {"url": MULTIMODAL_IMG_URL},
+                                    "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
                                 },
                             ],
                         }
