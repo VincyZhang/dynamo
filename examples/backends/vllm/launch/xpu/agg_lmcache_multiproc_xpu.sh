@@ -34,9 +34,6 @@ MODEL="Qwen/Qwen3-0.6B"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-4096}"
 MAX_CONCURRENT_SEQS="${MAX_CONCURRENT_SEQS:-2}"
 
-# Non-profiled XPU fallback: cap at 0.75 to leave headroom for the Level Zero
-# driver/runtime, whose allocations vLLM's accounting doesn't track. The profiler
-# path supplies its own --gpu-memory-utilization 0.01 via $GPU_MEM_ARGS.
 GPU_MEM_ARGS=$(build_vllm_gpu_mem_args)
 
 HTTP_PORT="${DYN_HTTP_PORT:-8000}"
@@ -46,11 +43,13 @@ python -m dynamo.frontend &
 
 DYN_SYSTEM_PORT=${DYN_SYSTEM_PORT:-8081} \
   PROMETHEUS_MULTIPROC_DIR="$PROMETHEUS_MULTIPROC_DIR" \
+  ZE_AFFINITY_MASK=$ZE_AFFINITY_MASK \
   python -m dynamo.vllm --model "$MODEL" --enforce-eager \
   --max-model-len "$MAX_MODEL_LEN" \
   --max-num-seqs "$MAX_CONCURRENT_SEQS" \
   --block-size "${BLOCK_SIZE:-64}" \
-  ${GPU_MEM_ARGS:---gpu-memory-utilization 0.75} \
+  --gpu-memory-utilization 0.75 \
+  $GPU_MEM_ARGS \
   --kv-transfer-config '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both","kv_buffer_device":"xpu"}' &
 
 # Exit on first worker failure; kill 0 in the EXIT trap tears down the rest
