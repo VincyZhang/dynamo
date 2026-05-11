@@ -4,7 +4,7 @@
 import asyncio
 
 # Timing notes (measured locally):
-# - GPU-1 subset (`-m "gpu_1 and not gpu_2"`): 130.43s total for 3 tests.
+# - GPU-1 subset (`-m "gpu_1 and not gpu_2"`): 130.43s total for 3 tests on vLLM 0.20.0.
 # These tests load a real model and can be slow/flaky when GPU resources are contended,
 # so we set explicit pytest timeouts to fail fast on hangs (see per-test markers below).
 import json
@@ -35,6 +35,7 @@ from tests.utils.device import (
     get_device_visibility_env_var,
     get_gpu_memory_utilization,
 )
+from tests.utils.gpu_args import build_gpu_mem_args
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.port_utils import allocate_ports, deallocate_ports
 
@@ -69,6 +70,13 @@ VLLM_ARGS_NO_BLOCK_SIZE: Dict[str, Any] = {
     "max_model_len": _MAX_MODEL_LEN,  # Limit context length to reduce KV cache size
     "enforce_eager": True,  # Disable CUDA graphs for faster startup & lower memory
 }
+
+
+def _vllm_gpu_mem_args(gpu_memory_utilization: Optional[float]) -> list[str]:
+    args = build_gpu_mem_args("build_vllm_gpu_mem_args")
+    if args or gpu_memory_utilization is None:
+        return args
+    return ["--gpu-memory-utilization", str(gpu_memory_utilization)]
 
 
 class VLLMProcess(ManagedEngineProcessMixin):
@@ -231,10 +239,7 @@ class VLLMProcess(ManagedEngineProcessMixin):
                 command.append("--enforce-eager")
 
             # Limit VRAM allocation (required for multi-worker on same GPU)
-            if gpu_memory_utilization is not None:
-                command.extend(
-                    ["--gpu-memory-utilization", str(gpu_memory_utilization)]
-                )
+            command.extend(_vllm_gpu_mem_args(gpu_memory_utilization))
 
             # Add optional max_model_len if specified
             if max_model_len is not None:
@@ -651,9 +656,11 @@ class VLLMProcess(ManagedEngineProcessMixin):
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
-@pytest.mark.timeout(
-    600
-)  # Session-scoped model download (~4min) + worker startup (~2min) on XPU
+@pytest.mark.profiled_vram_gib(6.9)  # actual profiled peak with kv-bytes
+@pytest.mark.requested_vllm_kv_cache_bytes(
+    331_801_000
+)  # KV cache cap (2x safety over min=165_900_288)
+@pytest.mark.timeout(600)  # Session-scoped model download (~4min) + worker startup (~2min) on XPU
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_vllm_kv_router_basic(
     request,
@@ -677,7 +684,11 @@ def test_vllm_kv_router_basic(
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
-@pytest.mark.timeout(150)  # ~3x average (~43s/test), rounded up
+@pytest.mark.profiled_vram_gib(6.9)  # actual profiled peak with kv-bytes
+@pytest.mark.requested_vllm_kv_cache_bytes(
+    331_801_000
+)  # KV cache cap (2x safety over min=165_900_288)
+@pytest.mark.timeout(360)  # vLLM 0.20.x startup can exceed 150s on contended CI runners
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_vllm_kv_router_without_block_size_specified_in_vllm_args(
     request,
@@ -702,6 +713,10 @@ def test_vllm_kv_router_without_block_size_specified_in_vllm_args(
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
 @pytest.mark.xpu_1
+@pytest.mark.profiled_vram_gib(6.9)  # actual profiled peak with kv-bytes
+@pytest.mark.requested_vllm_kv_cache_bytes(
+    331_801_000
+)  # KV cache cap (2x safety over min=165_900_288)
 @pytest.mark.timeout(600)  # XPU model loading can take 4+ min
 @pytest.mark.parametrize("request_plane", ["tcp"], indirect=True)
 def test_router_decisions_vllm_multiple_workers(
@@ -798,7 +813,11 @@ def test_router_decisions_vllm_disagg(
 
 @pytest.mark.pre_merge
 @pytest.mark.gpu_1
-@pytest.mark.timeout(150)  # ~3x average (~43s/test), rounded up
+@pytest.mark.profiled_vram_gib(6.9)  # actual profiled peak with kv-bytes
+@pytest.mark.requested_vllm_kv_cache_bytes(
+    331_801_000
+)  # KV cache cap (2x safety over min=165_900_288)
+@pytest.mark.timeout(360)  # vLLM 0.20.x startup can exceed 150s on contended CI runners
 @pytest.mark.parametrize(
     "store_backend,durable_kv_events,request_plane",
     [
