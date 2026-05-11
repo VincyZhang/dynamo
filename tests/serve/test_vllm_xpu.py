@@ -17,7 +17,7 @@ from tests.serve.common import (
     params_with_model_mark,
     run_serve_deployment,
 )
-import tests.serve.conftest as _serve_conftest
+from tests.serve.conftest import MULTIMODAL_IMG_URL, get_multimodal_test_image_bytes
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -278,7 +278,7 @@ vllm_configs = {
                 1_710_490_000
             ),  # KV cache cap (2x safety over min=855_244_800)
             pytest.mark.timeout(220),  # ~5x observed 43.7s; 2B model loads slower on CI
-            pytest.mark.pre_merge,
+            pytest.mark.post_merge,
         ],
         model="Qwen/Qwen2-VL-2B-Instruct",
         # Pass --frontend-decoding to enable Rust frontend image decoding + NIXL RDMA transfer
@@ -287,9 +287,6 @@ vllm_configs = {
             "Qwen/Qwen2-VL-2B-Instruct",
             "--frontend-decoding",
         ],
-        env={
-            "DYN_MM_ALLOW_INTERNAL": "1",
-        },
         request_payloads=[
             chat_payload(
                 [
@@ -299,7 +296,7 @@ vllm_configs = {
                     },
                     {
                         "type": "image_url",
-                        "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
+                        "image_url": {"url": MULTIMODAL_IMG_URL},
                     },
                 ],
                 repeat_count=1,
@@ -338,7 +335,7 @@ vllm_configs = {
                     },
                     {
                         "type": "image_url",
-                        "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
+                        "image_url": {"url": MULTIMODAL_IMG_URL},
                     },
                 ],
                 repeat_count=1,
@@ -425,7 +422,7 @@ vllm_configs = {
                                 },
                                 {
                                     "type": "image_url",
-                                    "image_url": {"url": _serve_conftest.MULTIMODAL_IMG_URL},
+                                    "image_url": {"url": MULTIMODAL_IMG_URL},
                                 },
                             ],
                         }
@@ -627,7 +624,7 @@ def test_multimodal_b64(
     (not collection time), ensuring it only fails when actually executed.
     """
     # Load B64 image at test execution time (uses real PNG even if MULTIMODAL_IMG is LFS pointer)
-    b64_img = base64.b64encode(_serve_conftest.get_multimodal_test_image_bytes()).decode()
+    b64_img = base64.b64encode(get_multimodal_test_image_bytes()).decode()
 
     # Create payload with B64 image
     b64_payload = chat_payload(
@@ -684,7 +681,7 @@ def test_multimodal_b64_frontend_decoding(
     with inline base64 data: URIs (not HTTP URLs). Verifies that the
     strip_inline_data_urls optimization does not break correctness.
     """
-    b64_img = base64.b64encode(_serve_conftest.get_multimodal_test_image_bytes()).decode()
+    b64_img = base64.b64encode(get_multimodal_test_image_bytes()).decode()
 
     b64_payload = chat_payload(
         [
