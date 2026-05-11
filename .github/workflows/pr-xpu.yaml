@@ -4,9 +4,9 @@
 name: PR-XPU
 
 on:
-  push:
+  pull_request:
     branches:
-      - "pull-request/[0-9]+"
+      - main
 
 concurrency:
   group: pr-xpu-${{ github.ref_name }}
