@@ -230,6 +230,7 @@ def test_vllm_kv_router_basic_xpu(
         engine_args_name="vllm_args",
         engine_args=VLLM_ARGS,
         num_workers=2,
+        single_gpu=False,
         request=request,
         request_plane=request_plane,
         block_size=BLOCK_SIZE,
@@ -252,6 +253,7 @@ def test_vllm_kv_router_without_block_size_xpu(
         engine_args_name="vllm_args",
         engine_args=VLLM_ARGS_NO_BLOCK_SIZE,
         num_workers=2,
+        single_gpu=False,
         request=request,
         request_plane=request_plane,
         block_size=BLOCK_SIZE,
@@ -279,5 +281,6 @@ def test_router_decisions_vllm_multiple_workers_xpu(
         block_size=BLOCK_SIZE,
         component_name="backend",
         num_workers=2,
+        single_gpu=False,
         test_dp_rank=False,
     )
