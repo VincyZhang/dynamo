@@ -74,7 +74,7 @@ jobs:
         shell: bash
         run: |
           python3 --version
-          python3 -m pip install jinja2 pyyaml
+          sudo apt-get update -qq && sudo apt-get install -y -qq python3-jinja2 python3-yaml
 
       - name: Generate Dockerfile
         shell: bash
