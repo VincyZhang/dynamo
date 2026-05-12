@@ -63,27 +63,18 @@ jobs:
   # ============================================================================
 
   build-xpu:
-    runs-on: xpu
+    runs-on: xpu-new
     steps:
       - name: Checkout code
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
         with:
           ref: ${{ env.SOURCE_REF }}
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
-        with:
-          python-version: '3.12'
-
-      - name: Install render dependencies
-        shell: bash
-        run: pip install jinja2 pyyaml
-
       - name: Generate Dockerfile
         shell: bash
         run: |
           echo "::group::Generating XPU Dockerfile"
-          python ./container/render.py \
+          python3 ./container/render.py \
               --target=${{ env.TARGET }} \
               --framework=${{ env.FRAMEWORK }} \
               --device=${{ env.DEVICE }} \
@@ -149,7 +140,7 @@ jobs:
   test-xpu:
     needs: [build-xpu]
     if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
-    runs-on: xpu
+    runs-on: xpu-new
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
       IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}
@@ -211,7 +202,7 @@ jobs:
   cleanup-xpu:
     needs: [build-xpu, test-xpu]
     if: ${{ always() }}
-    runs-on: xpu
+    runs-on: xpu-new
     env:
       IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}
       TEST_IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}-test
