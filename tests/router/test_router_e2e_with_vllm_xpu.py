@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""XPU-specific router e2e tests (single-card only).
+"""XPU-specific router e2e tests (multi-card, one device per worker).
 
 This module mirrors the gpu_1 tests from test_router_e2e_with_vllm.py
 with the following XPU adaptations:
@@ -45,12 +45,12 @@ pytestmark = [
     pytest.mark.e2e,
     pytest.mark.router,
     pytest.mark.vllm,
-    pytest.mark.xpu_1,
+    pytest.mark.xpu_2,
     pytest.mark.model(MODEL_NAME),
 ]
 
 BLOCK_SIZE = get_default_vllm_block_size()
-_GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=True)
+_GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=False)
 _MAX_MODEL_LEN = 768
 
 VLLM_ARGS: Dict[str, Any] = {
@@ -84,7 +84,6 @@ class XPUVLLMProcess(ManagedEngineProcessMixin):
         request,
         vllm_args: Optional[Dict[str, Any]] = None,
         num_workers: int = 2,
-        single_gpu: bool = False,
         request_plane: str = "tcp",
         store_backend: str = "etcd",
         namespace: Optional[str] = None,
@@ -126,19 +125,20 @@ class XPUVLLMProcess(ManagedEngineProcessMixin):
         inherited_visibility = os.environ.get(visibility_env_var)
 
         for worker_idx in range(num_workers):
-            # Single-GPU: split the affinity mask on XPU.
-            if single_gpu:
-                if visibility_env_var == "ZE_AFFINITY_MASK" and inherited_visibility:
-                    devices = [d.strip() for d in inherited_visibility.split(",")]
-                    gpu_device = (
-                        devices[gpu_start_index]
-                        if gpu_start_index < len(devices)
-                        else str(gpu_start_index)
-                    )
-                else:
-                    gpu_device = str(gpu_start_index)
+            # Map worker index to physical device using inherited mask.
+            # ZE_AFFINITY_MASK uses physical indices (not remapped like
+            # CUDA_VISIBLE_DEVICES), so we must pick from the inherited
+            # list to stay on the cards assigned to this runner.
+            device_idx = gpu_start_index + worker_idx
+            if visibility_env_var == "ZE_AFFINITY_MASK" and inherited_visibility:
+                devices = [d.strip() for d in inherited_visibility.split(",")]
+                gpu_device = (
+                    devices[device_idx]
+                    if device_idx < len(devices)
+                    else str(device_idx)
+                )
             else:
-                gpu_device = str(gpu_start_index + worker_idx)
+                gpu_device = str(device_idx)
 
             command = ["python3", "-m", "dynamo.vllm", "--model", model]
 
@@ -211,7 +211,7 @@ class XPUVLLMProcess(ManagedEngineProcessMixin):
 
 
 # ---------------------------------------------------------------------------
-# Single-card tests
+# Multi-card tests (one XPU device per worker)
 # ---------------------------------------------------------------------------
 
 
@@ -230,7 +230,6 @@ def test_vllm_kv_router_basic_xpu(
         engine_args_name="vllm_args",
         engine_args=VLLM_ARGS,
         num_workers=2,
-        single_gpu=True,
         request=request,
         request_plane=request_plane,
         block_size=BLOCK_SIZE,
@@ -253,7 +252,6 @@ def test_vllm_kv_router_without_block_size_xpu(
         engine_args_name="vllm_args",
         engine_args=VLLM_ARGS_NO_BLOCK_SIZE,
         num_workers=2,
-        single_gpu=True,
         request=request,
         request_plane=request_plane,
         block_size=BLOCK_SIZE,
@@ -281,6 +279,5 @@ def test_router_decisions_vllm_multiple_workers_xpu(
         block_size=BLOCK_SIZE,
         component_name="backend",
         num_workers=2,
-        single_gpu=True,
         test_dp_rank=False,
     )

@@ -140,7 +140,7 @@ jobs:
   test-xpu:
     needs: [build-xpu]
     if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
-    runs-on: xpu-new
+    runs-on: xpu-two
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
       IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}
