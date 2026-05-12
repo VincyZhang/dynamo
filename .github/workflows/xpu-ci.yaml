@@ -70,20 +70,11 @@ jobs:
         with:
           ref: ${{ env.SOURCE_REF }}
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
-        with:
-          python-version: '3.12'
-
-      - name: Install render dependencies
-        shell: bash
-        run: pip install jinja2 pyyaml
-
       - name: Generate Dockerfile
         shell: bash
         run: |
           echo "::group::Generating XPU Dockerfile"
-          python ./container/render.py \
+          python3 ./container/render.py \
               --target=${{ env.TARGET }} \
               --framework=${{ env.FRAMEWORK }} \
               --device=${{ env.DEVICE }} \
