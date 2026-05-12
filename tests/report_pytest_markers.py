@@ -181,7 +181,6 @@ STUB_MODULES = [
     "sglang.srt.parser.reasoning_parser",
     "sglang.srt.utils",
     "sglang.srt.utils.hf_transformers_utils",
-    "sglang.srt.utils.network",
     "sglang.srt.disaggregation",
     "sglang.srt.disaggregation.kv_events",
     "sglang.srt.disaggregation.utils",

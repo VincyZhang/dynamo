@@ -234,7 +234,7 @@ def get_decode_worker_dir(backend: str, deploy_type: str) -> Optional[str]:
         return WORKER_MAP[backend]["decode_agg"]  # "TRTLLMWorker"
     else:
         return WORKER_MAP[backend]["decode"]
-        # "decode" (trtllm disagg), "VllmDecodeWorker", or "decode" (sglang)
+        # "TRTLLMDecodeWorker", "VllmDecodeWorker", or "decode"
 
 
 def calculate_recovery_time(
