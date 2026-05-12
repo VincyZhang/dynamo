@@ -91,7 +91,7 @@ jobs:
           set -x
 
           IMAGE_NAME="dynamo-${{ env.FRAMEWORK }}-${{ env.TARGET }}-${{ env.DEVICE }}"
-          IMAGE_TAG="${IMAGE_NAME}:${{ env.SOURCE_REF }}"
+          IMAGE_TAG="${IMAGE_NAME}:${{ github.run_id }}-${{ env.SOURCE_REF }}"
 
           echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
@@ -140,11 +140,11 @@ jobs:
   test-xpu:
     needs: [build-xpu]
     if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
-    runs-on: xpu-two
+    runs-on: xpu-new
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
-      IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}
-      TEST_IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}-test
+      IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ github.run_id }}-${{ inputs.source_ref || github.sha }}
+      TEST_IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ github.run_id }}-${{ inputs.source_ref || github.sha }}-test
     steps:
       - name: Checkout code
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
@@ -204,8 +204,8 @@ jobs:
     if: ${{ always() }}
     runs-on: xpu-new
     env:
-      IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}
-      TEST_IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ inputs.source_ref || github.sha }}-test
+      IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ github.run_id }}-${{ inputs.source_ref || github.sha }}
+      TEST_IMAGE_TAG: dynamo-${{ inputs.framework || 'vllm' }}-${{ inputs.target || 'runtime' }}-xpu:${{ github.run_id }}-${{ inputs.source_ref || github.sha }}-test
     steps:
       - name: Cleanup Docker Images
         shell: bash
@@ -213,5 +213,4 @@ jobs:
           echo "🧹 Cleaning up XPU docker images..."
           docker image rm -f "${{ env.IMAGE_TAG }}" 2>/dev/null || true
           docker image rm -f "${{ env.TEST_IMAGE_TAG }}" 2>/dev/null || true
-          docker image prune -f 2>/dev/null || true
           echo "✓ XPU image cleanup finished"

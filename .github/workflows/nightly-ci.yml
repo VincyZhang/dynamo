@@ -4,11 +4,10 @@
 name: Nightly CI Pipeline
 
 on:
-  # pull_request trigger disabled for XPU CI development
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types: [opened, synchronize, reopened, labeled]
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:  # Allow manual triggering for testing
     inputs:
       release:
