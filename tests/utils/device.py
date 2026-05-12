@@ -68,6 +68,11 @@ def get_gpu_memory_utilization(num_workers: int = 1, single_gpu: bool = False) -
     device = detect_target_device()
 
     if device == "xpu":
+        if single_gpu and num_workers >= 2:
+            # XPU shared-GPU: 2+ workers on same card (e.g., 23GB Intel)
+            # Worker 1 gets ~4.3GB KV cache at 0.3, but worker 2 sees -2.5GB
+            # available. Use 0.2 so each worker reserves less memory.
+            return 0.2
         # XPU general case (single worker or multi-GPU)
         return 0.4
 
