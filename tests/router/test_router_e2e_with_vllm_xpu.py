@@ -29,15 +29,7 @@ from tests.router.e2e_harness import (
 )
 from tests.router.helper import generate_random_suffix
 from tests.utils.constants import DefaultPort
-<<<<<<< HEAD
 from tests.utils.device import get_default_vllm_block_size
-=======
-from tests.utils.device import (
-    get_default_vllm_block_size,
-    get_device_visibility_env_var,
-    get_gpu_memory_utilization,
-)
->>>>>>> f55195ecaa (test: add XPU router e2e tests with multi-card support)
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.port_utils import allocate_ports, deallocate_ports
 
@@ -54,16 +46,13 @@ pytestmark = [
 ]
 
 BLOCK_SIZE = get_default_vllm_block_size()
-<<<<<<< HEAD
 _MAX_MODEL_LEN = 768
 _GPU_MEM_UTIL = 0.4
 
 # Device visibility: ZE_AFFINITY_MASK for XPU.
 _DEVICE_VISIBILITY_ENV_VAR = "ZE_AFFINITY_MASK"
-=======
 _GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=False)
 _MAX_MODEL_LEN = 768
->>>>>>> f55195ecaa (test: add XPU router e2e tests with multi-card support)
 
 VLLM_ARGS: Dict[str, Any] = {
     "block_size": BLOCK_SIZE,
@@ -100,7 +89,6 @@ class XPUVLLMProcess(ManagedEngineProcessMixin):
         store_backend: str = "etcd",
         namespace: Optional[str] = None,
         gpu_start_index: int = 0,
-<<<<<<< HEAD
         single_gpu: bool = False,
         **kwargs,
     ):
@@ -110,10 +98,6 @@ class XPUVLLMProcess(ManagedEngineProcessMixin):
                 "XPU does not support single_gpu mode; "
                 "each worker requires a dedicated card."
             )
-=======
-        **kwargs,
-    ):
->>>>>>> f55195ecaa (test: add XPU router e2e tests with multi-card support)
         namespace_suffix = generate_random_suffix()
         self.namespace = namespace or f"test-namespace-{namespace_suffix}"
         self.component_name = "backend"
@@ -145,11 +129,7 @@ class XPUVLLMProcess(ManagedEngineProcessMixin):
         self.model_name = model
         self.block_size = vllm_args.get("block_size", BLOCK_SIZE)
 
-<<<<<<< HEAD
         visibility_env_var = _DEVICE_VISIBILITY_ENV_VAR
-=======
-        visibility_env_var = get_device_visibility_env_var()
->>>>>>> f55195ecaa (test: add XPU router e2e tests with multi-card support)
         inherited_visibility = os.environ.get(visibility_env_var)
 
         for worker_idx in range(num_workers):
@@ -311,10 +291,7 @@ def test_router_decisions_vllm_multiple_workers_xpu(
         num_workers=2,
         single_gpu=False,
         test_dp_rank=False,
-<<<<<<< HEAD
         # XPU workers have longer startup latency; 1.0s base avoids
         # spurious retries during the first request after registration.
         initial_wait=1.0,
-=======
->>>>>>> f55195ecaa (test: add XPU router e2e tests with multi-card support)
     )
