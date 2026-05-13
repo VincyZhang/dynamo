@@ -302,9 +302,11 @@ RUN --mount=type=cache,target=/home/dynamo/.cache/uv,uid=1000,gid=0,mode=0775,sh
     # XPU: remove all CUDA nixl variants that LMCache or other deps may pull in
     (uv pip freeze 2>/dev/null | awk -F= '/^nixl-cu/{print $1}' | xargs -r uv pip uninstall -y 2>/dev/null || true) && \
 {% elif device == "cuda" %}
-    if [ "${CUDA_VERSION%%.*}" = "13" ]; then \
-        uv pip uninstall -y nixl-cu12 || true; \
-    fi && \
+    # Remove nixl-cu* variants that do NOT match the build CUDA major version.
+    # LMCache >=0.4.4 depends on nixl>=1.1.0 which pulls in both nixl-cu12 and
+    # nixl-cu13; their coexistence breaks `import nixl` at runtime.
+    CUDA_MAJOR="${CUDA_VERSION%%.*}" && \
+    (uv pip freeze 2>/dev/null | awk -F= '/^nixl-cu/{print $1}' | grep -v "^nixl-cu${CUDA_MAJOR}" | xargs -r uv pip uninstall -y 2>/dev/null || true) && \
 {% endif %}
     if [ "${ENABLE_KVBM}" = "true" ]; then \
         KVBM_WHEEL=$(ls /opt/dynamo/wheelhouse/kvbm*.whl 2>/dev/null | head -1); \
