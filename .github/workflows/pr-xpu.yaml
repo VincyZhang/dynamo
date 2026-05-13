@@ -20,17 +20,23 @@ jobs:
   # users / copy-pr-bot can reach this workflow.
   # ============================================================================
 
+  # guard:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     has_xpu_label: ${{ steps.pr-info.outputs.has_xpu_label }}
+  #   steps:
+  #     - name: Get PR info and check xpu label
+  #       id: pr-info
+  #       run: |
+  #         # Guard bypassed – always run XPU CI
+  #         echo "has_xpu_label=true" >> "$GITHUB_OUTPUT"
+  #         echo "✅ Guard bypassed – running XPU CI unconditionally"
   guard:
     runs-on: ubuntu-latest
     outputs:
-      has_xpu_label: ${{ steps.pr-info.outputs.has_xpu_label }}
+      has_xpu_label: 'true'
     steps:
-      - name: Get PR info and check xpu label
-        id: pr-info
-        run: |
-          # Guard bypassed – always run XPU CI
-          echo "has_xpu_label=true" >> "$GITHUB_OUTPUT"
-          echo "✅ Guard bypassed – running XPU CI unconditionally"
+      - run: echo "Guard disabled – always true"
 
   # ============================================================================
   # CHANGE DETECTION

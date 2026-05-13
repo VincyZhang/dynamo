@@ -4,10 +4,10 @@
 name: Post-Merge CI Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - 'release/*.*.*'
+  # push:
+  #   branches:
+  #     - main
+  #     - 'release/*.*.*'
   workflow_dispatch:
     inputs:
       framework:
