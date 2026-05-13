@@ -4,10 +4,11 @@
 name: Post-Merge CI Pipeline
 
 on:
-  pull_request:
-    branches:
-      - main
-    types: [opened, synchronize, reopened, labeled]
+  # pull_request trigger disabled for quick XPU CI validation
+  # pull_request:
+  #   branches:
+  #     - main
+  #   types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
     inputs:
       framework:

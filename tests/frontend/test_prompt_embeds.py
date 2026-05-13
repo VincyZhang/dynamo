@@ -115,7 +115,7 @@ class VllmPromptEmbedsWorkerProcess(ManagedProcess):
                 (f"http://localhost:{self.frontend_port}/v1/models", check_models_api),
                 (f"http://localhost:{self.system_port}/health", self.is_ready),
             ],
-            timeout=500,
+            timeout=800 if detect_target_device() == "xpu" else 500,
             display_output=True,
             terminate_all_matching_process_names=False,
             stragglers=["VLLM::EngineCore"],
