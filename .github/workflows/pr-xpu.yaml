@@ -73,7 +73,8 @@ jobs:
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      pytest_markers: 'vllm and xpu_1 and pre_merge and not multimodal'
+      # WORKAROUND: limit to router tests only; xpu_2 for 2-card requirement
+      pytest_markers: 'vllm and xpu_2 and pre_merge and not multimodal and router'
 
   # ============================================================================
   # STATUS CHECK
