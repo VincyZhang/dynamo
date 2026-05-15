@@ -245,6 +245,7 @@ vllm_configs = {
             pytest.mark.post_merge,
         ],
         model="Qwen/Qwen2-VL-2B-Instruct",
+        env={"DYN_MM_ALLOW_INTERNAL": "1"},
         # Pass --frontend-decoding to enable Rust frontend image decoding + NIXL RDMA transfer
         script_args=[
             "--model",
@@ -291,6 +292,7 @@ vllm_configs = {
         script_args=["--model", "Qwen/Qwen2.5-VL-7B-Instruct"],
         delayed_start=0,
         timeout=360,
+        env={"DYN_MM_ALLOW_INTERNAL": "1"},
         request_payloads=[
             chat_payload(
                 [
@@ -375,6 +377,7 @@ vllm_configs = {
         ],
         delayed_start=0,
         timeout=600,
+        env={"DYN_MM_ALLOW_INTERNAL": "1"},
         request_payloads=[
             ToolCallingChatPayload(
                 body={
@@ -448,6 +451,7 @@ vllm_configs = {
         delayed_start=60,  # Video models require longer loading time
         script_args=["--model", "Qwen/Qwen3-VL-2B-Instruct"],
         timeout=600,  # 10 minutes for video processing overhead
+        env={"DYN_MM_ALLOW_INTERNAL": "1"},  # allow httpserver video URLs
         request_payloads=[
             chat_payload(
                 [
