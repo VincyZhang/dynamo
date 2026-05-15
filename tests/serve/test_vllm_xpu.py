@@ -7,7 +7,6 @@ import logging
 import os
 import random
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -17,7 +16,11 @@ from tests.serve.common import (
     params_with_model_mark,
     run_serve_deployment,
 )
-from tests.serve.conftest import MULTIMODAL_IMG_URL, get_multimodal_test_image_bytes
+from tests.serve.conftest import (
+    MULTIMODAL_IMG_URL,
+    MULTIMODAL_VIDEO_URL,
+    get_multimodal_test_image_bytes,
+)
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -48,10 +51,11 @@ class VLLMConfig(EngineConfig):
 vllm_dir = os.environ.get("VLLM_DIR") or os.path.join(
     WORKSPACE_DIR, "examples/backends/vllm"
 )
-LOCAL_VIDEO_TEST_PATH = Path(
-    WORKSPACE_DIR, "lib/llm/tests/data/media/240p_10.mp4"
-).resolve()
-LOCAL_VIDEO_TEST_URI = LOCAL_VIDEO_TEST_PATH.as_uri()
+# Video served via HTTP (see conftest.image_server fixture)
+# LOCAL_VIDEO_TEST_PATH = Path(
+#     WORKSPACE_DIR, "lib/llm/tests/data/media/240p_10.mp4"
+# ).resolve()
+# LOCAL_VIDEO_TEST_URI = LOCAL_VIDEO_TEST_PATH.as_uri()
 
 
 # vLLM test configurations
@@ -443,9 +447,6 @@ vllm_configs = {
             pytest.mark.xpu_1,
             pytest.mark.multimodal,
             pytest.mark.pre_merge,
-            pytest.mark.skip(
-                reason="Flaky: https://github.com/ai-dynamo/dynamo/issues/9601"
-            ),
             pytest.mark.timeout(600),  # TODO: profile to get tighter timeout
         ],  # TODO: profile to get max_vram
         model="Qwen/Qwen3-VL-2B-Instruct",
@@ -458,7 +459,7 @@ vllm_configs = {
                     {"type": "text", "text": "Describe the video in detail"},
                     {
                         "type": "video_url",
-                        "video_url": {"url": LOCAL_VIDEO_TEST_URI},
+                        "video_url": {"url": MULTIMODAL_VIDEO_URL},
                     },
                 ],
                 repeat_count=1,
