@@ -21,6 +21,7 @@ from tests.serve.conftest import (
     MULTIMODAL_VIDEO_URL,
     get_multimodal_test_image_bytes,
 )
+from tests.utils.multimodal import LOCAL_VIDEO_TEST_URI
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -244,12 +245,11 @@ vllm_configs = {
             pytest.mark.timeout(220),  # ~5x observed 43.7s; 2B model loads slower on CI
             pytest.mark.post_merge,
         ],
-        model="Qwen/Qwen2-VL-2B-Instruct",
+        model="Qwen/Qwen3-VL-2B-Instruct",
         env={"DYN_MM_ALLOW_INTERNAL": "1"},
-        # Pass --frontend-decoding to enable Rust frontend image decoding + NIXL RDMA transfer
         script_args=[
             "--model",
-            "Qwen/Qwen2-VL-2B-Instruct",
+            "Qwen/Qwen3-VL-2B-Instruct",
             "--frontend-decoding",
         ],
         request_payloads=[
@@ -451,14 +451,14 @@ vllm_configs = {
         delayed_start=60,  # Video models require longer loading time
         script_args=["--model", "Qwen/Qwen3-VL-2B-Instruct"],
         timeout=600,  # 10 minutes for video processing overhead
-        env={"DYN_MM_ALLOW_INTERNAL": "1"},  # allow httpserver video URLs
+        env={"DYN_MM_LOCAL_PATH": WORKSPACE_DIR},
         request_payloads=[
             chat_payload(
                 [
                     {"type": "text", "text": "Describe the video in detail"},
                     {
                         "type": "video_url",
-                        "video_url": {"url": MULTIMODAL_VIDEO_URL},
+                        "video_url": {"url": LOCAL_VIDEO_TEST_URI},
                     },
                 ],
                 repeat_count=1,
