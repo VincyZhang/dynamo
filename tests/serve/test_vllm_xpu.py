@@ -25,7 +25,7 @@ from tests.utils.multimodal import LOCAL_VIDEO_TEST_URI
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
-from tests.utils.multimodal import IMAGE_COLOR_PROMPT
+from tests.utils.multimodal import IMAGE_COLOR_PROMPT, LOCAL_VIDEO_TEST_URI
 from tests.utils.payload_builder import (
     chat_payload,
     chat_payload_default,

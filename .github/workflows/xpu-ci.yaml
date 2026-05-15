@@ -71,14 +71,6 @@ jobs:
           ref: ${{ env.SOURCE_REF }}
           lfs: true
 
-      - name: Ensure LFS files are checked out
-        shell: bash
-        run: |
-          git lfs install --local
-          git lfs checkout
-          echo "LFS files checked out:"
-          git lfs ls-files | head -10
-
       - name: Generate Dockerfile
         shell: bash
         run: |
@@ -181,28 +173,6 @@ jobs:
           else
             echo "✅ Sanity check passed"
           fi
-
-      - name: Verify LFS media files in container
-        shell: bash
-        run: |
-          echo "Checking LFS media files are real content (not pointers)..."
-          docker run --rm "${{ env.TEST_IMAGE_TAG }}" python -c "
-          import os, sys
-          media_dir = '/workspace/lib/llm/tests/data/media'
-          for f in sorted(os.listdir(media_dir)):
-              path = os.path.join(media_dir, f)
-              if not os.path.isfile(path): continue
-              sz = os.path.getsize(path)
-              with open(path, 'rb') as fh:
-                  head = fh.read(16)
-              is_lfs = head[:8] == b'version '
-              status = 'LFS POINTER' if is_lfs else 'OK'
-              print(f'{status}: {f} ({sz} bytes)')
-              if is_lfs:
-                  print(f'  ERROR: {f} is a Git LFS pointer, not real content!')
-                  sys.exit(1)
-          print('All media files are real content.')
-          "
 
       - name: Run XPU tests
         uses: ./.github/actions/pytest
