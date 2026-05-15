@@ -91,6 +91,24 @@ RUN --mount=type=bind,source=./container/deps/vllm/protected_packages.txt,target
     export UV_CACHE_DIR=/root/.cache/uv; \
     bash /tmp/install_vllm_omni.sh
 
+{% if device == "xpu" %}
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --fix-missing \
+    ffmpeg \
+    libsndfile1 \
+    libsm6 \
+    libxext6 \
+    libgl1 \
+    lsb-release \
+    numactl \
+    wget \
+    vim \
+    linux-libc-dev && \
+    # Install Intel GPU runtime packages
+    apt-get install -y libze1 libze-dev libze-intel-gpu1 intel-opencl-icd libze-intel-gpu-raytracing \
+    intel-ocloc intel-oneapi-compiler-dpcpp-cpp-2025.3 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 {% endif %}
 {% endif %}
 

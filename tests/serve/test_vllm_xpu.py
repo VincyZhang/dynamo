@@ -437,11 +437,6 @@ vllm_configs = {
         ],
     ),
     # Video multimodal tests for CI using the vLLM video launch scripts.
-    # NOTE: Requires FFmpeg shared libs in the container (enable_media_ffmpeg).
-    # Currently nightly-only because the XPU vllm image lacks FFmpeg codecs
-    # (context.yaml enable_media_ffmpeg="false"), so cv2.VideoCapture fails
-    # with "VIDEOIO(FFMPEG): backend is generally available but can't be used
-    # to capture by read data stream".
     "multimodal_video_agg": VLLMConfig(
         name="multimodal_video_agg_xpu",
         directory=vllm_dir,
@@ -449,7 +444,7 @@ vllm_configs = {
         marks=[
             pytest.mark.xpu_1,
             pytest.mark.multimodal,
-            pytest.mark.nightly,
+            pytest.mark.pre_merge,
             pytest.mark.timeout(600),  # TODO: profile to get tighter timeout
         ],  # TODO: profile to get max_vram
         model="Qwen/Qwen3-VL-2B-Instruct",
