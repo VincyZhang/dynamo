@@ -94,7 +94,7 @@ RUN --mount=type=bind,source=./container/deps/vllm/protected_packages.txt,target
 {% if device == "xpu" %}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --fix-missing \
-    #ffmpeg \
+    libavcodec-dev libavformat-dev libswscale-dev \
     libsndfile1 \
     libsm6 \
     libxext6 \
