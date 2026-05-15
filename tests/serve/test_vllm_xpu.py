@@ -51,11 +51,6 @@ class VLLMConfig(EngineConfig):
 vllm_dir = os.environ.get("VLLM_DIR") or os.path.join(
     WORKSPACE_DIR, "examples/backends/vllm"
 )
-# Video served via HTTP (see conftest.image_server fixture)
-# LOCAL_VIDEO_TEST_PATH = Path(
-#     WORKSPACE_DIR, "lib/llm/tests/data/media/240p_10.mp4"
-# ).resolve()
-# LOCAL_VIDEO_TEST_URI = LOCAL_VIDEO_TEST_PATH.as_uri()
 
 
 # vLLM test configurations
@@ -585,6 +580,7 @@ def test_serve_deployment(
 @pytest.mark.xpu_2
 @pytest.mark.nightly
 @pytest.mark.multimodal
+@pytest.mark.model("Qwen/Qwen2.5-VL-7B-Instruct")
 @pytest.mark.timeout(360)  # Match VLLMConfig.timeout for this multimodal deployment
 def test_multimodal_b64(
     request,
@@ -644,6 +640,7 @@ def test_multimodal_b64(
 @pytest.mark.xpu_1
 @pytest.mark.pre_merge
 @pytest.mark.multimodal
+@pytest.mark.model("Qwen/Qwen3-VL-2B-Instruct")
 @pytest.mark.timeout(220)
 def test_multimodal_b64_frontend_decoding(
     request,
