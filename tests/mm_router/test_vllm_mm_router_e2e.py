@@ -39,7 +39,6 @@ THREE_IMAGE_TOTAL_BLOCKS_RANGE = (180, 340)
 SINGLE_IMAGE_TOTAL_BLOCKS_RANGE = (60, 160)
 
 pytestmark = [
-    pytest.mark.pre_merge,  # all tests take <1 min to run finish on RTX 6000
     pytest.mark.e2e,
     pytest.mark.vllm,
     pytest.mark.multimodal,
@@ -315,8 +314,45 @@ def _send_request_get_overlap(
     return overlap, total, segment
 
 
+@pytest.mark.pre_merge
+@pytest.mark.profiled_vram_gib(7.6)
+@pytest.mark.requested_vllm_kv_cache_bytes(
+    1_719_075_000
+)  # KV cache cap (2x safety over min=859_537_408)
+@pytest.mark.timeout(1800)
+def test_vllm_mm_overlap_all(
+    start_vllm_mm_services, predownload_models, http_image_server
+):
+    """Run all MM overlap scenarios under one profiled worker startup.
+
+    GPU-parallel CI runs each selected test id in its own pytest subprocess.
+    Keeping the individual scenario tests out of pre_merge avoids paying vLLM
+    startup for each scenario while preserving them for manual development runs.
+    """
+    _check_text_only_overlap_repeated_prompt(start_vllm_mm_services, predownload_models)
+    _check_repeated_three_images(start_vllm_mm_services, predownload_models)
+    _check_repeated_single_image(start_vllm_mm_services, predownload_models)
+    _check_repeated_two_identical_images(start_vllm_mm_services, predownload_models)
+    _check_staircase_single_to_double_to_triple_identical_image(
+        start_vllm_mm_services, predownload_models
+    )
+    _check_diff_images_less_than_same(start_vllm_mm_services, predownload_models)
+    _check_same_images_different_prompt_less_than_same_prompt(
+        start_vllm_mm_services, predownload_models
+    )
+    _check_swapped_order_less_than_same_order(
+        start_vllm_mm_services, predownload_models
+    )
+    _check_repeated_http_images(
+        start_vllm_mm_services, predownload_models, http_image_server
+    )
+    _check_http_vs_data_uri_same_image(
+        start_vllm_mm_services, predownload_models, http_image_server
+    )
+
+
 @pytest.mark.timeout(300)
-def test_vllm_text_only_overlap_repeated_prompt(
+def _check_text_only_overlap_repeated_prompt(
     start_vllm_mm_services, predownload_models
 ):
     """Text-only routing should increase overlap on repeat and then stabilize."""
@@ -361,9 +397,7 @@ def test_vllm_text_only_overlap_repeated_prompt(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_repeated_three_images(
-    start_vllm_mm_services, predownload_models
-):
+def _check_repeated_three_images(start_vllm_mm_services, predownload_models):
     """For repeated same 3-image request: low first overlap, then increase, then stable."""
     frontend_port, router_proc = start_vllm_mm_services
 
@@ -401,9 +435,7 @@ def test_vllm_mm_overlap_repeated_three_images(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_repeated_single_image(
-    start_vllm_mm_services, predownload_models
-):
+def _check_repeated_single_image(start_vllm_mm_services, predownload_models):
     """For repeated same single-image request: low first overlap, then increase, then stable."""
     frontend_port, router_proc = start_vllm_mm_services
 
@@ -441,9 +473,7 @@ def test_vllm_mm_overlap_repeated_single_image(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_repeated_two_identical_images(
-    start_vllm_mm_services, predownload_models
-):
+def _check_repeated_two_identical_images(start_vllm_mm_services, predownload_models):
     """For repeated same two-identical-image request: low first overlap, then increase, then stable."""
     frontend_port, router_proc = start_vllm_mm_services
 
@@ -477,7 +507,7 @@ def test_vllm_mm_overlap_repeated_two_identical_images(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_staircase_single_to_double_to_triple_identical_image(
+def _check_staircase_single_to_double_to_triple_identical_image(
     start_vllm_mm_services, predownload_models
 ):
     """Single->double->triple identical image requests follow prefix-overlap semantics."""
@@ -532,9 +562,7 @@ def test_vllm_mm_overlap_staircase_single_to_double_to_triple_identical_image(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_diff_images_less_than_same(
-    start_vllm_mm_services, predownload_models
-):
+def _check_diff_images_less_than_same(start_vllm_mm_services, predownload_models):
     """Different images should produce lower overlap than repeated identical images."""
     frontend_port, router_proc = start_vllm_mm_services
     baseline_payload = _build_payload(
@@ -586,7 +614,7 @@ def test_vllm_mm_overlap_diff_images_less_than_same(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_same_images_different_prompt_less_than_same_prompt(
+def _check_same_images_different_prompt_less_than_same_prompt(
     start_vllm_mm_services, predownload_models
 ):
     """Same images but different prompt should produce lower overlap than repeated same prompt."""
@@ -646,7 +674,7 @@ def test_vllm_mm_overlap_same_images_different_prompt_less_than_same_prompt(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_swapped_order_less_than_same_order(
+def _check_swapped_order_less_than_same_order(
     start_vllm_mm_services, predownload_models
 ):
     """Swapping order of three distinct images should result in near-zero overlap."""
@@ -740,7 +768,7 @@ def http_image_server() -> Generator[list[str], None, None]:
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_repeated_http_images(
+def _check_repeated_http_images(
     start_vllm_mm_services, predownload_models, http_image_server
 ):
     """For repeated same 3-HTTP-image request: low first overlap, then increase, then stable."""
@@ -781,7 +809,7 @@ def test_vllm_mm_overlap_repeated_http_images(
 
 
 @pytest.mark.timeout(600)
-def test_vllm_mm_overlap_http_vs_data_uri_same_image(
+def _check_http_vs_data_uri_same_image(
     start_vllm_mm_services, predownload_models, http_image_server
 ):
     """HTTP URL and data URI for the same image should produce identical KV cache hashes."""

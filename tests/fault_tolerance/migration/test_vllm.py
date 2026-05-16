@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 pytestmark = [
     pytest.mark.fault_tolerance,
     pytest.mark.vllm,
+    pytest.mark.core,
     pytest.mark.gpu_1,
     pytest.mark.xpu_1,
     pytest.mark.e2e,
