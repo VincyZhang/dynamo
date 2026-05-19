@@ -57,6 +57,10 @@ COPY --chmod=775 --chown=dynamo:0 --from=wheel_builder /opt/dynamo/dist/*.whl /o
 # Keep the upstream Python solve intact: install only Dynamo-owned wheels and
 # suppress transitive dependency resolution unless a later validation proves a
 # missing package must be added explicitly.
+# XPU base images use a virtualenv (/opt/venv) where vLLM is installed, so we
+# must install Dynamo wheels there (--python) rather than into system site-packages.
+# For non-XPU images, install into system Python (--system) after removing the
+# PEP 668 marker if present.
 {% set pip_target = "--python /opt/venv/bin/python" if device == "xpu" else "--system" %}
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     export UV_CACHE_DIR=/root/.cache/uv && \
