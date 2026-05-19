@@ -247,7 +247,7 @@ vllm_configs = {
         ],
         model="Qwen/Qwen3-VL-2B-Instruct",
         timeout=360,
-        env={"DYN_MM_ALLOW_INTERNAL": "1"},
+        env={"DYN_MM_ALLOW_INTERNAL": "1", "VLLM_LOGGING_LEVEL": "DEBUG"},
         script_args=[
             "--model",
             "Qwen/Qwen3-VL-2B-Instruct",
@@ -452,7 +452,7 @@ vllm_configs = {
         delayed_start=60,  # Video models require longer loading time
         script_args=["--model", "Qwen/Qwen3-VL-2B-Instruct"],
         timeout=600,  # 10 minutes for video processing overhead
-        env={"DYN_MM_LOCAL_PATH": WORKSPACE_DIR},
+        env={"DYN_MM_LOCAL_PATH": WORKSPACE_DIR, "VLLM_LOGGING_LEVEL": "DEBUG"},
         request_payloads=[
             chat_payload(
                 [
@@ -693,6 +693,7 @@ def test_multimodal_b64_frontend_decoding(
         ],
         delayed_start=0,
         timeout=360,
+        env={"VLLM_LOGGING_LEVEL": "DEBUG"},
         request_payloads=[b64_payload],
     )
 
