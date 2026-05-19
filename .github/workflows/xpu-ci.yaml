@@ -85,26 +85,6 @@ jobs:
           echo "::endgroup::"
 
 
-      - name: Ensure XPU base image exists locally
-        shell: bash
-        run: |
-          # Extract base image from rendered Dockerfile ARGs
-          BASE_IMG=$(grep -m1 '^ARG BASE_IMAGE=' container/rendered.Dockerfile | cut -d= -f2)
-          BASE_TAG=$(grep -m1 '^ARG BASE_IMAGE_TAG=' container/rendered.Dockerfile | cut -d= -f2)
-          LOCAL_REF="${BASE_IMG}:${BASE_TAG}"
-
-          echo "🔍 Checking for local base image: ${LOCAL_REF}"
-          if docker image inspect "${LOCAL_REF}" >/dev/null 2>&1; then
-            echo "✅ Base image found locally"
-          else
-            # Pull from ECR and retag as local name
-            ECR_REF="public.ecr.aws/q9t5s3a7/vllm-ci-test-repo:${BASE_TAG}"
-            echo "⬇️  Pulling from ECR: ${ECR_REF}"
-            docker pull "${ECR_REF}"
-            docker tag "${ECR_REF}" "${LOCAL_REF}"
-            echo "✅ Tagged as ${LOCAL_REF}"
-          fi
-
       - name: Build XPU image
         id: build
         shell: bash
