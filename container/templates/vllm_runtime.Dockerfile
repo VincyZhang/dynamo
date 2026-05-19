@@ -132,10 +132,7 @@ RUN rm -rf /workspace/vllm
 
 USER dynamo
 
-# Remove vLLM source tree left by the XPU base image to avoid pytest collection
-# conflicts (duplicate conftest.py plugins, missing relative paths).
-# No-op on CUDA images (directory does not exist; rm -rf is idempotent).
-RUN rm -rf /workspace/vllm
+USER dynamo
 
 # Copy the workspace surface needed by the current vLLM pre-merge test image.
 # Keep optional framework trees like planner out of /workspace so the upstream
