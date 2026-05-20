@@ -41,6 +41,7 @@ pytest-httpserver==1.1.3
 pytest-md-report==0.7.0
 pytest-order==1.3.0
 pytest-rerunfailures==16.1
+pytest-subtests==0.13.1
 pytest-timeout==2.4.0
 pytest-xdist==3.8.0
 requests==2.33.1
