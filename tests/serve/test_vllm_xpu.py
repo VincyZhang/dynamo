@@ -744,11 +744,6 @@ def lora_chat_payload(
 @pytest.mark.model("Qwen/Qwen3-0.6B", "codelion/Qwen3-0.6B-accuracy-recovery-lora")
 @pytest.mark.timeout(600)
 @pytest.mark.post_merge
-@pytest.mark.xfail(
-    reason="XPU LoRA dtype mismatch: PunicaWrapperXPU requires inputs dtype to "
-    "match lora_b_weights dtype, pending fix in vLLM XPU backend",
-    strict=False,
-)
 def test_lora_aggregated(
     request,
     runtime_services_dynamic_ports,
@@ -777,6 +772,7 @@ def test_lora_aggregated(
 
     # Create test config with MinIO environment variables
     env_vars = minio_config.get_env_vars()
+    env_vars["VLLM_LOGGING_LEVEL"] = "DEBUG"
     config = VLLMConfig(
         name="test_lora_aggregated_xpu",
         directory=vllm_dir,
