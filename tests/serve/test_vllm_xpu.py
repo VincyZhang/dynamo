@@ -16,12 +16,7 @@ from tests.serve.common import (
     params_with_model_mark,
     run_serve_deployment,
 )
-from tests.serve.conftest import (
-    MULTIMODAL_IMG_URL,
-    MULTIMODAL_VIDEO_URL,
-    get_multimodal_test_image_bytes,
-)
-from tests.utils.multimodal import LOCAL_VIDEO_TEST_URI
+from tests.serve.conftest import MULTIMODAL_IMG_URL, get_multimodal_test_image_bytes
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -566,6 +561,7 @@ def test_serve_deployment(
     dynamo_dynamic_ports,
     num_system_ports,
     predownload_models,
+    image_server,
 ):
     """
     Test dynamo serve deployments with different graph configurations.

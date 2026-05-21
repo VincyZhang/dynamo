@@ -71,6 +71,25 @@ jobs:
           ref: ${{ env.SOURCE_REF }}
           lfs: true
 
+      - name: Ensure Git LFS files are pulled
+        shell: bash
+        run: |
+          # actions/checkout injects an http.extraheader with a GITHUB_TOKEN
+          # scoped to the fork. For public repos whose LFS objects live on the
+          # parent, this token can cause 403 from GitHub's LFS API.
+          # Temporarily remove it so git-lfs downloads via anonymous HTTPS.
+          git config --unset-all http.https://github.com/.extraheader || true
+          git lfs pull
+          # Validate critical test media are real files (not LFS pointers)
+          for f in lib/llm/tests/data/media/240p_10.mp4; do
+            if [ -f "$f" ] && head -c 7 "$f" | grep -q "version"; then
+              echo "::error::LFS pointer still present after pull: $f"
+              cat "$f"
+              exit 1
+            fi
+          done
+          echo "✅ LFS media files validated"
+
       - name: Generate Dockerfile
         shell: bash
         run: |
