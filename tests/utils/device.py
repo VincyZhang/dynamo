@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import logging
 from typing import Any
 
 try:
@@ -9,10 +10,13 @@ try:
 except ImportError:
     torch = None
 
+logger = logging.getLogger(__name__)
+
 
 def detect_target_device() -> str:
     """Detect the runtime accelerator expected by the current test environment."""
     if torch is None:
+        logger.info("torch not available, defaulting to CUDA")
         return "cuda"
 
     if torch.cuda.is_available():
@@ -20,6 +24,7 @@ def detect_target_device() -> str:
     if hasattr(torch, "xpu") and torch.xpu.is_available():
         return "xpu"
 
+    logger.info("No accelerator detected, defaulting to CUDA")
     return "cuda"
 
 
