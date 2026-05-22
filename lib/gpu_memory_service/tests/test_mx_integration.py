@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import HAS_GMS, HAS_TORCH
+from .conftest import HAS_GMS, HAS_TORCH
 
 if not HAS_GMS:
     pytest.skip(
@@ -63,16 +63,13 @@ class TestConfigureMxPorts:
 
 
 # torch is required to import model_loader.py (top-level `import torch`)
-if not HAS_TORCH:
-    pytest.skip("torch required for model_loader", allow_module_level=True)
-
-import torch  # noqa: E402
-
-from gpu_memory_service.integrations.vllm.model_loader import (  # noqa: E402
-    get_mx_load_context,
-)
+if HAS_TORCH:
+    from gpu_memory_service.integrations.vllm.model_loader import (  # noqa: E402
+        get_mx_load_context,
+    )
 
 
+@pytest.mark.skipif(not HAS_TORCH, reason="torch required for model_loader")
 class TestGetMxLoadContext:
     """Tests for get_mx_load_context() guard logic."""
 

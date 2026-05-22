@@ -17,7 +17,7 @@ from typing import cast
 
 import pytest
 
-from conftest import HAS_CUDA, HAS_GMS, HAS_TORCH
+from .conftest import HAS_CUDA, HAS_GMS, HAS_TORCH
 
 if not HAS_GMS:
     pytest.skip(
@@ -34,7 +34,6 @@ if not HAS_CUDA:
     )
 
 import torch
-
 from gpu_memory_service.client.memory_manager import GMSClientMemoryManager
 from gpu_memory_service.client.torch.module import (
     materialize_module_from_gms,
