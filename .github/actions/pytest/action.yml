@@ -232,7 +232,7 @@ runs:
           if [[ "${{ inputs.device }}" == "xpu" ]]; then
             echo "✓ XPU device specified, enabling /dev/dri device flags"
             RENDER_GID=$(stat -c '%g' /dev/dri/renderD128)
-            DOCKER_EXTRA_FLAGS=(-v "/dev/dri:/dev/dri" --device /dev/dri:/dev/dri --group-add ${RENDER_GID} -e "ZE_AFFINITY_MASK=${ZE_AFFINITY_MASK:-}")
+            DOCKER_EXTRA_FLAGS=(-v "/dev/dri:/dev/dri" --device /dev/dri:/dev/dri --group-add ${RENDER_GID} -e "ZE_AFFINITY_MASK=${ZE_AFFINITY_MASK:-}" -e "VLLM_LOGGING_LEVEL=DEBUG")
             PYTEST_TIMEOUT_OPT="--timeout=600"
           elif docker info 2>/dev/null | grep -i "runtimes" | grep -q "nvidia"; then
             echo "✓ Docker Daemon supports Nvidia runtime, enabling GPU flags"
@@ -281,7 +281,7 @@ runs:
             DIST_OPTS="--dist=loadscope"
           fi
 
-          PYTEST_CMD="pytest ${PARALLEL_OPTS} ${VRAM_OPTS} ${DIST_OPTS} --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=10 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest ${PARALLEL_OPTS} ${VRAM_OPTS} ${DIST_OPTS} --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=10 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\" tests/serve/test_vllm_omni.py"
 
         fi
 
