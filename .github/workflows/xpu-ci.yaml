@@ -26,6 +26,11 @@ on:
         required: false
         type: string
         default: ''
+      test_paths:
+        description: 'Specific test file or directory paths to run'
+        required: false
+        type: string
+        default: ''
   workflow_call:
     inputs:
       framework:
@@ -45,6 +50,11 @@ on:
         default: ''
       pytest_markers:
         description: 'Pytest marker expression for test selection'
+        required: false
+        type: string
+        default: ''
+      test_paths:
+        description: 'Specific test file or directory paths to run'
         required: false
         type: string
         default: ''
@@ -205,6 +215,7 @@ jobs:
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           start_minio: 'false'
+          test_paths: ${{ inputs.test_paths }}
 
       - name: Cleanup Pytest Containers
         if: always()

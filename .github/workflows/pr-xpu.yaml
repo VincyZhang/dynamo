@@ -80,6 +80,7 @@ jobs:
     with:
       framework: vllm
       pytest_markers: 'vllm and xpu_1'
+      test_paths: 'tests/serve/test_vllm_omni.py'
 
   # ============================================================================
   # STATUS CHECK
