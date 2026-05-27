@@ -33,7 +33,6 @@ logger = logging.getLogger(__name__)
 pytestmark = [
     pytest.mark.fault_tolerance,
     pytest.mark.vllm,
-    pytest.mark.core,
 ]
 
 
