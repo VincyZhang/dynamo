@@ -78,6 +78,32 @@ async def parse_tool_calls_stream(
     """
     ...
 
+def parse_reasoning_batch(
+    parser_name: str,
+    message: str,
+    token_ids: Optional[List[int]] = None,
+    in_reasoning: bool = False,
+) -> str:
+    """Parse reasoning from a complete model output string using the specified parser.
+
+    Returns:
+        JSON-serialized string `{"reasoning_text": str, "normal_text": str}`.
+    """
+    ...
+
+def parse_reasoning_stream(
+    parser_name: str,
+    chunks: List[str],
+    token_chunks: Optional[List[List[int]]] = None,
+    in_reasoning: bool = False,
+) -> str:
+    """Parse reasoning from streaming chunks using one stateful parser instance.
+
+    Returns:
+        JSON-serialized string with accumulated `reasoning_text` and `normal_text`.
+    """
+    ...
+
 def run_kv_indexer(args: List[str]) -> None:
     """Run the KV indexer with the given arguments."""
     ...
@@ -651,6 +677,10 @@ class ModelRuntimeConfig:
     taints: Set[str]
     stable_routing_id: str | None
     runtime_data: dict[str, Any]
+    topology_domains: dict[str, str]
+    kv_transfer_domain: str | None
+    kv_transfer_enforcement: str | None
+    kv_transfer_preferred_weight: float | None
     tensor_model_config: Any | None
     bootstrap_host: str | None
     bootstrap_port: int | None
