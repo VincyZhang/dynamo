@@ -15,10 +15,17 @@ import signal
 import time
 
 import pytest
+from _deps import HAS_GMS
+
+if not HAS_GMS:
+    pytest.skip(
+        "gpu_memory_service package is not available in this test image",
+        allow_module_level=True,
+    )
+
 from gpu_memory_service.failover_lock.flock import FlockFailoverLock
 
 pytestmark = [
-    pytest.mark.gms,
     pytest.mark.pre_merge,
     pytest.mark.unit,
     pytest.mark.none,
