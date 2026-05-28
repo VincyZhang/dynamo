@@ -186,6 +186,7 @@ jobs:
           parallel_mode: 'none'
           dind_as_sidecar: 'true'
           start_minio: 'false'
+          test_paths: 'tests/serve/test_vllm_omni.py'
 
       - name: Cleanup Pytest Containers
         if: always()
