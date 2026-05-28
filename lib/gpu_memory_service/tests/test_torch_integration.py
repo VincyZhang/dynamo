@@ -16,33 +16,27 @@ import time
 from typing import cast
 
 import pytest
-from _deps import HAS_CUDA, HAS_GMS, HAS_TORCH
 
-if not HAS_GMS:
-    pytest.skip(
-        "gpu_memory_service package is not available in this test image",
-        allow_module_level=True,
-    )
+torch = pytest.importorskip("torch")
 
-if not HAS_TORCH:
-    pytest.skip("torch is required", allow_module_level=True)
-
-if not HAS_CUDA:
+if not torch.cuda.is_available():
     pytest.skip(
         "CUDA is required for torch GMS integration tests", allow_module_level=True
     )
 
-import torch
-from gpu_memory_service.client.memory_manager import GMSClientMemoryManager
-from gpu_memory_service.client.torch.module import (
+from gpu_memory_service.client.memory_manager import (  # noqa: E402
+    GMSClientMemoryManager,
+)
+from gpu_memory_service.client.torch.module import (  # noqa: E402
     materialize_module_from_gms,
     register_module_tensors,
 )
-from gpu_memory_service.client.torch.tensor import _tensor_from_pointer
-from gpu_memory_service.common.locks import RequestedLockType
-from gpu_memory_service.server.rpc import GMSRPCServer
+from gpu_memory_service.client.torch.tensor import _tensor_from_pointer  # noqa: E402
+from gpu_memory_service.common.locks import RequestedLockType  # noqa: E402
+from gpu_memory_service.server.rpc import GMSRPCServer  # noqa: E402
 
 pytestmark = [
+    pytest.mark.gms,
     pytest.mark.pre_merge,
     pytest.mark.integration,
     pytest.mark.none,

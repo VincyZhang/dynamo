@@ -11,6 +11,7 @@ in-process GMS server.
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import itertools
 import os
 import signal
@@ -22,17 +23,6 @@ import time
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 import pytest
-from _deps import HAS_GMS, HAS_PYNVML
-
-if not HAS_GMS:
-    pytest.skip(
-        "gpu_memory_service package is not available in this test image",
-        allow_module_level=True,
-    )
-
-if HAS_PYNVML:
-    import pynvml
-
 from gpu_memory_service.client import memory_manager as client_memory_manager
 from gpu_memory_service.client.memory_manager import (
     GMSClientMemoryManager,
@@ -52,7 +42,13 @@ from gpu_memory_service.server.allocations import GMSAllocationManager
 from gpu_memory_service.server.fsm import ServerState
 from gpu_memory_service.server.rpc import GMSRPCServer
 
+HAS_PYNVML = importlib.util.find_spec("pynvml") is not None
+
+if HAS_PYNVML:
+    import pynvml
+
 pytestmark = [
+    pytest.mark.gms,
     pytest.mark.pre_merge,
     pytest.mark.integration,
     pytest.mark.none,

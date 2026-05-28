@@ -554,6 +554,8 @@ def pytest_collection_modifyitems(config, items):
         "sglang": "sglang",
         "kvbm": "kvbm",
         "lmcache": "lmcache",
+        "gms": "gpu_memory_service",
+        "pynvml": "pynvml",
     }
     for marker_name, module_name in framework_markers.items():
         if importlib.util.find_spec(module_name) is None:

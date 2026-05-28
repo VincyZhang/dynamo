@@ -8,21 +8,15 @@ get_mx_load_context tests require torch (model_loader.py imports it at
 module level) and are skipped when torch is not available.
 """
 
+import importlib.util
 import os
 from types import SimpleNamespace
 
 import pytest
-from _deps import HAS_GMS, HAS_TORCH
-
-if not HAS_GMS:
-    pytest.skip(
-        "gpu_memory_service package is not available in this test image",
-        allow_module_level=True,
-    )
-
 from gpu_memory_service.integrations.vllm.utils import configure_mx_ports
 
 pytestmark = [
+    pytest.mark.gms,
     pytest.mark.pre_merge,
     pytest.mark.unit,
     pytest.mark.none,
@@ -62,6 +56,8 @@ class TestConfigureMxPorts:
 
 
 # torch is required to import model_loader.py (top-level `import torch`)
+HAS_TORCH = importlib.util.find_spec("torch") is not None
+
 if HAS_TORCH:
     from gpu_memory_service.integrations.vllm.model_loader import (  # noqa: E402
         get_mx_load_context,
