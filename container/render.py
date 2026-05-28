@@ -117,7 +117,6 @@ def validate_args(args):
                 "runtime",
                 "dev",
                 "local-dev",
-                "framework",
                 "wheel_builder",
                 "base",
             ],
