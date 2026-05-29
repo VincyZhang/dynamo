@@ -186,6 +186,9 @@ def run_serve_deployment(
             logger.info("Staggering startup by %ds (xdist %s)", stagger_s, worker_id)
             time.sleep(stagger_s)
 
+    # Track additional ports allocated for multi-GPU tests (for cleanup in finally)
+    _extra_allocated_ports: list[int] = []
+
     if ports is not None:
         dynamic_frontend_port = int(ports.frontend_port)
         dynamic_system_ports = [int(p) for p in ports.system_ports]
@@ -220,6 +223,39 @@ def run_serve_deployment(
         # Unique ZMQ port for vLLM KV event publishing (avoids xdist collisions).
         if ports.kv_event_port:
             merged_env["DYN_VLLM_KV_EVENT_PORT"] = str(ports.kv_event_port)
+            # For multi-worker scripts (xpu_2 router tests), allocate separate
+            # KV event ports for each worker to avoid ZMQ bind collisions.
+            if len(dynamic_system_ports) >= 2:
+                kv_port1 = ports.kv_event_port
+                kv_port2 = allocate_port(ports.kv_event_port + 1)
+                _extra_allocated_ports.append(kv_port2)
+                merged_env["DYN_VLLM_KV_EVENT_PORT1"] = str(kv_port1)
+                merged_env["DYN_VLLM_KV_EVENT_PORT2"] = str(kv_port2)
+
+        # Multi-GPU device assignment for 2-card tests.
+        # XPU uses ZE_AFFINITY_MASK, CUDA uses CUDA_VISIBLE_DEVICES.
+        # They don't coexist but each environment needs its own var set.
+        if len(dynamic_system_ports) >= 2:
+            cvd = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+            existing_mask = os.environ.get("ZE_AFFINITY_MASK", "")
+            if cvd and "," in cvd:
+                # CUDA env with multiple devices (e.g. "2,3")
+                merged_env.setdefault("CUDA_VISIBLE_DEVICES", cvd)
+            elif cvd:
+                # CUDA env with single device (e.g. "2") — derive two devices
+                base = int(cvd)
+                merged_env.setdefault("CUDA_VISIBLE_DEVICES", f"{base},{base + 1}")
+            elif existing_mask and "," in existing_mask:
+                # XPU env with multiple devices already set
+                merged_env.setdefault("ZE_AFFINITY_MASK", existing_mask)
+            else:
+                # Default: devices 0 and 1
+                merged_env.setdefault("CUDA_VISIBLE_DEVICES", "0,1")
+
+            # Allocate unique NIXL side channel port for worker 2
+            nixl_port = allocate_port(20097)
+            _extra_allocated_ports.append(nixl_port)
+            merged_env["VLLM_NIXL_SIDE_CHANNEL_PORT"] = str(nixl_port)
 
         # Ensure EngineProcess health checks hit the correct frontend port.
         config = dataclasses.replace(config, frontend_port=dynamic_frontend_port)
@@ -362,6 +398,8 @@ def run_serve_deployment(
     finally:
         if disagg_bootstrap_port is not None:
             deallocate_port(disagg_bootstrap_port)
+        for p in _extra_allocated_ports:
+            deallocate_port(p)
 
 
 def params_with_model_mark(configs: Mapping[str, EngineConfig]):
