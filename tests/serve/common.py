@@ -266,6 +266,10 @@ def run_serve_deployment(
             _extra_allocated_ports.append(nixl_port)
             merged_env["VLLM_NIXL_SIDE_CHANNEL_PORT"] = str(nixl_port)
 
+        # Per-worker NIXL side-channel ports, indexed to match DYN_SYSTEM_PORT{idx}.
+        for idx, port in enumerate(ports.nixl_side_channel_ports, start=1):
+            merged_env[f"DYN_VLLM_NIXL_SIDE_CHANNEL_PORT{idx}"] = str(port)
+
         # Ensure EngineProcess health checks hit the correct frontend port.
         config = dataclasses.replace(config, frontend_port=dynamic_frontend_port)
 
