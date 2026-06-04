@@ -28,17 +28,20 @@ use super::super::response::{CalledFunction, ToolCallResponse, ToolCallType};
 pub fn detect_tool_call_start_dsml(chunk: &str, config: &DsmlParserConfig) -> bool {
     let start_token = &config.block_start;
 
-    // Check for complete start token
-    if chunk.contains(start_token.as_str()) {
+    // Check for complete outer block start, or a bare invoke when the outer
+    // wrapper opener is missing.
+    if chunk.contains(start_token.as_str()) || chunk.contains(config.invoke_start_prefix.as_str()) {
         return true;
     }
 
-    // Check for partial match at the end (streaming scenario)
-    let start_chars: Vec<char> = start_token.chars().collect();
-    for i in 1..start_chars.len() {
-        let partial: String = start_chars[..i].iter().collect();
-        if chunk.ends_with(&partial) {
-            return true;
+    // Check for partial match at the end (streaming scenario).
+    for token in [start_token, &config.invoke_start_prefix] {
+        let chars: Vec<char> = token.chars().collect();
+        for i in 1..chars.len() {
+            let partial: String = chars[..i].iter().collect();
+            if chunk.ends_with(&partial) {
+                return true;
+            }
         }
     }
 
@@ -54,21 +57,6 @@ pub fn find_tool_call_end_position_dsml(chunk: &str, config: &DsmlParserConfig) 
     } else {
         chunk.len()
     }
-}
-
-/// Build the regex that matches a complete DSML tool_calls / function_calls block.
-/// Shared by `extract_tool_calls_with_regex` and `try_tool_call_parse_dsml` so
-/// the two stay in lockstep on how a block is recognised.
-fn build_block_regex(config: &DsmlParserConfig) -> anyhow::Result<Regex> {
-    // Matches: <｜DSML｜function_calls> ... </｜DSML｜function_calls>
-    // Pattern: (?s) = dot matches newlines
-    //          \s*(.*?)\s* = capture content between start/end tags (non-greedy)
-    let block_pattern = format!(
-        r"(?s){}\s*(.*?)\s*{}",
-        regex::escape(&config.block_start),
-        regex::escape(&config.block_end)
-    );
-    Ok(Regex::new(&block_pattern)?)
 }
 
 /// Parse DSML formatted tool calls from a message.
@@ -95,22 +83,50 @@ pub fn try_tool_call_parse_dsml(
         return Ok((vec![], Some(String::new())));
     }
 
-    // Check if tool call block exists
-    let start_idx = trimmed.find(&config.block_start);
-    if start_idx.is_none() {
+    let Some(start_idx) = trimmed.find(&config.block_start) else {
+        if let Some(marker_idx) = first_orphan_dsml_marker_index(trimmed, config) {
+            let marker_tail = &trimmed[marker_idx..];
+            if marker_tail.starts_with(config.invoke_start_prefix.as_str())
+                && (marker_tail.contains(config.block_end.as_str()) || config.allow_eof_recovery)
+            {
+                let tool_calls = extract_invokes(marker_tail, config)?;
+                if !tool_calls.is_empty() {
+                    tracing::warn!(
+                        why = "bare_invoke_recovery",
+                        recovered_calls = tool_calls.len(),
+                        recovered_bytes = marker_tail.len(),
+                        kept_prefix_bytes = marker_idx,
+                        "DSML recovery: recovered complete bare invoke(s) without outer block_start"
+                    );
+                    return Ok((
+                        tool_calls,
+                        Some(trimmed[..marker_idx].trim_end().to_string()),
+                    ));
+                }
+            }
+            let stripped = &trimmed[marker_idx..];
+            tracing::warn!(
+                why = "DSML tool-call marker found without the outer block_start; dropping orphan marker tail so wire tags do not leak into normal_text",
+                stripped_bytes = stripped.len(),
+                "DSML strip (orphan markers)"
+            );
+            return Ok((vec![], Some(trimmed[..marker_idx].trim_end().to_string())));
+        }
         return Ok((vec![], Some(trimmed.to_string())));
-    }
+    };
 
-    // Extract tool calls blocks
-    let block_regex = build_block_regex(config)?;
-    let tool_calls = extract_tool_calls_with_regex(trimmed, &block_regex, config)?;
+    // Extract tool calls blocks. Finalize paths can opt into EOF recovery so
+    // a missing outer block end still yields any complete inner invokes.
+    let tool_calls = extract_tool_calls(trimmed, config)?;
 
     // Whether or not invokes parsed, normal_text is the prefix before the
     // first block_start — mirrors vLLM's success path. On no-invokes the
     // markup-leak warning still fires for the diagnostic trail.
-    let pre_block_text = start_idx
-        .map(|idx| trimmed[..idx].to_string())
-        .unwrap_or_default();
+    let pre_block_span = &trimmed[..start_idx];
+    let pre_block_text = first_orphan_dsml_marker_index(pre_block_span, config)
+        .filter(|idx| pre_block_span[*idx..].starts_with(config.invoke_start_prefix.as_str()))
+        .map(|idx| pre_block_span[..idx].trim_end().to_string())
+        .unwrap_or_else(|| pre_block_span.to_string());
 
     if tool_calls.is_empty() {
         // A block-start was detected but no valid invokes parsed. Do NOT leak
@@ -120,16 +136,14 @@ pub fn try_tool_call_parse_dsml(
         // Note: an unterminated block-start here means `block_regex` finds no
         // match at all, so any valid block *after* the unterminated one is
         // lost. This matches the pre-existing conservative P1-3 contract.
-        if let Some(idx) = start_idx {
-            let failed = &trimmed[idx..];
-            let prefix: String = failed.chars().take(120).collect();
-            tracing::warn!(
-                why = "no_invokes_parsed",
-                stripped_bytes = failed.len(),
-                "DSML strip (recovery): block_start detected but extract_tool_calls returned 0 invokes; suppressing all bytes from block_start onward so tool-call markup never bleeds into normal_text. preview={:?}",
-                prefix
-            );
-        }
+        let failed = &trimmed[start_idx..];
+        let prefix: String = failed.chars().take(120).collect();
+        tracing::warn!(
+            why = "no_invokes_parsed",
+            stripped_bytes = failed.len(),
+            "DSML strip (recovery): block_start detected but extract_tool_calls returned 0 invokes; suppressing all bytes from block_start onward so tool-call markup never bleeds into normal_text. preview={:?}",
+            prefix
+        );
         return Ok((vec![], Some(pre_block_text)));
     }
 
@@ -137,43 +151,114 @@ pub fn try_tool_call_parse_dsml(
     // onward (the block(s) themselves plus any inter-block / trailing narration)
     // is stripped from normal_text. Mirrors vLLM's
     // `content = model_output[:content_end]`.
-    if let Some(idx) = start_idx {
-        let stripped = &trimmed[idx..];
-        if !stripped.is_empty() {
-            let preview: String = stripped.chars().take(120).collect();
-            tracing::debug!(
-                why = "prefix_only_contract",
-                n_calls = tool_calls.len(),
-                kept_prefix_bytes = pre_block_text.len(),
-                stripped_bytes = stripped.len(),
-                "DSML strip (success): kept prefix before first block_start; dropped parsed-block(s) + any inter-block / trailing narration. preview={:?}",
-                preview
-            );
-        }
+    let stripped = &trimmed[start_idx..];
+    if !stripped.is_empty() {
+        let preview: String = stripped.chars().take(120).collect();
+        tracing::debug!(
+            why = "prefix_only_contract",
+            n_calls = tool_calls.len(),
+            kept_prefix_bytes = pre_block_text.len(),
+            stripped_bytes = stripped.len(),
+            "DSML strip (success): kept prefix before first block_start; dropped parsed-block(s) + any inter-block / trailing narration. preview={:?}",
+            preview
+        );
     }
 
     Ok((tool_calls, Some(pre_block_text)))
 }
 
-/// Extract all tool calls matched by `block_regex` from the DSML formatted text.
-fn extract_tool_calls_with_regex(
+fn first_orphan_dsml_marker_index(text: &str, config: &DsmlParserConfig) -> Option<usize> {
+    [
+        config.block_end.as_str(),
+        config.invoke_start_prefix.as_str(),
+        config.invoke_end.as_str(),
+        config.parameter_prefix.as_str(),
+        config.parameter_end.as_str(),
+    ]
+    .into_iter()
+    .filter_map(|marker| text.find(marker))
+    .min()
+}
+
+/// Extract all tool calls from DSML formatted text.
+fn extract_tool_calls(
     text: &str,
-    block_regex: &Regex,
     config: &DsmlParserConfig,
 ) -> anyhow::Result<Vec<ToolCallResponse>> {
     let mut tool_calls = Vec::new();
+    let mut cursor = 0;
 
-    for block_match in block_regex.captures_iter(text) {
-        if let Some(block_content) = block_match.get(1) {
-            let block = block_content.as_str();
-
-            // Extract individual invokes from this block
-            let invokes = extract_invokes(block, config)?;
-            tool_calls.extend(invokes);
+    while cursor < text.len() {
+        let Some(rel_start) = text[cursor..].find(config.block_start.as_str()) else {
+            if let Some((_, mut recovered)) =
+                recover_orphan_invokes_in_span(&text[cursor..], config)?
+            {
+                tool_calls.append(&mut recovered);
+            }
+            break;
+        };
+        let abs_start = cursor + rel_start;
+        if let Some((_, mut recovered)) =
+            recover_orphan_invokes_in_span(&text[cursor..abs_start], config)?
+        {
+            tool_calls.append(&mut recovered);
         }
+
+        let block_content_start = abs_start + config.block_start.len();
+        let after_start = &text[block_content_start..];
+
+        let (block, next_cursor) =
+            if let Some(rel_end) = after_start.find(config.block_end.as_str()) {
+                (
+                    &after_start[..rel_end],
+                    block_content_start + rel_end + config.block_end.len(),
+                )
+            } else if config.allow_eof_recovery {
+                (&text[block_content_start..], text.len())
+            } else {
+                break;
+            };
+
+        let invokes = extract_invokes(block, config)?;
+        tool_calls.extend(invokes);
+
+        cursor = next_cursor;
     }
 
     Ok(tool_calls)
+}
+
+fn recover_orphan_invokes_in_span(
+    span: &str,
+    config: &DsmlParserConfig,
+) -> anyhow::Result<Option<(String, Vec<ToolCallResponse>)>> {
+    let Some(marker_idx) = first_orphan_dsml_marker_index(span, config) else {
+        return Ok(None);
+    };
+    let marker_tail = &span[marker_idx..];
+    if !marker_tail.starts_with(config.invoke_start_prefix.as_str()) {
+        return Ok(None);
+    }
+    if !marker_tail.contains(config.block_end.as_str()) && !config.allow_eof_recovery {
+        return Ok(None);
+    }
+
+    let tool_calls = extract_invokes(marker_tail, config)?;
+    if tool_calls.is_empty() {
+        return Ok(None);
+    }
+
+    tracing::warn!(
+        why = "bare_invoke_gap_recovery",
+        recovered_calls = tool_calls.len(),
+        recovered_bytes = marker_tail.len(),
+        kept_prefix_bytes = marker_idx,
+        "DSML recovery: recovered complete bare invoke(s) before a later outer block"
+    );
+    Ok(Some((
+        span[..marker_idx].trim_end().to_string(),
+        tool_calls,
+    )))
 }
 
 /// Extract individual invoke blocks from function_calls content
@@ -290,6 +375,13 @@ mod tests {
         }
     }
 
+    fn get_v4_recovery_test_config() -> DsmlParserConfig {
+        DsmlParserConfig {
+            allow_eof_recovery: true,
+            ..get_v4_test_config()
+        }
+    }
+
     #[test] // helper
     fn test_detect_tool_call_start() {
         let config = get_test_config();
@@ -353,6 +445,15 @@ mod tests {
     //                  string="true|false" type hints, so XML entity decoding
     //                  and schema-aware coercion don't apply.
     //   - TOOLCALLING.harmony.1 / TOOLCALLING.harmony.2 N/A — Harmony-only.
+    //
+    // EOF recovery:
+    //   - TOOLCALLING.stream.4.a  Stream finalization sets
+    //             `allow_eof_recovery=true` and recovers complete
+    //             <｜DSML｜invoke>...</｜DSML｜invoke> pairs even when the
+    //             outer close fence is absent at EOS. Streaming early-exit and
+    //             batch/non-streaming aggregate paths keep recovery disabled so
+    //             they do not claim DSML calls before `</｜DSML｜tool_calls>`
+    //             actually arrives.
     //
     // TODO — bugs pinned, parser still needs to be fixed:
     //   - TOOLCALLING.batch.5  BUG: parser drops all calls when </｜DSML｜tool_calls> is
@@ -898,27 +999,14 @@ mod tests {
     // full mapping from TOOLCALLING.* → test. Each test's doc-comment names the
     // specific CASE it pins.
 
-    /// `TOOLCALLING.batch.5` — missing end-token recovery.
-    /// **Pinned as broken** — parser drops the call; see the TODO block above.
+    /// `TOOLCALLING.batch.5` — missing end-token, streaming-safe path.
     ///
-    /// If a DeepSeek V4 stream is truncated before `</｜DSML｜tool_calls>`
-    /// arrives (max_tokens cut-off, EOS mid-generation, connection drop),
-    /// the block regex requires both fences and matches zero times. The
-    /// entire DSML-looking payload falls through as raw `normal_text`; no
-    /// tool calls are recovered.
-    ///
-    /// This is the same structural failure mode Kimi K2 had before its
-    /// parser gained end-token recovery; see
-    /// `kimi_k2_parser.rs::test_parse_malformed_no_section_end` for the
-    /// post-fix recovery pattern.
-    ///
-    /// Note: post-hardening, the parser no longer leaks raw DSML markup
-    /// into `normal_text` when block-start appears but no invokes parse —
-    /// it returns the pre-block text only (empty here, since the input
-    /// starts with the block-start fence). The call is still dropped.
+    /// Without EOF recovery, the parser must not claim a complete tool call
+    /// before `</｜DSML｜tool_calls>` arrives. Streaming early-exit uses this
+    /// path and keeps buffering until stream finalization.
     // DEPRECATED(parser-fixture-duplicate): Duplicate of YAML fixture coverage: TOOLCALLING.batch.5.a in tests/parity/toolcalling/fixtures/deepseek_v4/TOOLCALLING.batch.5.yaml.
     #[test] // TOOLCALLING.batch.5, TOOLCALLING.fmt.3 — V4 variant
-    fn test_parse_deepseek_v4_missing_end_token() {
+    fn test_parse_deepseek_v4_missing_end_token_without_recovery() {
         // Start fence + complete invoke, but no </｜DSML｜tool_calls>.
         let input = "<｜DSML｜tool_calls>\n\
 <｜DSML｜invoke name=\"get_weather\">\n\
@@ -930,9 +1018,8 @@ mod tests {
 
         assert!(
             calls.is_empty(),
-            "V4 DSML parser currently drops tool calls when \
-             </｜DSML｜tool_calls> is missing. \
-             If recovery is added, flip this assertion."
+            "Streaming-safe DSML parser must wait for </｜DSML｜tool_calls> \
+             instead of recovering early."
         );
         assert_eq!(
             normal_text.as_deref(),
@@ -967,6 +1054,51 @@ mod tests {
             "Even two fully-formed invokes are dropped when the outer \
              </｜DSML｜tool_calls> is missing."
         );
+    }
+
+    /// `TOOLCALLING.stream.4.a` — missing end-token recovery at stream finalize.
+    ///
+    /// Stream finalization flips `allow_eof_recovery=true`, treating an
+    /// unterminated outer block as extending to EOF and recovering complete
+    /// inner invokes. Batch/non-streaming aggregate parsing remains strict.
+    #[test] // TOOLCALLING.stream.4.a — V4 variant
+    fn test_parse_deepseek_v4_missing_end_token_with_recovery() {
+        let input = "<｜DSML｜tool_calls>\n\
+<｜DSML｜invoke name=\"get_weather\">\n\
+<｜DSML｜parameter name=\"city\" string=\"true\">NYC</｜DSML｜parameter>\n\
+</｜DSML｜invoke>";
+
+        let config = get_v4_recovery_test_config();
+        let (calls, normal_text) = try_tool_call_parse_dsml(input, &config).unwrap();
+
+        assert_eq!(calls.len(), 1);
+        assert_eq!(normal_text.as_deref(), Some(""));
+        let (name, args) = extract_name_and_args(calls[0].clone());
+        assert_eq!(name, "get_weather");
+        assert_eq!(args["city"], "NYC");
+    }
+
+    /// Stream-finalize recovery with multiple complete invokes and no outer end fence.
+    #[test]
+    fn test_parse_deepseek_v4_missing_end_token_multiple_calls_with_recovery() {
+        let input = "<｜DSML｜tool_calls>\n\
+<｜DSML｜invoke name=\"a\">\n\
+<｜DSML｜parameter name=\"x\" string=\"true\">1</｜DSML｜parameter>\n\
+</｜DSML｜invoke>\n\
+<｜DSML｜invoke name=\"b\">\n\
+<｜DSML｜parameter name=\"y\" string=\"true\">2</｜DSML｜parameter>\n\
+</｜DSML｜invoke>";
+
+        let config = get_v4_recovery_test_config();
+        let (calls, _) = try_tool_call_parse_dsml(input, &config).unwrap();
+
+        assert_eq!(calls.len(), 2);
+        let (name1, args1) = extract_name_and_args(calls[0].clone());
+        let (name2, args2) = extract_name_and_args(calls[1].clone());
+        assert_eq!(name1, "a");
+        assert_eq!(args1["x"], "1");
+        assert_eq!(name2, "b");
+        assert_eq!(args2["y"], "2");
     }
 
     /// `TOOLCALLING.batch.4` — malformed JSON in a `string="false"` parameter value falls back

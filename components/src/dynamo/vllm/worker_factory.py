@@ -35,19 +35,29 @@ from .handlers import (
     PrefillWorkerHandler,
     get_dp_range_for_worker,
 )
-from .health_check import VllmHealthCheckPayload, VllmPrefillHealthCheckPayload
+from .health_check import (
+    VllmEmbeddingHealthCheckPayload,
+    VllmHealthCheckPayload,
+    VllmPrefillHealthCheckPayload,
+)
+from .instrumented_scheduler import ENV_FPM_BENCHMARK_OUTPUT_PATH, ENV_FPM_WORKER_ID
 from .multimodal_handlers import EncodeWorkerHandler
 from .publisher import StatLoggerFactory
 
 logger = logging.getLogger(__name__)
 
 # (engine_client, vllm_config, default_sampling_params, prometheus_temp_dir, component_gauges)
-EngineSetupResult = tuple[AsyncLLM, VllmConfig, Any, Any, LLMBackendMetrics]
+# component_gauges is None on the embedding-worker path: pooling engines
+# have no KV cache / scheduler gauges, so setup_vllm_engine() skips the
+# LLMBackendMetrics registration there.
+EngineSetupResult = tuple[AsyncLLM, VllmConfig, Any, Any, Optional[LLMBackendMetrics]]
 
 
 async def _wait_and_load_benchmark(bench_cfg: dict, vllm_config: VllmConfig) -> dict:
     """Wait for benchmark result files and aggregate across DP ranks."""
-    base_path = Path(bench_cfg["output_path"])
+    base_path = Path(
+        os.environ.get(ENV_FPM_BENCHMARK_OUTPUT_PATH, bench_cfg["output_path"])
+    )
     timeout = int(bench_cfg.get("timeout", 300))
 
     try:
@@ -78,7 +88,7 @@ async def _wait_and_load_benchmark(bench_cfg: dict, vllm_config: VllmConfig) -> 
         while not p.exists():
             if _time.monotonic() > deadline:
                 raise TimeoutError(
-                    f"Benchmark did not complete within {timeout}s. " f"Missing: {p}"
+                    f"Benchmark did not complete within {timeout}s. Missing: {p}"
                 )
             await asyncio.sleep(0.1)
 
@@ -188,7 +198,8 @@ class WorkerFactory:
         shutdown_endpoints[:] = [generate_endpoint]
 
         handler = EncodeWorkerHandler(
-            config.engine_args, config.embedding_transfer_mode  # type: ignore[arg-type]
+            config.engine_args,
+            config.embedding_transfer_mode,  # type: ignore[arg-type]
         )
         await handler.async_init(runtime)
         logger.info("Starting to serve the encode worker endpoint...")
@@ -255,7 +266,15 @@ class WorkerFactory:
         shutdown_endpoints[:] = [generate_endpoint]
 
         fpm_worker_id = str(generate_endpoint.connection_id())
-        factory = StatLoggerFactory(endpoint=generate_endpoint)
+        # Embedding workers run on pooling engines: no KV cache, no
+        # scheduler stats, no decode loop. The factory still has to exist
+        # because vLLM unconditionally invokes it during AsyncLLM init,
+        # but it returns a no-op stat logger and setup_vllm_engine() skips
+        # the chat-shaped LLMBackendMetrics registration.
+        factory = StatLoggerFactory(
+            endpoint=generate_endpoint,
+            embedding_worker=True,
+        )
         (
             engine_client,
             vllm_config,
@@ -271,12 +290,17 @@ class WorkerFactory:
             shutdown_event=shutdown_event,
         )
 
+        embedding_health_check_payload = VllmEmbeddingHealthCheckPayload(
+            model_name=config.served_model_name or config.model
+        ).to_dict()
+
         logger.info("Starting to serve the embedding worker endpoint...")
         try:
             await asyncio.gather(
                 generate_endpoint.serve_endpoint(
                     handler.generate,
                     metrics_labels=[("model", config.model)],
+                    health_check_payload=embedding_health_check_payload,
                 ),
                 self.register_vllm_model(
                     ModelInput.Text,
@@ -309,7 +333,7 @@ class WorkerFactory:
         if not config.gms_shadow_mode:
             return
 
-        await handler._quiesce_controller.quiesce(1)
+        await handler._pause_controller.pause(1)
 
         runtime.set_health_status(True)
         logger.info(
@@ -324,8 +348,8 @@ class WorkerFactory:
         await lock.acquire(engine_id=f"engine-{engine_id}")
         logger.info("[Shadow] Lock acquired, waking engine")
 
-        await handler._quiesce_controller.resume()
-        handler._quiesce_controller.mark_resumed()
+        await handler._pause_controller.resume()
+        handler._pause_controller.mark_resumed()
         logger.info("[Shadow] Engine awake, registering with discovery")
 
     async def _create_decode_worker(
@@ -382,7 +406,7 @@ class WorkerFactory:
                 prometheus_temp_dir,
                 component_gauges,
             ) = snapshot_engine
-            vllm_config.additional_config["fpm_worker_id"] = fpm_worker_id
+            os.environ[ENV_FPM_WORKER_ID] = fpm_worker_id
             # Factory is created after unpack so component_gauges is available
             factory = StatLoggerFactory(
                 endpoint=generate_endpoint,
@@ -628,7 +652,7 @@ class WorkerFactory:
             # because the engine was forked before the runtime existed.
             # Propagating the new ID to the child requires shared memory or
             # a restart of the EngineCore process.
-            vllm_config.additional_config["fpm_worker_id"] = fpm_worker_id
+            os.environ[ENV_FPM_WORKER_ID] = fpm_worker_id
         else:
             (
                 engine_client,

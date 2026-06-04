@@ -12,6 +12,10 @@ use validator::{Validate, ValidationError};
 use crate::protocols::tensor;
 use dynamo_kv_router::protocols::KvTransferEnforcement;
 
+/// Re-export from parsers crate so that `ModelRuntimeConfig` can use it
+/// directly without type duplication.
+pub use dynamo_parsers::tool_calling::StructuralTagSchemaMode;
+
 // Reserve a topology namespace so generated taints can be rebuilt without touching caller taints.
 pub const TOPOLOGY_TAINT_PREFIX: &str = "dynamo.topology/";
 
@@ -21,6 +25,24 @@ pub const TOPOLOGY_TAINT_PREFIX: &str = "dynamo.topology/";
 /// `dynamo.topology/zone=us-east-1a`.
 pub fn topology_taint(domain: &str, value: &str) -> String {
     format!("{TOPOLOGY_TAINT_PREFIX}{domain}={value}")
+}
+
+/// Master switch for structural tag guided decoding.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum StructuralTagMode {
+    #[default]
+    Off,
+    On,
+}
+
+/// Controls when structural tags are activated based on `tool_choice`.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum StructuralTagScope {
+    #[default]
+    Auto,
+    Always,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -45,6 +67,18 @@ pub struct ModelRuntimeConfig {
 
     pub reasoning_parser: Option<String>,
 
+    /// Whether structural tag guided decoding is enabled for tool calls.
+    #[serde(default)]
+    pub structural_tag_mode: StructuralTagMode,
+
+    /// Controls when structural tags are activated based on tool_choice.
+    #[serde(default)]
+    pub structural_tag_scope: StructuralTagScope,
+
+    /// Controls whether tools get real or generic schemas in structural tags.
+    #[serde(default)]
+    pub structural_tag_schema: StructuralTagSchemaMode,
+
     /// When true, strip tool definitions from the chat template when tool_choice is "none".
     #[serde(default = "default_exclude_tools_when_tool_choice_none")]
     pub exclude_tools_when_tool_choice_none: bool,
@@ -64,6 +98,17 @@ pub struct ModelRuntimeConfig {
     /// Mapping of engine-specific runtime configs
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub runtime_data: HashMap<String, serde_json::Value>,
+
+    /// Backend framework serving this model (e.g. "sglang", "vllm"). Used
+    /// by the frontend to apply backend-specific hints — for example, the
+    /// MM-aware KV router picks the per-image routing-token fill recipe
+    /// from this field (sglang fills with `pad_value(mm_hash)`, vLLM fills
+    /// with the placeholder token id and attaches mm_hashes via
+    /// `block_mm_infos`). Set by each backend at registration time
+    /// (`components/src/dynamo/sglang/register.py`,
+    /// `components/src/dynamo/vllm/main.py`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backend_framework: Option<String>,
 
     // Provide tensor model config in the case where the model type is Tensor.
     // Currently use JSON object for convinence, the programmatic way is to
@@ -151,11 +196,15 @@ impl Default for ModelRuntimeConfig {
             max_num_batched_tokens: None,
             tool_call_parser: None,
             reasoning_parser: None,
+            structural_tag_mode: StructuralTagMode::Off,
+            structural_tag_scope: StructuralTagScope::Auto,
+            structural_tag_schema: StructuralTagSchemaMode::Auto,
             exclude_tools_when_tool_choice_none: default_exclude_tools_when_tool_choice_none(),
             data_parallel_start_rank: default_data_parallel_start_rank(),
             data_parallel_size: default_data_parallel_size(),
             enable_local_indexer: true,
             runtime_data: HashMap::new(),
+            backend_framework: None,
             tensor_model_config: None,
             disaggregated_endpoint: None,
             enable_eagle: false,

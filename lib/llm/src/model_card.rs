@@ -170,15 +170,9 @@ impl PromptFormatterArtifact {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-#[serde(rename_all = "snake_case")]
-pub enum PromptContextMixin {
-    /// Support OAI Chat Messages and Tools
-    OaiChat,
-
-    /// Enables templates with `{{datetime}}` to be rendered with the current date and time.
-    Llama3DateTime,
-}
+// `PromptContextMixin` is owned by the `dynamo-renderer` crate (it drives
+// chat-template rendering); the MDC's `prompt_context` field is typed with it.
+use dynamo_renderer::PromptContextMixin;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -334,13 +328,9 @@ fn symlink_force(target: &Path, link: &Path) -> anyhow::Result<()> {
 /// the fallback when `size` is absent on a `CheckedFile`.
 const ABSOLUTE_MAX_METADATA_BYTES: u64 = 1024 * 1024 * 1024;
 
-/// File extensions that identify model weights. Used by the hf:// sibling
-/// harvest to skip weight blobs (which `hub::from_hf(_, ignore_weights=true)`
-/// also already filters at download, but the snapshot dir may contain
-/// pre-existing weights from a prior unrestricted pull).
-///
-/// `.safetensors.index.json` is correctly kept: extension is `.json`.
-fn is_weight_file(path: &Path) -> bool {
+/// File extensions that identify model weights. Callers: the frontend
+/// hf:// sibling harvest below and `local_model::harvest_extra_files`.
+pub(crate) fn is_weight_file(path: &Path) -> bool {
     matches!(
         path.extension().and_then(|e| e.to_str()),
         Some("safetensors" | "bin" | "gguf" | "onnx" | "tflite" | "h5" | "pt" | "pth" | "msgpack")
@@ -748,6 +738,11 @@ pub struct ModelDeploymentCard {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub router_config: Option<RouterConfig>,
 
+    /// Sibling files (e.g. `preprocessor_config.json`) the worker
+    /// advertises alongside the typed slots.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extra_files: Vec<CheckedFile>,
+
     #[serde(skip, default)]
     checksum: OnceLock<String>,
 }
@@ -764,6 +759,11 @@ pub struct LoraInfo {
 }
 
 impl ModelDeploymentCard {
+    /// Number of typed metadata slots (`model_info`, `tokenizer`,
+    /// `prompt_formatter`, `chat_template_file`, `gen_config`). Used as
+    /// a capacity hint for [`Self::iter_metadata_files`].
+    const TYPED_SLOT_COUNT: usize = 5;
+
     pub fn builder() -> ModelDeploymentCardBuilder {
         ModelDeploymentCardBuilder::default()
     }
@@ -849,6 +849,23 @@ impl ModelDeploymentCard {
                     bytes_to_hash.extend(gen_config.checksum().as_bytes());
                 }
 
+                // extra_files: hash sorted (basename, checksum) pairs so
+                // (a) workers with identical siblings produce the same
+                // mdcsum regardless of `read_dir` order, and (b) the same
+                // bytes under different filenames don't collide — otherwise
+                // the frontend cache could serve a slug_dir missing siblings.
+                let mut extras: Vec<(&str, &str)> = self
+                    .extra_files
+                    .iter()
+                    .map(|cf| (cf.basename().unwrap_or(""), cf.checksum().hash()))
+                    .collect();
+                extras.sort_unstable();
+                for (name, h) in &extras {
+                    bytes_to_hash.extend(name.as_bytes());
+                    bytes_to_hash.push(0);
+                    bytes_to_hash.extend(h.as_bytes());
+                }
+
                 if let Some(prompt_context_vec) = self.prompt_context.as_ref() {
                     // Paste it as the bytes of the debug format. It's a Vec of enum, so this should be
                     // fine. If the debug representation changes that only happens in a new release.
@@ -919,6 +936,11 @@ impl ModelDeploymentCard {
     ///   tokenizations at special-token boundaries (massive speed-up for shared chat
     ///   prefixes; default off, zero cost when unset)
     /// - `DYN_TOKENIZER_CACHE_BYTES=<n>` — L1 cache byte budget (default 50 MB)
+    /// - `DYN_TOKENIZER_CACHE_EXTEND=0` — disable partial-hit extension. By default
+    ///   (when the cache is enabled) a partial hit also caches the new suffix so each
+    ///   turn of a growing multi-turn conversation hits deeper than the last, keeping
+    ///   per-turn tokenization cost flat instead of growing with history. Set to `0` to
+    ///   fall back to the original hit-without-insert behavior.
     pub fn tokenizer(&self) -> anyhow::Result<crate::tokenizers::Tokenizer> {
         let use_fast = match std::env::var("DYN_TOKENIZER") {
             Ok(v) if v == "fastokens" => true,
@@ -941,6 +963,11 @@ impl ModelDeploymentCard {
             .ok()
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(50 * 1024 * 1024);
+        // Partial-hit extension is on by default; disable with DYN_TOKENIZER_CACHE_EXTEND=0.
+        let cache_extend = !matches!(
+            std::env::var("DYN_TOKENIZER_CACHE_EXTEND").ok().as_deref(),
+            Some("0")
+        );
 
         let inner: Arc<dyn crate::tokenizers::traits::Tokenizer> = match &self.tokenizer {
             Some(TokenizerKind::HfTokenizerJson(checked_file)) => {
@@ -952,7 +979,7 @@ impl ModelDeploymentCard {
                 // extracting special-token strings. `FastTokenizer` does not re-expose
                 // `get_added_tokens_decoder`, so we must capture specials from the raw
                 // HF tokenizer before any swap.
-                let hf = HfTokenizer::from_file(p)
+                let mut hf = HfTokenizer::from_file(p)
                     .inspect_err(|err| {
                         if let Some(serde_err) = err.downcast_ref::<serde_json::Error>()
                             && let Ok(contents) = std::fs::read_to_string(p)
@@ -962,13 +989,26 @@ impl ModelDeploymentCard {
                     })
                     .map_err(anyhow::Error::msg)
                     .with_context(|| p.display().to_string())?;
-
+                // Apply the tokenizer_config.json special-token merge eagerly so
+                // `extract_hf_special_tokens` below sees the same specials the
+                // wrapped tokenizer will use. Without this the L1 prefix cache's
+                // boundary list would diverge from the actual tokenizer
+                // (e.g. Qwen2-VL's `<|image_pad|>` would be in the tokenizer
+                // but missing from the cache specials), letting chat prefixes
+                // straddle a special-token boundary and reducing hit rate.
+                if let Some(model_dir) = p.parent() {
+                    crate::tokenizers::hf::merge_special_tokens_from_config(&mut hf, model_dir);
+                }
                 // Hold onto specials before any move of `hf`.
                 let specials: Vec<String> = if cache_enabled {
                     extract_hf_special_tokens(&hf)
                 } else {
                     Vec::new()
                 };
+
+                // Merge already applied above; just wrap.
+                let wrap_hf =
+                    |hf: HfTokenizer| crate::tokenizers::HuggingFaceTokenizer::from_tokenizer(hf);
 
                 // Pick the inner backend.
                 let raw: Arc<dyn crate::tokenizers::traits::Tokenizer> = if use_fast {
@@ -983,9 +1023,7 @@ impl ModelDeploymentCard {
                                     %e,
                                     "Failed to load fastokens, falling back to HuggingFace"
                                 );
-                                Arc::new(crate::tokenizers::HuggingFaceTokenizer::from_tokenizer(
-                                    hf,
-                                ))
+                                Arc::new(wrap_hf(hf))
                             }
                         }
                     } else {
@@ -993,20 +1031,22 @@ impl ModelDeploymentCard {
                             path = %p.display(),
                             "Tokenizer path contains non-UTF-8 characters, skipping fastokens; falling back to HuggingFace"
                         );
-                        Arc::new(crate::tokenizers::HuggingFaceTokenizer::from_tokenizer(hf))
+                        Arc::new(wrap_hf(hf))
                     }
                 } else {
-                    Arc::new(crate::tokenizers::HuggingFaceTokenizer::from_tokenizer(hf))
+                    Arc::new(wrap_hf(hf))
                 };
 
                 if cache_enabled {
                     tracing::info!(
                         cache_bytes,
+                        cache_extend,
                         specials = specials.len(),
                         "wrapping tokenizer in L1 prefix cache",
                     );
                     Arc::new(
                         crate::tokenizers::CachedTokenizer::new(raw, specials, cache_bytes)
+                            .with_extend(cache_extend)
                             .with_observer(
                                 Arc::new(|| {
                                     dynamo_runtime::metrics::frontend_perf::TOKENIZER_CACHE_HITS_TOTAL
@@ -1044,6 +1084,7 @@ impl ModelDeploymentCard {
                     );
                     Arc::new(
                         crate::tokenizers::CachedTokenizer::new(raw, Vec::new(), cache_bytes)
+                            .with_extend(cache_extend)
                             .with_observer(
                                 Arc::new(|| {
                                     dynamo_runtime::metrics::frontend_perf::TOKENIZER_CACHE_HITS_TOTAL
@@ -1105,18 +1146,13 @@ impl ModelDeploymentCard {
 
     /// Iterate populated metadata slots in deterministic order:
     /// model_info, tokenizer, prompt_formatter, chat_template_file,
-    /// gen_config. Each entry is `(file, is_custom)` — `is_custom` is
-    /// only ever true for operator-supplied chat templates, which
-    /// can't fall back to HF.
-    ///
-    /// TODO(gh-8749): external preprocessors (vllm/sglang) read
-    /// `from_pretrained(slug_dir)` and may expect siblings outside the
-    /// typed slots — `preprocessor_config.json`, `special_tokens_map.json`,
-    /// `added_tokens.json`, etc. Add an `extra_files: Vec<CheckedFile>`
-    /// MDC field so the worker can advertise everything in its model dir
-    /// minus weights. Frontend pipeline is already generic over slot count.
+    /// gen_config, then any `extra_files` siblings the worker harvested
+    /// (preprocessor_config.json, special_tokens_map.json, etc.). Each entry
+    /// is `(file, is_custom)` — `is_custom` is only ever true for
+    /// operator-supplied chat templates, which can't fall back to HF.
     pub fn iter_metadata_files(&self) -> Vec<(&CheckedFile, bool)> {
-        let mut out: Vec<(&CheckedFile, bool)> = Vec::with_capacity(5);
+        let mut out: Vec<(&CheckedFile, bool)> =
+            Vec::with_capacity(Self::TYPED_SLOT_COUNT + self.extra_files.len());
         if let Some(ModelInfoType::HfConfigJson(cf)) = self.model_info.as_ref() {
             out.push((cf, false));
         }
@@ -1134,12 +1170,16 @@ impl ModelDeploymentCard {
         if let Some(GenerationConfig::HfGenerationConfigJson(cf)) = self.gen_config.as_ref() {
             out.push((cf, false));
         }
+        for cf in &self.extra_files {
+            out.push((cf, false));
+        }
         out
     }
 
     /// Mutable mirror of [`Self::iter_metadata_files`].
     pub fn iter_metadata_files_mut(&mut self) -> Vec<(&mut CheckedFile, bool)> {
-        let mut out: Vec<(&mut CheckedFile, bool)> = Vec::with_capacity(5);
+        let mut out: Vec<(&mut CheckedFile, bool)> =
+            Vec::with_capacity(Self::TYPED_SLOT_COUNT + self.extra_files.len());
         if let Some(ModelInfoType::HfConfigJson(cf)) = self.model_info.as_mut() {
             out.push((cf, false));
         }
@@ -1157,6 +1197,9 @@ impl ModelDeploymentCard {
             out.push((pf_checked_file_mut(c), is_custom));
         }
         if let Some(GenerationConfig::HfGenerationConfigJson(cf)) = self.gen_config.as_mut() {
+            out.push((cf, false));
+        }
+        for cf in &mut self.extra_files {
             out.push((cf, false));
         }
         out
@@ -1442,6 +1485,7 @@ impl ModelDeploymentCard {
             media_decoder: None,
             media_fetcher: None,
             router_config: None,
+            extra_files: Vec::new(),
             checksum: OnceLock::new(),
         })
     }
@@ -2116,6 +2160,36 @@ mod tests {
         .unwrap()
     }
 
+    /// Two MDCs with `extra_files` that share bytes but differ in basename
+    /// must produce distinct mdcsums — otherwise the frontend cache would
+    /// alias them and a slug_dir built from one worker's harvest would be
+    /// reused for another worker that needs a differently-named sibling.
+    #[test]
+    fn mdcsum_extras_distinguish_basename_at_equal_checksum() {
+        let src =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data/sample-models/TinyLlama_v1.1");
+        let mut a = super::ModelDeploymentCard::load_from_disk(&src, None).unwrap();
+        let mut b = super::ModelDeploymentCard::load_from_disk(&src, None).unwrap();
+        a.extra_files.push(cf_for("/m/preprocessor_config.json"));
+        b.extra_files.push(cf_for("/m/image_processor_config.json"));
+        assert_ne!(a.mdcsum(), b.mdcsum());
+    }
+
+    /// Read-order independence: extras pushed in different order must
+    /// hash the same (sort_unstable on (basename, checksum) pairs).
+    #[test]
+    fn mdcsum_extras_stable_across_read_order() {
+        let src =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data/sample-models/TinyLlama_v1.1");
+        let mut a = super::ModelDeploymentCard::load_from_disk(&src, None).unwrap();
+        let mut b = super::ModelDeploymentCard::load_from_disk(&src, None).unwrap();
+        let cf1 = cf_for("/m/a.json");
+        let cf2 = cf_for("/m/b.json");
+        a.extra_files.extend([cf1.clone(), cf2.clone()]);
+        b.extra_files.extend([cf2, cf1]);
+        assert_eq!(a.mdcsum(), b.mdcsum());
+    }
+
     #[test]
     fn checked_file_uri_passes_through_remote_urls() {
         let tmp = tempfile::tempdir().unwrap();
@@ -2204,7 +2278,7 @@ mod tests {
         assert!(!dest.exists(), "dest must not exist after cancel");
     }
 
-    /// Brings in the sibling that `lightseek-mm` needs.
+    /// Brings in the sibling that `mm-routing` needs.
     #[test]
     fn harvest_brings_in_non_weight_siblings() -> anyhow::Result<()> {
         let snap = tempfile::tempdir()?;
