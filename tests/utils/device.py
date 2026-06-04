@@ -1,31 +1,22 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-<<<<<<< enable_xpu_multicard_test_local
-=======
 import json
 import logging
 from typing import Any
 
->>>>>>> main
 try:
     import torch
 except ImportError:
     torch = None
 
-<<<<<<< enable_xpu_multicard_test_local
-=======
 logger = logging.getLogger(__name__)
 
->>>>>>> main
 
 def detect_target_device() -> str:
     """Detect the runtime accelerator expected by the current test environment."""
     if torch is None:
-<<<<<<< enable_xpu_multicard_test_local
-=======
         logger.info("torch not available, defaulting to CUDA")
->>>>>>> main
         return "cuda"
 
     if torch.cuda.is_available():
@@ -33,18 +24,13 @@ def detect_target_device() -> str:
     if hasattr(torch, "xpu") and torch.xpu.is_available():
         return "xpu"
 
-<<<<<<< enable_xpu_multicard_test_local
-=======
     logger.info("No accelerator detected, defaulting to CUDA")
->>>>>>> main
     return "cuda"
 
 
 def get_default_vllm_block_size() -> int:
     """Return a runtime-compatible default vLLM block size for tests."""
     return 64 if detect_target_device() == "xpu" else 16
-<<<<<<< enable_xpu_multicard_test_local
-=======
 
 
 def build_nixl_kv_transfer_config() -> dict[str, Any]:
@@ -61,4 +47,3 @@ def build_nixl_kv_transfer_config() -> dict[str, Any]:
 def build_nixl_kv_transfer_config_json() -> str:
     """JSON-encode the runtime-compatible NIXL kv-transfer config."""
     return json.dumps(build_nixl_kv_transfer_config())
->>>>>>> main
