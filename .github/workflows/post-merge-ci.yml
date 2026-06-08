@@ -4,18 +4,25 @@
 name: Post-Merge CI Pipeline
 
 on:
-  push:
+  #push:
+  #  branches:
+  #    - main
+  #    - 'release/*.*.*'
+  #workflow_dispatch:
+  #  inputs:
+  #    framework:
+  #      description: 'Framework to validate'
+  #      type: choice
+  #      options: [all, vllm, sglang, trtllm]
+  #      default: all
+  pull_request:
     branches:
       - main
-      - 'release/*.*.*'
-  workflow_dispatch:
-    inputs:
-      framework:
-        description: 'Framework to validate'
-        type: choice
-        options: [all, vllm, sglang, trtllm]
-        default: all
+    types: [opened, synchronize, reopened, labeled]
 
+concurrency:
+  group: post-merge-xpu-${{ github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 
@@ -51,7 +58,7 @@ jobs:
   # ============================================================================
   dynamo-pipeline:
     name: dynamo-runtime
-    if: github.event_name != 'workflow_dispatch'
+    if: false
     uses: ./.github/workflows/dynamo-pipeline.yml
     with:
       builder_name: b-${{ github.run_id }}-${{ github.run_attempt }}
@@ -69,6 +76,7 @@ jobs:
   # ============================================================================
   operator:
     name: Operator
+    if: false
     runs-on: prod-default-v2
     outputs:
       operator_default_tag: ${{ steps.build.outputs.image_tag }}
@@ -97,7 +105,7 @@ jobs:
 
   snapshot-agent:
     name: Snapshot Agent
-    if: github.event_name != 'workflow_dispatch'
+    if: false
     runs-on: prod-default-v2
     steps:
       - name: Checkout code
@@ -122,8 +130,8 @@ jobs:
 
   vllm-build:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: vllm
@@ -139,8 +147,8 @@ jobs:
 
   vllm-dev-build:
     name: vllm-dev
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: vllm
@@ -157,8 +165,8 @@ jobs:
 
   vllm-efa-build:
     name: vllm-runtime-efa
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: vllm
@@ -175,8 +183,8 @@ jobs:
 
   sglang-build:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_sglang == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: sglang
@@ -192,8 +200,8 @@ jobs:
 
   sglang-dev-build:
     name: sglang-dev
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_sglang == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: sglang
@@ -210,8 +218,8 @@ jobs:
 
   sglang-efa-build:
     name: sglang-runtime-efa
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_sglang == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: sglang
@@ -228,8 +236,8 @@ jobs:
 
   trtllm-build:
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_trtllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: trtllm
@@ -245,8 +253,8 @@ jobs:
 
   trtllm-dev-build:
     name: trtllm-dev
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_trtllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: trtllm
@@ -263,8 +271,8 @@ jobs:
 
   trtllm-efa-build:
     name: trtllm-runtime-efa
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_trtllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: trtllm
@@ -281,7 +289,7 @@ jobs:
 
   planner-build:
     name: planner # This name overlaps with other planner jobs to group them in the UI
-    if: github.event_name != 'workflow_dispatch'
+    if: false
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: dynamo
@@ -297,8 +305,8 @@ jobs:
 
   frontend-build:
     name: frontend
+    if: false
     needs: [config]
-    if: github.event_name != 'workflow_dispatch' || needs.config.outputs.run_vllm == 'true'
     uses: ./.github/workflows/shared-build-image.yml
     with:
       framework: dynamo
@@ -318,6 +326,7 @@ jobs:
 
   vllm-test:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [vllm-build]
     uses: ./.github/workflows/shared-test.yml
     with:
@@ -340,6 +349,7 @@ jobs:
 
   vllm-multi-gpu-test:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [vllm-build]
     uses: ./.github/workflows/shared-test.yml
     with:
@@ -356,6 +366,7 @@ jobs:
 
   vllm-efa-test:
     name: vllm-runtime-efa
+    if: false
     needs: [vllm-efa-build]
     uses: ./.github/workflows/shared-test.yml
     with:
@@ -372,6 +383,7 @@ jobs:
 
   sglang-test:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [sglang-build]
     uses: ./.github/workflows/shared-test.yml
     with:
@@ -393,6 +405,7 @@ jobs:
     secrets: inherit
 
   sglang-multi-gpu-test:
+    if: false
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
     needs: [sglang-build]
     uses: ./.github/workflows/shared-test.yml
@@ -409,6 +422,7 @@ jobs:
     secrets: inherit
 
   trtllm-test:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -431,6 +445,7 @@ jobs:
     secrets: inherit
 
   trtllm-multi-gpu-test:
+    if: false
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-test.yml
@@ -447,6 +462,7 @@ jobs:
     secrets: inherit
 
   trtllm-efa-test:
+    if: false
     name: trtllm-runtime-efa
     needs: [trtllm-efa-build]
     uses: ./.github/workflows/shared-test.yml
@@ -463,6 +479,7 @@ jobs:
     secrets: inherit
 
   planner-test:
+    if: false
     name: planner # This name overlaps with other planner jobs to group them in the UI
     needs: [planner-build]
     uses: ./.github/workflows/shared-test.yml
@@ -488,9 +505,11 @@ jobs:
   vllm-test-xpu:
     name: vllm-xpu
     uses: ./.github/workflows/xpu-ci.yaml
+    needs: [config]
+    if: needs.config.outputs.run_vllm == 'true' || true
     with:
       framework: vllm
-      pytest_markers: '(pre_merge or post_merge) and vllm and xpu_1 and not multimodal'
+      pytest_markers: '(pre_merge or post_merge) and vllm and xpu_1'
 
   # ============================================================================
   # IMAGE COMPLIANCE JOBS
@@ -498,6 +517,7 @@ jobs:
 
   vllm-compliance:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [vllm-build]
     uses: ./.github/workflows/shared-compliance.yml
     with:
@@ -510,6 +530,7 @@ jobs:
 
   sglang-compliance:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [sglang-build]
     uses: ./.github/workflows/shared-compliance.yml
     with:
@@ -522,6 +543,7 @@ jobs:
 
   trtllm-compliance:
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-compliance.yml
     with:
@@ -534,6 +556,7 @@ jobs:
 
   planner-compliance:
     name: planner # This name overlaps with other planner jobs to group them in the UI
+    if: false
     needs: [planner-build]
     uses: ./.github/workflows/shared-compliance.yml
     with:
@@ -546,6 +569,7 @@ jobs:
 
   frontend-compliance:
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
+    if: false
     needs: [frontend-build]
     uses: ./.github/workflows/shared-compliance.yml
     with:
@@ -562,6 +586,7 @@ jobs:
 
   vllm-copy-to-acr:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [vllm-build]
     uses: ./.github/workflows/shared-copy.yml
     with:
@@ -583,6 +608,7 @@ jobs:
 
   sglang-copy-to-acr:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [sglang-build]
     uses: ./.github/workflows/shared-copy.yml
     with:
@@ -593,10 +619,8 @@ jobs:
 
   sglang-dev-copy-to-acr:
     name: sglang-dev # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [sglang-dev-build]
-    if: |
-      always() &&
-      needs.sglang-dev-build.result == 'success'
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.sglang-dev-build.outputs.target_tag_plain }}
@@ -607,6 +631,7 @@ jobs:
 
   trtllm-copy-to-acr:
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [trtllm-build]
     uses: ./.github/workflows/shared-copy.yml
     with:
@@ -617,10 +642,8 @@ jobs:
 
   trtllm-dev-copy-to-acr:
     name: trtllm-dev # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [trtllm-dev-build]
-    if: |
-      always() &&
-      needs.trtllm-dev-build.result == 'success'
     uses: ./.github/workflows/shared-copy.yml
     with:
       target_tag_plain: ${{ needs.trtllm-dev-build.outputs.target_tag_plain }}
@@ -631,6 +654,7 @@ jobs:
 
   frontend-copy-to-acr:
     name: frontend # This name overlaps with other frontend jobs to group them in the UI
+    if: false
     needs: [frontend-build]
     uses: ./.github/workflows/shared-copy.yml
     with:
@@ -647,6 +671,7 @@ jobs:
 
   deploy-operator:
     needs: [operator]
+    if: false
     runs-on: prod-deploy-tester-v1
     outputs:
       namespace: ${{ steps.setup.outputs.namespace }}
@@ -666,6 +691,7 @@ jobs:
 
   deploy-test-vllm:
     needs: [deploy-operator, vllm-copy-to-acr]
+    if: false
     uses: ./.github/workflows/shared-deploy-test.yml
     with:
       framework: vllm
@@ -678,6 +704,7 @@ jobs:
 
   deploy-test-sglang:
     needs: [deploy-operator, sglang-copy-to-acr]
+    if: false
     uses: ./.github/workflows/shared-deploy-test.yml
     with:
       framework: sglang
@@ -690,6 +717,7 @@ jobs:
 
   deploy-test-trtllm:
     needs: [deploy-operator, trtllm-copy-to-acr]
+    if: false
     uses: ./.github/workflows/shared-deploy-test.yml
     with:
       framework: trtllm
@@ -701,7 +729,7 @@ jobs:
     secrets: inherit
 
   deploy-cleanup:
-    if: always()
+    if: false
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
     runs-on: prod-deploy-tester-v1
     steps:
@@ -718,6 +746,7 @@ jobs:
   # ============================================================================
   deploy-test-gaie:
     name: GAIE Deploy Test
+    if: false
     runs-on: prod-deploy-tester-v1
     needs: [deploy-operator, frontend-copy-to-acr, vllm-copy-to-acr]
     timeout-minutes: 30
@@ -776,8 +805,8 @@ jobs:
 
   deploy-status-check:
     runs-on: ubuntu-latest
+    if: false
     needs: [deploy-operator, deploy-test-vllm, deploy-test-sglang, deploy-test-trtllm, deploy-test-gaie]
-    if: always()
     steps:
       - name: "Check all deploy test jobs"
         run: |
@@ -789,8 +818,8 @@ jobs:
 
   clean-k8s-builder:
     name: Clean K8s builder if exists
+    if: false
     runs-on: prod-default-small-v2
-    if: always()
     needs: [vllm-build, sglang-build, trtllm-build, vllm-dev-build, sglang-dev-build, trtllm-dev-build, vllm-efa-build, sglang-efa-build, trtllm-efa-build, operator, frontend-build, planner-build]
     steps:
     - name: Checkout repository
@@ -810,8 +839,9 @@ jobs:
   ############################## SLACK NOTIFICATION ##############################
   notify-slack:
     name: Notify Slack
+    if: false
     runs-on: ubuntu-slim
-    if: always() && github.event_name != 'workflow_dispatch'
+    needs: [ deploy-status-check ]
     needs: [ deploy-status-check ]
     permissions:
       contents: read

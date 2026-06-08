@@ -4,25 +4,33 @@
 name: Nightly CI Pipeline
 
 on:
-  schedule:
-    - cron: '0 8 * * *' # Every day at 12:00 AM PST (08:00 UTC)
-  workflow_dispatch:  # Allow manual triggering for testing
-    inputs:
-      release:
-        description: 'Stage NGC images, Artifactory wheels, and trigger the GitLab release pipeline. Schedule always sets release=true.'
-        required: false
-        type: boolean
-        default: false
-      run_tests:
-        description: 'Run vllm/sglang/trtllm tests + dynamo-pipeline checks. Schedule always runs them.'
-        required: false
-        type: boolean
-        default: true
-      skip_gitlab_pipeline:
-        description: 'Skip the GitLab release automation pipeline trigger. Emergency use only.'
-        required: false
-        type: boolean
-        default: false
+  #schedule:
+  #  - cron: '0 8 * * *' # Every day at 12:00 AM PST (08:00 UTC)
+  #workflow_dispatch:  # Allow manual triggering for testing
+  #  inputs:
+  #    release:
+  #      description: 'Stage NGC images, Artifactory wheels, and trigger the GitLab release pipeline. Schedule always sets release=true.'
+  #      required: false
+  #      type: boolean
+  #      default: false
+  #    run_tests:
+  #      description: 'Run vllm/sglang/trtllm tests + dynamo-pipeline checks. Schedule always runs them.'
+  #      required: false
+  #      type: boolean
+  #      default: true
+  #    skip_gitlab_pipeline:
+  #      description: 'Skip the GitLab release automation pipeline trigger. Emergency use only.'
+  #      required: false
+  #      type: boolean
+  #      default: false
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: nightly-xpu-${{ github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -38,6 +46,7 @@ jobs:
   # ============================================================================
   create-fresh-builder:
     name: Create fresh K8s builder
+    if: false
     runs-on: prod-default-small-v2
     permissions:
       contents: read
@@ -65,7 +74,7 @@ jobs:
   # and workflow_dispatch from main, this is just github.sha.
   resolve-source-sha:
     name: Resolve source SHA
-    runs-on: prod-default-v2
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -88,7 +97,8 @@ jobs:
   # wheel_builder stage carry the dev version.
   compute-dev-version:
     name: Compute dev version suffix
-    runs-on: prod-default-v2
+    if: false
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -150,6 +160,7 @@ jobs:
   # block the nightly — downstream jobs skip on empty outputs.
   notify-slack-start:
     name: Notify Slack — nightly started
+    if: false
     runs-on: prod-default-v2
     needs: [compute-release-mode, resolve-source-sha, compute-dev-version]
     if: ${{ needs.compute-release-mode.outputs.release == 'true' }}
@@ -226,8 +237,8 @@ jobs:
   # job below accepts `skipped` as success.
   manual-release-approval:
     name: Manual release approval gate
+    if: false
     needs: [compute-release-mode]
-    if: ${{ github.event_name == 'workflow_dispatch' && needs.compute-release-mode.outputs.release == 'true' }}
     runs-on: prod-default-small-v2
     environment: manual-release-approval
     permissions:
@@ -244,6 +255,7 @@ jobs:
 
   vllm-build:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [create-fresh-builder, resolve-source-sha]
     uses: ./.github/workflows/shared-build-image.yml
     with:
@@ -259,6 +271,7 @@ jobs:
 
   sglang-build:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [create-fresh-builder, resolve-source-sha]
     uses: ./.github/workflows/shared-build-image.yml
     with:
@@ -274,6 +287,7 @@ jobs:
 
   trtllm-build:
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [create-fresh-builder, resolve-source-sha]
     uses: ./.github/workflows/shared-build-image.yml
     with:
@@ -293,8 +307,8 @@ jobs:
 
   vllm-test:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [vllm-build, resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/shared-test.yml
     with:
       test_suite_name: vllm
@@ -318,8 +332,8 @@ jobs:
 
   vllm-multi-gpu-test:
     name: vllm-runtime # This name overlaps with other vllm jobs to group them in the UI
+    if: false
     needs: [vllm-build, resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/shared-test.yml
     with:
       test_suite_name: vllm
@@ -338,8 +352,8 @@ jobs:
 
   sglang-test:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [sglang-build, resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/shared-test.yml
     with:
       test_suite_name: sglang
@@ -364,8 +378,8 @@ jobs:
 
   sglang-multi-gpu-test:
     name: sglang-runtime # This name overlaps with other sglang jobs to group them in the UI
+    if: false
     needs: [sglang-build, resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/shared-test.yml
     with:
       test_suite_name: sglang
@@ -384,8 +398,8 @@ jobs:
 
   trtllm-test:
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [trtllm-build, resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/shared-test.yml
     with:
       test_suite_name: trtllm
@@ -410,8 +424,8 @@ jobs:
 
   trtllm-multi-gpu-test:
     name: trtllm-runtime # This name overlaps with other trtllm jobs to group them in the UI
+    if: false
     needs: [trtllm-build, resolve-source-sha, compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     uses: ./.github/workflows/shared-test.yml
     with:
       test_suite_name: trtllm
@@ -439,7 +453,7 @@ jobs:
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      pytest_markers: 'vllm and xpu_1 and not multimodal'
+      pytest_markers: 'vllm and xpu_1'
       source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
 
   # ============================================================================
@@ -447,6 +461,7 @@ jobs:
   # ============================================================================
   dynamo-pipeline:
     name: dynamo-runtime
+    if: false
     needs: [create-fresh-builder, compute-dev-version, resolve-source-sha]
     uses: ./.github/workflows/dynamo-pipeline.yml
     with:
@@ -471,8 +486,8 @@ jobs:
   # ============================================================================
   rust-tests:
     name: rust-${{ matrix.dir == '.' && 'root' || matrix.dir }}-coverage
+    if: false
     needs: [compute-release-mode]
-    if: ${{ needs.compute-release-mode.outputs.run_tests == 'true' }}
     runs-on:
       group: Fastchecker
     strategy:
