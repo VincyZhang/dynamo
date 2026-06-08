@@ -509,7 +509,7 @@ jobs:
     if: needs.config.outputs.run_vllm == 'true' || true
     with:
       framework: vllm
-      pytest_markers: '(pre_merge or post_merge) and vllm and xpu_1'
+      pytest_markers: '(pre_merge or post_merge) and vllm'
 
   # ============================================================================
   # IMAGE COMPLIANCE JOBS
@@ -841,7 +841,6 @@ jobs:
     name: Notify Slack
     if: false
     runs-on: ubuntu-slim
-    needs: [ deploy-status-check ]
     needs: [ deploy-status-check ]
     permissions:
       contents: read
