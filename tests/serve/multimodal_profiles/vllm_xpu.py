@@ -147,7 +147,6 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
                 tests=[MmCase(payload=make_image_payload(["green"]))],
             ),
         },
-        gpu_marker="xpu_1",
         extra_vllm_args=["--block-size", "16"],
     ),
     # Lightseek-supported VLM coverage on `agg_router` (Rust-frontend
@@ -164,7 +163,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             "agg_router": TopologyConfig(
                 marks=[pytest.mark.post_merge],
                 timeout_s=500,
-                gpu_marker="xpu_1",
+                gpu_marker="xpu_2",
                 profiled_vram_gib=19.0,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
                 env={"NUM_WORKERS": 2},
@@ -179,7 +178,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             "agg_router": TopologyConfig(
                 marks=[pytest.mark.post_merge],
                 timeout_s=500,
-                gpu_marker="xpu_1",
+                gpu_marker="xpu_2",
                 profiled_vram_gib=16.0,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
                 env={"NUM_WORKERS": 2},
