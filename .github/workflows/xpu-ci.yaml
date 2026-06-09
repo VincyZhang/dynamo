@@ -273,7 +273,7 @@ jobs:
   # ============================================================================
 
   cleanup-xpu:
-    needs: [build-xpu, test-xpu, test-xpu-2card]
+    needs: [build-xpu, test-xpu]
     if: ${{ always() }}
     runs-on: xpu
     env:
