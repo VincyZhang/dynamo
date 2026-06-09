@@ -133,11 +133,17 @@ GPU_MEM_ARGS=$(build_vllm_gpu_mem_args)
 
 # ZE_AFFINITY is expected to be provided by the caller. For multi-worker
 # launches, pass a comma-separated list (for example: 0,1).
-IFS=',' read -r -a ZE_AFFINITY_LIST <<< "${ZE_AFFINITY}"
+# Default to empty so the single-worker path doesn't error under set -euo pipefail.
+IFS=',' read -r -a ZE_AFFINITY_LIST <<< "${ZE_AFFINITY:-}"
+# Validate that ZE_AFFINITY has at least NUM_WORKERS entries when multi-worker.
+if (( NUM_WORKERS > 1 )) && [[ ${#ZE_AFFINITY_LIST[@]} -lt ${NUM_WORKERS} ]]; then
+    echo "ERROR: ZE_AFFINITY must have at least ${NUM_WORKERS} comma-separated values (got ${#ZE_AFFINITY_LIST[@]})" >&2
+    exit 1
+fi
 # DYN_SYSTEM_PORT is expected to be provided by the caller. For multi-worker
 # launches, use numbered vars (for example: DYN_SYSTEM_PORT1=18081,
 # DYN_SYSTEM_PORT2=18083).
-
+DYN_SYSTEM_PORT=${DYN_SYSTEM_PORT1:-18081}
 # Phase 1: launch all workers in parallel.
 # Under SINGLE_GPU=true, requires the KV-bytes cap (CI sets it via the
 # requested_vllm_kv_cache_bytes marker) - otherwise vLLM's 0.9 default races.

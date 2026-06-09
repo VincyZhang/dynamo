@@ -13,11 +13,11 @@ from typing import Any
 import pytest
 import requests
 
-from dynamo.common.utils.paths import 
+from dynamo.common.utils.paths import WORKSPACE_DIR
 from tests.utils.engine_process import EngineConfig, EngineProcess
 
 CANARY_READY_BUDGET_S = 60
-SAMPLE_DIR = os.path.join(, "examples/backends/sample")
+SAMPLE_DIR = os.path.join(WORKSPACE_DIR, "examples/backends/sample")
 MODEL = "Qwen/Qwen3-0.6B"
 
 pytestmark = [
