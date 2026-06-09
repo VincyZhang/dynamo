@@ -103,7 +103,8 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             # assertions live in tests/mm_router/test_router_rust_mm_router_e2e.py
             # (post_merge).
             "agg_router": TopologyConfig(
-                marks=[pytest.mark.pre_merge],
+                marks=[pytest.mark.pre_merge, pytest.mark.xpu_2],
+                gpu_marker="xpu_2",
                 timeout_s=400,
                 profiled_vram_gib=18.7,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
@@ -120,7 +121,8 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             # SINGLE_GPU=true packs both workers onto GPU 0 to match the
             # single-GPU CI environment.
             "agg_router_chat_processor": TopologyConfig(
-                marks=[pytest.mark.post_merge],
+                marks=[pytest.mark.post_merge, pytest.mark.xpu_2],
+                gpu_marker="xpu_2",
                 timeout_s=400,
                 profiled_vram_gib=18.7,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
@@ -137,7 +139,8 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             # CI; the content-hash correctness assertion lives in
             # tests/mm_router/test_router_rust_mm_frontend_decode_e2e.py.
             "agg_router_frontend_decode": TopologyConfig(
-                marks=[pytest.mark.post_merge],
+                marks=[pytest.mark.post_merge, pytest.mark.xpu_2],
+                gpu_marker="xpu_2",
                 timeout_s=400,
                 profiled_vram_gib=18.7,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
