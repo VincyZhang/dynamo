@@ -26,7 +26,7 @@ from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
 from tests.utils.multimodal import (
     IMAGE_COLOR_PROMPT,
-    LOCAL_VIDEO_TEST_URI,
+    MULTIMODAL_VIDEO_URL,
     make_multimodal_configs,
 )
 from tests.utils.payload_builder import (
@@ -469,7 +469,7 @@ vllm_configs = {
                     {"type": "text", "text": "Describe the video in detail"},
                     {
                         "type": "video_url",
-                        "video_url": {"url": LOCAL_VIDEO_TEST_URI},
+                        "video_url": {"url": MULTIMODAL_VIDEO_URL},
                     },
                 ],
                 repeat_count=1,

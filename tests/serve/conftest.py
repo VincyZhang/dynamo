@@ -17,6 +17,9 @@ MULTIMODAL_IMG_URL = f"http://localhost:{IMAGE_SERVER_PORT}/llm-graphic.png"
 MULTIMODAL_VIDEO_PATH = os.path.join(
     WORKSPACE_DIR, "lib/llm/tests/data/media/240p_10.mp4"
 )
+# HTTP URL for video - served by image_server fixture when file exists locally.
+# Falls back to LOCAL_VIDEO_TEST_URI (file://) when not running in Docker/CI.
+MULTIMODAL_VIDEO_URL = f"http://localhost:{IMAGE_SERVER_PORT}/240p_10.mp4"
 
 
 def get_multimodal_test_image_bytes() -> bytes:
