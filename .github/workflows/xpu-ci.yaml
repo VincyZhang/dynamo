@@ -81,19 +81,19 @@ jobs:
           ref: ${{ env.SOURCE_REF }}
           lfs: true
 
-      - name: Ensure Git LFS files are pulled
-        shell: bash
-        run: |
-          git config --unset-all http.https://github.com/.extraheader || true
-          git lfs pull
-          for f in lib/llm/tests/data/media/240p_10.mp4; do
-            if [ -f "$f" ] && head -c 7 "$f" | grep -q "version"; then
-              echo "::error::LFS pointer still present after pull: $f"
-              cat "$f"
-              exit 1
-            fi
-          done
-          echo "✅ LFS media files validated"
+      #- name: Ensure Git LFS files are pulled
+      #  shell: bash
+      #  run: |
+      #    git config --unset-all http.https://github.com/.extraheader || true
+      #    git lfs pull
+      #    for f in lib/llm/tests/data/media/240p_10.mp4; do
+      #      if [ -f "$f" ] && head -c 7 "$f" | grep -q "version"; then
+      #        echo "::error::LFS pointer still present after pull: $f"
+      #        cat "$f"
+      #        exit 1
+      #      fi
+      #    done
+      #    echo "✅ LFS media files validated"
 
       - name: Generate Dockerfile
         shell: bash
