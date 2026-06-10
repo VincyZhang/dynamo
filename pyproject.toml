@@ -289,6 +289,7 @@ markers = [
     "kvbm: marks tests for KV behavior and model determinism",
     "kvbm_concurrency: marks concurrency stress tests for KVBM (runs separately)",
     "model: model id used by a test or parameter",
+    "video: marks tests as video multimodal tests",
     "custom_build: marks tests that require custom builds or special setup (e.g., MoE models)",
     "k8s: marks tests as requiring Kubernetes",
     "fault_tolerance: marks tests as fault tolerance tests",
