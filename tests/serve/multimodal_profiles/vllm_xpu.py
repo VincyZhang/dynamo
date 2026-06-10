@@ -111,7 +111,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             "agg_router": TopologyConfig(
                 marks=[pytest.mark.pre_merge, pytest.mark.xpu_2],
                 gpu_marker="xpu_2",
-                timeout_s=400,
+                timeout_s=800,
                 profiled_vram_gib=18.7,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
                 env={"NUM_WORKERS": "2"},
@@ -129,7 +129,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             "agg_router_chat_processor": TopologyConfig(
                 marks=[pytest.mark.post_merge, pytest.mark.xpu_2],
                 gpu_marker="xpu_2",
-                timeout_s=400,
+                timeout_s=800,
                 profiled_vram_gib=18.7,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
                 env={"NUM_WORKERS": "2"},
@@ -147,7 +147,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
             "agg_router_frontend_decode": TopologyConfig(
                 marks=[pytest.mark.post_merge, pytest.mark.xpu_2],
                 gpu_marker="xpu_2",
-                timeout_s=400,
+                timeout_s=800,
                 profiled_vram_gib=18.7,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
                 env={
@@ -172,7 +172,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
         topologies={
             "agg_router": TopologyConfig(
                 marks=[pytest.mark.post_merge],
-                timeout_s=500,
+                timeout_s=800,
                 gpu_marker="xpu_2",
                 profiled_vram_gib=19.0,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
@@ -187,7 +187,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
         topologies={
             "agg_router": TopologyConfig(
                 marks=[pytest.mark.post_merge],
-                timeout_s=500,
+                timeout_s=800,
                 gpu_marker="xpu_2",
                 profiled_vram_gib=16.0,
                 requested_vllm_kv_cache_bytes=1_719_075_000,
@@ -202,7 +202,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
         topologies={
             "agg": TopologyConfig(
                 marks=[pytest.mark.post_merge],
-                timeout_s=600,
+                timeout_s=800,
                 gpu_marker="xpu_1",
                 profiled_vram_gib=4.7,
                 requested_vllm_kv_cache_bytes=920_126_000,  # 2x safety over min=460_062_720

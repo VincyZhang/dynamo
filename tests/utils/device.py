@@ -33,6 +33,15 @@ def get_default_vllm_block_size() -> int:
     return 64 if detect_target_device() == "xpu" else 16
 
 
+def get_gpu_memory_utilization(
+    num_workers: int = 1, single_gpu: bool = False
+) -> float:
+    """Return a device-aware GPU memory utilization ratio for vLLM tests."""
+    if detect_target_device() == "xpu":
+        return 0.4
+    return 0.45
+
+
 def build_nixl_kv_transfer_config() -> dict[str, Any]:
     """Build a runtime-compatible NIXL kv-transfer config for vLLM tests."""
     config: dict[str, Any] = {

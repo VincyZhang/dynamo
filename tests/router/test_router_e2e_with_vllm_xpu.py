@@ -29,7 +29,7 @@ from tests.router.e2e_harness import (
 )
 from tests.router.helper import generate_random_suffix
 from tests.utils.constants import DefaultPort
-from tests.utils.device import get_default_vllm_block_size, get_gpu_memory_utilization
+from tests.utils.device import get_default_vllm_block_size
 from tests.utils.managed_process import ManagedProcess
 from tests.utils.port_utils import allocate_ports, deallocate_ports
 
@@ -46,12 +46,6 @@ pytestmark = [
 ]
 
 BLOCK_SIZE = get_default_vllm_block_size()
-_MAX_MODEL_LEN = 768
-_GPU_MEM_UTIL = 0.4
-
-# Device visibility: ZE_AFFINITY_MASK for XPU.
-_DEVICE_VISIBILITY_ENV_VAR = "ZE_AFFINITY_MASK"
-_GPU_MEM_UTIL = get_gpu_memory_utilization(num_workers=2, single_gpu=False)
 _MAX_MODEL_LEN = 768
 _GPU_MEM_UTIL = 0.4
 
