@@ -97,7 +97,7 @@ VLLM_MULTIMODAL_PROFILES: list[MultimodalModelProfile] = [
                     #    reason="flaky test, local video file downloading may fail due to network issues"
                     #),
                     pytest.mark.nightly,
-                    pytest.mark.multimodal,
+                    pytest.mark.video,
                 ],
                 timeout_s=600,
                 delayed_start=60,

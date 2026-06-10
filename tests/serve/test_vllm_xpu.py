@@ -7,6 +7,7 @@ import logging
 import os
 import random
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -43,6 +44,24 @@ from tests.utils.payload_builder import (
 from tests.utils.payloads import LoraTestChatPayload, ToolCallingChatPayload
 
 logger = logging.getLogger(__name__)
+
+
+def _log_video_sample_source() -> None:
+    path = Path(LOCAL_VIDEO_TEST_URI.removeprefix("file://"))
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        logger.warning("[video-sample] uri=%s path=%s error=%s", LOCAL_VIDEO_TEST_URI, path, exc)
+        print(f"[video-sample] uri={LOCAL_VIDEO_TEST_URI} path={path} error={exc}")
+        return
+
+    is_lfs_pointer = data.startswith(b"version https://git-lfs.github.com/spec/v1")
+    message = (
+        f"[video-sample] uri={LOCAL_VIDEO_TEST_URI} path={path} size={path.stat().st_size} "
+        f"bytes lfs_pointer={is_lfs_pointer}"
+    )
+    logger.info(message)
+    print(message)
 
 
 @dataclass
@@ -468,7 +487,7 @@ vllm_configs = {
         script_name="xpu/agg_multimodal_xpu.sh",
         marks=[
             pytest.mark.xpu_1,
-            pytest.mark.multimodal,
+            pytest.mark.video,
             pytest.mark.nightly,
             pytest.mark.timeout(600),  # TODO: profile to get tighter timeout
         ],  # TODO: profile to get max_vram
@@ -607,6 +626,11 @@ def test_serve_deployment(
         for m in vllm_config_test.marks
     ):
         request.getfixturevalue("image_server")
+
+    if vllm_config_test.name == "multimodal_video_agg_xpu" or vllm_config_test.name.startswith(
+        "mm_agg_video"
+    ):
+        _log_video_sample_source()
 
     config = dataclasses.replace(
         vllm_config_test, frontend_port=dynamo_dynamic_ports.frontend_port
