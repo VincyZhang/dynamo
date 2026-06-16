@@ -152,7 +152,7 @@ jobs:
   deploy-test-xpu:
     needs: [build-xpu]
     if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
-    runs-on: prod-deploy-tester-v1
+    runs-on: xpu-deploy
     permissions:
       contents: read
     strategy:
