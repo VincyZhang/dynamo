@@ -148,6 +148,22 @@ jobs:
             --build-arg BASE_IMAGE=${{ steps.build.outputs.image_tag }} \
             . 2>&1 | tee build-xpu-test.log
 
+      - name: Save XPU images
+        shell: bash
+        run: |
+          set -x
+          docker save \
+            "${{ steps.build.outputs.image_tag }}" \
+            "${{ steps.build.outputs.image_tag }}-test" \
+            -o xpu-images.tar
+
+      - name: Upload XPU images
+        uses: actions/upload-artifact@v4
+        with:
+          name: xpu-images
+          path: xpu-images.tar
+          retention-days: 1
+
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
@@ -175,6 +191,18 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
         with:
           ref: ${{ env.SOURCE_REF }}
+
+      - name: Download XPU images
+        uses: actions/download-artifact@v4
+        with:
+          name: xpu-images
+          path: /tmp/xpu-images
+
+      - name: Load XPU images
+        shell: bash
+        run: |
+          set -x
+          docker load -i /tmp/xpu-images/xpu-images.tar
 
       - name: Pre-cleanup Pytest Containers
         shell: bash
@@ -227,7 +255,7 @@ jobs:
 
   test-xpu-2card:
     needs: [build-xpu]
-    if: ${{ !cancelled() && needs.build-xpu.result == 'success' && inputs.test_paths == '' }}
+    if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
     runs-on: xpu_2
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
@@ -238,6 +266,18 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
         with:
           ref: ${{ env.SOURCE_REF }}
+
+      - name: Download XPU images
+        uses: actions/download-artifact@v4
+        with:
+          name: xpu-images
+          path: /tmp/xpu-images
+
+      - name: Load XPU images
+        shell: bash
+        run: |
+          set -x
+          docker load -i /tmp/xpu-images/xpu-images.tar
 
       - name: Pre-cleanup Pytest Containers
         shell: bash
