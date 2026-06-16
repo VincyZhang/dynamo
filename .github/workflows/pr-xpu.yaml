@@ -79,8 +79,8 @@ jobs:
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      pytest_markers: 'vllm'
-      test_paths: 'tests/serve/test_vllm_xpu.py::test_serve_deployment[mm_agg_qwen3.5-0.8b_b64_frontend_decoding-2]'
+      pytest_markers: 'vllm and xpu_1'
+      test_paths: 'tests/serve/test_vllm_xpu.py::test_multimodal_b64_frontend_decoding'
 
   # ============================================================================
   # STATUS CHECK
