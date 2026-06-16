@@ -80,6 +80,7 @@ jobs:
     with:
       framework: vllm
       pytest_markers: 'vllm'
+      test_paths: 'tests/serve/test_vllm_xpu.py::test_serve_deployment[mm_agg_qwen3.5-0.8b_b64_frontend_decoding-2]'
 
   # ============================================================================
   # STATUS CHECK
