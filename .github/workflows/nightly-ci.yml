@@ -481,6 +481,7 @@ jobs:
     with:
       framework: vllm
       source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
+      image_tag_suffix: '-nightly'
     secrets: inherit
 
   # ============================================================================
