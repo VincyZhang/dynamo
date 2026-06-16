@@ -61,6 +61,7 @@ jobs:
     with:
       framework: vllm
       source_ref: ${{ github.sha }}
+      image_tag_suffix: '-pr'
     secrets: inherit
 
   # xpu-ci-vllm:
