@@ -227,7 +227,7 @@ jobs:
 
   test-xpu-2card:
     needs: [build-xpu]
-    if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
+    if: ${{ !cancelled() && needs.build-xpu.result == 'success' && inputs.test_paths == '' }}
     runs-on: xpu_2
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
