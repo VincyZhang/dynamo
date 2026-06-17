@@ -74,21 +74,6 @@ jobs:
         with:
           ref: ${{ env.SOURCE_REF }}
 
-      - name: Build local operator image
-        shell: bash
-        run: |
-          set -euo pipefail
-          OPERATOR_IMAGE="${LOCAL_REGISTRY}/ai-dynamo/dynamo:main-operator"
-
-          docker buildx build \
-            --platform "${PLATFORM}" \
-            --push \
-            --build-arg DOCKER_PROXY= \
-            --build-context snapshot=./deploy/snapshot \
-            --tag "${OPERATOR_IMAGE}" \
-            -f ./deploy/operator/Dockerfile \
-            ./deploy/operator 2>&1 | tee build-operator.log
-
       - name: Generate Dockerfile
         shell: bash
         run: |
@@ -117,7 +102,7 @@ jobs:
 
           echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
 
-      - name: Setup vCluster and operator
+      - name: Setup vCluster and existing operator
         id: setup
         uses: ./.github/actions/setup-dynamo-operator
         with:
