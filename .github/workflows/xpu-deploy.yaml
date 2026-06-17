@@ -109,8 +109,6 @@ jobs:
           registry: ${{ env.LOCAL_REGISTRY }}
           operator_tag: main-operator
           hf_token: ${{ secrets.HF_TOKEN }}
-          dockerhub_username: ${{ secrets.DOCKERHUB_LOGIN_USER }}
-          dockerhub_password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
           vcluster_name: ci-${{ github.run_id }}-${{ matrix.name }}-xpu
           vcluster_namespace: gh-id-${{ github.run_id }}-${{ matrix.name }}-xpu
       - name: Connect to vCluster
