@@ -93,12 +93,12 @@ jobs:
           set -euo pipefail
           IMAGE_URI="${LOCAL_REGISTRY}/ai-dynamo/dynamo:${SOURCE_REF}-${FRAMEWORK}-${TARGET}-xpu"
 
-          docker buildx build \
-            --platform "${PLATFORM}" \
-            --push \
+          docker build \
             --tag "${IMAGE_URI}" \
             -f ./container/rendered.Dockerfile \
             . 2>&1 | tee build-xpu.log
+
+          docker push "${IMAGE_URI}"
 
           echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
 
