@@ -17,10 +17,6 @@ inputs:
   registry:
     description: 'Container registry hostname or full operator repository prefix'
     required: true
-  operator_repository:
-    description: 'Operator image repository (defaults to <registry>/ai-dynamo/dynamo)'
-    required: false
-    default: ''
   operator_tag:
     description: 'Operator image tag (default: main-operator)'
     required: false
@@ -345,7 +341,6 @@ runs:
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
-        OPERATOR_REPOSITORY: ${{ inputs.operator_repository }}
         OPERATOR_TAG: ${{ inputs.operator_tag }}
         CHECKPOINT_ENABLED: ${{ inputs.checkpoint_enabled }}
         CHECKPOINT_STORAGE_PVC_NAME: ${{ inputs.checkpoint_storage_pvc_name }}
@@ -356,8 +351,8 @@ runs:
         echo "::group::Install Dynamo platform via Helm (inside vCluster)"
         set -euo pipefail
         set -x
-        if [[ -n "${OPERATOR_REPOSITORY}" ]]; then
-          OPERATOR_REPO="${OPERATOR_REPOSITORY}"
+        if [[ "${REGISTRY}" == *"/"* ]]; then
+          OPERATOR_REPO="${REGISTRY}"
         else
           OPERATOR_REPO="${REGISTRY}/ai-dynamo/dynamo"
         fi
