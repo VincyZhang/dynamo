@@ -81,14 +81,44 @@ runs:
         kubectl config get-contexts
 
     - name: Set up Python
+      id: setup-python
+      continue-on-error: true
       uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
       with:
         python-version: ${{ inputs.python_version }}
         cache: 'pip'
         cache-dependency-path: 'container/deps/requirements.test.txt'
+
+    - name: Fallback to system Python
+      if: steps.setup-python.outcome != 'success'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        PY_CMD=""
+        for candidate in python3.12 python3.11 python3.10 python3.13 python3; do
+          if command -v "${candidate}" >/dev/null 2>&1; then
+            PY_CMD="${candidate}"
+            break
+          fi
+        done
+
+        if [[ -z "${PY_CMD}" ]]; then
+          echo "::error::actions/setup-python failed and no system python3 interpreter was found"
+          exit 1
+        fi
+
+        echo "::warning::actions/setup-python failed on this runner; falling back to ${PY_CMD}"
+        mkdir -p "${HOME}/.local/bin"
+        ln -sf "$(command -v "${PY_CMD}")" "${HOME}/.local/bin/python"
+        echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
+        "${PY_CMD}" --version
+
     - name: Install test dependencies
       shell: bash
       run: |
+        python -m ensurepip --upgrade || true
         python -m pip install --upgrade pip
         pip install -r container/deps/requirements.test.txt
 

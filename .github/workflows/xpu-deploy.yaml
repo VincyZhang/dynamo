@@ -125,7 +125,7 @@ jobs:
           registry: ${{ env.LOCAL_REGISTRY }}
           operator_tag: ${{ steps.setup.outputs.operator_tag }}
           hf_token: ${{ secrets.HF_TOKEN }}
-          python_version: '3.11'
+          python_version: '3.12'
           framework: ${{ inputs.framework || 'vllm' }}
           profile: ${{ matrix.profile }}
           image: ${{ env.IMAGE_URI }}

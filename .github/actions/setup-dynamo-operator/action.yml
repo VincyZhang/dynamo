@@ -422,11 +422,26 @@ runs:
         set -euo pipefail
         VKUBECONFIG=${{ github.workspace }}/.kubeconfig-vcluster
 
-        kubectl --kubeconfig="${VKUBECONFIG}" \
+        if ! kubectl --kubeconfig="${VKUBECONFIG}" \
           wait --for=condition=Available \
           deployment/dynamo-platform-dynamo-operator-controller-manager \
           -n default \
-          --timeout=900s
+          --timeout=900s; then
+          echo "::warning::dynamo-operator controller-manager Available condition timed out; checking pod readiness as fallback"
+
+          kubectl --kubeconfig="${VKUBECONFIG}" get deployment/dynamo-platform-dynamo-operator-controller-manager -n default -o wide || true
+          kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default | grep dynamo-platform-dynamo-operator-controller-manager || true
+
+          READY_CONTROLLER_PODS=$(kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default --no-headers \
+            | awk '$1 ~ /^dynamo-platform-dynamo-operator-controller-manager-/ && $2 ~ /^1\/1$/ && $3 == "Running" {count++} END {print count+0}')
+
+          if [[ "${READY_CONTROLLER_PODS}" -lt 1 ]]; then
+            echo "::error::dynamo-operator controller-manager is not Available and no Ready pod was found"
+            exit 1
+          fi
+
+          echo "controller-manager fallback check passed with ${READY_CONTROLLER_PODS} Ready pod(s)"
+        fi
 
         if ! kubectl --kubeconfig="${VKUBECONFIG}" \
           wait --for=condition=Available \
