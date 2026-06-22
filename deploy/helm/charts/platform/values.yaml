@@ -541,6 +541,11 @@ nats:
     #           key: token
     env: {}
 
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+
     # Advanced container configuration merging and patching
     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core
     merge: {}
@@ -566,6 +571,11 @@ nats:
 
     # Environment variables for the reloader container
     env: {}
+
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
 
     # Volume mount prefixes from NATS container to share with reloader
     # All NATS container volume mounts with these prefixes will be mounted into the reloader
