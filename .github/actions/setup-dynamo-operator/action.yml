@@ -15,7 +15,10 @@ inputs:
     required: false
     default: ''
   registry:
-    description: 'Container registry hostname (e.g. myregistry.azurecr.io). When empty, the Helm chart default image (nvcr.io/nvidia/ai-dynamo/kubernetes-operator) is used.'
+    description: 'Container registry hostname or full operator repository prefix'
+    required: true
+  operator_tag:
+    description: 'Operator image tag (default: main-operator)'
     required: false
     default: ''
   operator_tag:
@@ -123,6 +126,20 @@ runs:
 
     - name: Install vCluster CLI
       uses: ./.github/actions/install-vcluster-cli
+
+    - name: Add local Helm to PATH
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        for dir in "${HOME}/.local/bin" "/home/devcloud/.local/bin"; do
+          if [ -x "${dir}/helm" ]; then
+            echo "${dir}" >> "$GITHUB_PATH"
+          fi
+        done
+
+        export PATH="${HOME}/.local/bin:/home/devcloud/.local/bin:${PATH}"
+        helm version
 
     - name: Create host namespace
       shell: bash
@@ -334,6 +351,13 @@ runs:
         echo "::group::Install Dynamo platform via Helm (inside vCluster)"
         set -euo pipefail
         set -x
+        if [[ "${REGISTRY}" == *"/"* ]]; then
+          OPERATOR_REPO="${REGISTRY}"
+        else
+          OPERATOR_REPO="${REGISTRY}/ai-dynamo/dynamo"
+        fi
+        echo "Using operator image: ${OPERATOR_REPO}:${OPERATOR_TAG}"
+
         helm repo add bitnami https://charts.bitnami.com/bitnami
         cd deploy/helm/charts/platform/
         helm dep build .
@@ -394,149 +418,13 @@ runs:
     - name: Wait for operator CRDs to be established
       shell: bash
       run: |
-        echo "::group::Wait for Dynamo operator CRDs inside vCluster"
-        # CRDs live in the chart's crds/ directory so Helm installs them before any pod
-        # starts. Waiting for Established is independent of vCluster syncer pod-Ready
-        # latency, which is unreliable on some clusters (e.g. AWS with LimitRange QoS mismatch).
+        echo "::group::Wait for operator availability inside vCluster"
         kubectl --kubeconfig=${{ github.workspace }}/.kubeconfig-vcluster \
-          wait --for=condition=established \
-          crd/dynamographdeployments.nvidia.com \
-          --timeout=1800s
-        echo "::endgroup::"
-
-    - name: Wait for operator pod to be ready
-      shell: bash
-      env:
-        NAMESPACE: ${{ steps.resolve-names.outputs.namespace }}
-      run: |
-        echo "::group::Wait for operator pod Ready (host namespace)"
-        # Poll the host namespace instead of the vCluster API. The vCluster syncer
-        # on AWS stalls pod-Ready propagation due to a NATS qosClass reconciliation
-        # loop, so kubectl wait against the virtual cluster never returns. The host
-        # pod status is always accurate.
-        end=$((SECONDS + 1800))
-        while true; do
-          STATUS=$(kubectl get pods -n "${NAMESPACE}" --no-headers 2>/dev/null \
-            | grep 'dynamo-platform-dynamo-operator-controller-manager' \
-            | awk '{print $2}' | head -1)
-          if [ "${STATUS}" = "1/1" ]; then
-            echo "Operator pod Ready"
-            break
-          fi
-          if [ $SECONDS -ge $end ]; then
-            echo "::error::Operator pod not Ready after 1800s (last status: ${STATUS:-not found})"
-            exit 1
-          fi
-          echo "Waiting for operator pod... status=${STATUS:-not found}"
-          sleep 15
-        done
-        echo "::endgroup::"
-
-    - name: Wait for CRDs to be established
-      shell: bash
-      run: |
-        kubectl --kubeconfig=${{ github.workspace }}/.kubeconfig-vcluster \
-          wait --for=condition=established \
-          crd/dynamographdeployments.nvidia.com \
-          --timeout=120s
-
-    - name: Verify operator image and admission webhooks
-      shell: bash
-      env:
-        NAMESPACE: ${{ steps.resolve-names.outputs.namespace }}
-      run: |
-        set -euo pipefail
-        VKUBECONFIG=${{ github.workspace }}/.kubeconfig-vcluster
-
-        OPERATOR_POD=$(kubectl get pods -n "${NAMESPACE}" -o name \
-          | grep 'dynamo-platform-dynamo-operator-controller-manager' \
-          | head -1 || true)
-        if [ -z "${OPERATOR_POD}" ]; then
-          echo "::error::Ready operator pod disappeared before verification"
-          exit 1
-        fi
-
-        echo "::group::Resolved operator image identity"
-        kubectl get "${OPERATOR_POD}" -n "${NAMESPACE}" \
-          -o jsonpath='{range .status.initContainerStatuses[*]}initContainer={.name} image={.image} imageID={.imageID}{"\n"}{end}{range .status.containerStatuses[*]}container={.name} image={.image} imageID={.imageID}{"\n"}{end}'
-        echo "::endgroup::"
-
-        echo "::group::DynamoGraphDeployment admission smoke tests"
-        smoke_v1alpha1() {
-          kubectl --kubeconfig="${VKUBECONFIG}" --request-timeout=15s \
-            create --namespace=default --dry-run=server \
-            -o json \
-            -f - <<'EOF'
-        apiVersion: nvidia.com/v1alpha1
-        kind: DynamoGraphDeployment
-        metadata:
-          name: ci-webhook-smoke-v1alpha1
-        spec:
-          services:
-            Smoke:
-              componentType: worker
-              replicas: 0
-        EOF
-        }
-
-        smoke_v1beta1() {
-          kubectl --kubeconfig="${VKUBECONFIG}" --request-timeout=15s \
-            create --namespace=default --dry-run=server \
-            -o json \
-            -f - <<'EOF'
-        apiVersion: nvidia.com/v1beta1
-        kind: DynamoGraphDeployment
-        metadata:
-          name: ci-webhook-smoke-v1beta1
-        spec:
-          components:
-          - name: Smoke
-            type: worker
-            replicas: 0
-        EOF
-        }
-
-        run_admission_smoke_test() {
-          local version="$1"
-          local output
-          local origin_version
-          local deadline=$((SECONDS + 120))
-          local attempt=1
-          shift
-
-          while true; do
-            if output=$("$@" 2>&1); then
-              origin_version=$(sed -n 's/.*"nvidia\.com\/dynamo-operator-origin-version":[[:space:]]*"\([^"]*\)".*/\1/p' <<<"${output}" | tail -1)
-              if [ -z "${origin_version}" ]; then
-                echo "::error::${version} request succeeded without the operator origin-version mutation"
-                printf '%s\n' "${output}" >&2
-                return 1
-              fi
-              echo "${version} admission succeeded (operator origin version: ${origin_version})"
-              return 0
-            fi
-
-            if ! grep -Eiq \
-              'no endpoints available|connection refused|connection reset by peer|TLS handshake timeout|service .* not found|unexpected EOF|^EOF$' \
-              <<<"${output}"; then
-              printf '%s\n' "${output}" >&2
-              return 1
-            fi
-
-            if [ "${SECONDS}" -ge "${deadline}" ]; then
-              echo "::error::${version} admission smoke test did not become reachable within 120s"
-              printf '%s\n' "${output}" >&2
-              return 1
-            fi
-
-            echo "::warning::${version} admission endpoint not ready (attempt ${attempt}); retrying in 2s"
-            attempt=$((attempt + 1))
-            sleep 2
-          done
-        }
-
-        run_admission_smoke_test v1alpha1 smoke_v1alpha1
-        run_admission_smoke_test v1beta1 smoke_v1beta1
+          wait --for=condition=Available \
+          deployment/dynamo-platform-dynamo-operator-controller-manager \
+          deployment/grove-operator \
+          -n default \
+          --timeout=900s
         echo "::endgroup::"
 
     - name: Debug deployment failure

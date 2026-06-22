@@ -1,0 +1,134 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: XPU-Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      framework:
+        description: 'Framework name (vllm)'
+        required: false
+        type: string
+        default: 'vllm'
+      source_ref:
+        description: 'Git ref/SHA to checkout. Empty = current SHA.'
+        required: false
+        type: string
+        default: ''
+      registry_host:
+        description: 'Local registry host to push images to.'
+        required: false
+        type: string
+        default: 'localhost:5000'
+  workflow_call:
+    inputs:
+      framework:
+        description: 'Framework name (vllm)'
+        required: false
+        type: string
+        default: 'vllm'
+      source_ref:
+        description: 'Git ref/SHA to checkout. Empty = caller SHA.'
+        required: false
+        type: string
+        default: ''
+      registry_host:
+        description: 'Local registry host to push images to.'
+        required: false
+        type: string
+        default: 'localhost:5000'
+    secrets:
+      HF_TOKEN:
+        required: true
+      DOCKERHUB_LOGIN_USER:
+        required: true
+      DOCKERHUB_ACCESS_TOKEN:
+        required: true
+
+env:
+  FRAMEWORK: ${{ inputs.framework || 'vllm' }}
+  SOURCE_REF: ${{ inputs.source_ref || github.sha }}
+  LOCAL_REGISTRY: ${{ inputs.registry_host || 'localhost:5000' }}
+  TARGET: runtime
+  DEVICE: xpu
+  PLATFORM: linux/amd64
+
+jobs:
+  deploy-test-xpu:
+    runs-on: xpu-deploy
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: agg_xpu_dra
+            name: agg
+          - profile: disagg_xpu_dra
+            name: disagg
+    name: ${{ matrix.name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
+        with:
+          ref: ${{ env.SOURCE_REF }}
+
+      - name: Generate Dockerfile
+        shell: bash
+        run: |
+          echo "::group::Generating XPU Dockerfile"
+          python3 ./container/render.py \
+              --target=${{ env.TARGET }} \
+              --framework=${{ env.FRAMEWORK }} \
+              --device=${{ env.DEVICE }} \
+              --platform=${{ env.PLATFORM }} \
+              --show-result \
+              --output-short-filename
+          echo "::endgroup::"
+
+      - name: Build local XPU image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_URI="${LOCAL_REGISTRY}/ai-dynamo/dynamo:${SOURCE_REF}-${FRAMEWORK}-${TARGET}-xpu"
+
+          docker build \
+            --tag "${IMAGE_URI}" \
+            -f ./container/rendered.Dockerfile \
+            . 2>&1 | tee build-xpu.log
+
+          docker push "${IMAGE_URI}"
+
+          echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
+
+      - name: Setup vCluster and existing operator
+        id: setup
+        uses: ./.github/actions/setup-dynamo-operator
+        with:
+          registry: nvcr.io/nvidia/ai-dynamo/kubernetes-operator
+          operator_tag: 1.2.1
+          hf_token: ${{ secrets.HF_TOKEN }}
+          vcluster_name: ci-${{ github.run_id }}-${{ matrix.name }}-xpu
+          vcluster_namespace: gh-id-${{ github.run_id }}-${{ matrix.name }}-xpu
+      - name: Connect to vCluster
+        id: connect-vcluster
+        uses: ./.github/actions/connect-vcluster
+        with:
+          vcluster_name: ${{ steps.setup.outputs.vcluster_name }}
+          vcluster_namespace: ${{ steps.setup.outputs.namespace }}
+      - name: Run XPU Deploy Test
+        uses: ./.github/actions/dynamo-deploy-test
+        with:
+          kubeconfig_base64: ${{ steps.connect-vcluster.outputs.kubeconfig_base64 }}
+          namespace: default
+          registry: ${{ env.LOCAL_REGISTRY }}
+          operator_tag: ${{ steps.setup.outputs.operator_tag }}
+          hf_token: ${{ secrets.HF_TOKEN }}
+          python_version: '3.11'
+          framework: ${{ inputs.framework || 'vllm' }}
+          profile: ${{ matrix.profile }}
+          image: ${{ env.IMAGE_URI }}
+          platform_arch: amd64
+          test_name: ${{ inputs.framework || 'vllm' }}-${{ matrix.name }}-xpu
+          extra_pytest_args: -m framework_only

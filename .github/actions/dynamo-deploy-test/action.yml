@@ -28,6 +28,10 @@ inputs:
     description: 'Docker Hub password for image pull secrets. Required for rerun self-bootstrap if private images are used.'
     required: false
     default: ''
+  python_version:
+    description: 'Python version to install for deploy tests'
+    required: false
+    default: '3.12'
 
   framework:
     description: 'Framework name (vllm, sglang, trtllm)'
@@ -79,7 +83,7 @@ runs:
     - name: Set up Python
       uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
       with:
-        python-version: '3.12'
+        python-version: ${{ inputs.python_version }}
         cache: 'pip'
         cache-dependency-path: 'container/deps/requirements.test.txt'
     - name: Install test dependencies
