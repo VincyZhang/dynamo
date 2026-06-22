@@ -115,23 +115,19 @@ runs:
 
         "${PY_CMD}" --version
 
-        if ! python -m pip --version >/dev/null 2>&1; then
-          echo "::warning::pip not found for fallback interpreter; attempting bootstrap"
-          python -m ensurepip --upgrade || true
+        VENV_DIR="${{ github.workspace }}/.venv-deploy-test"
+        if [[ ! -d "${VENV_DIR}" ]]; then
+          python -m venv "${VENV_DIR}"
         fi
 
-        if ! python -m pip --version >/dev/null 2>&1; then
-          echo "::warning::ensurepip unavailable; bootstrapping pip via get-pip.py"
-          curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
-          python /tmp/get-pip.py --user
-        fi
+        echo "${VENV_DIR}/bin" >> "${GITHUB_PATH}"
+        echo "VIRTUAL_ENV=${VENV_DIR}" >> "${GITHUB_ENV}"
 
-        python -m pip --version
+        "${VENV_DIR}/bin/python" -m pip --version
 
     - name: Install test dependencies
       shell: bash
       run: |
-        python -m ensurepip --upgrade || true
         python -m pip install --upgrade pip
         python -m pip install -r container/deps/requirements.test.txt
 
