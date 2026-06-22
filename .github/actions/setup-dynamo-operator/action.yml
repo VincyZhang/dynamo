@@ -419,12 +419,37 @@ runs:
       shell: bash
       run: |
         echo "::group::Wait for operator availability inside vCluster"
-        kubectl --kubeconfig=${{ github.workspace }}/.kubeconfig-vcluster \
+        set -euo pipefail
+        VKUBECONFIG=${{ github.workspace }}/.kubeconfig-vcluster
+
+        kubectl --kubeconfig="${VKUBECONFIG}" \
           wait --for=condition=Available \
           deployment/dynamo-platform-dynamo-operator-controller-manager \
-          deployment/grove-operator \
           -n default \
           --timeout=900s
+
+        if ! kubectl --kubeconfig="${VKUBECONFIG}" \
+          wait --for=condition=Available \
+          deployment/grove-operator \
+          -n default \
+          --timeout=300s; then
+          echo "::warning::grove-operator deployment Available condition timed out; checking pod readiness as fallback"
+
+          kubectl --kubeconfig="${VKUBECONFIG}" get deployment/grove-operator -n default -o wide || true
+          kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o wide || true
+
+          READY_GROVE_PODS=$(kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default \
+            -l app.kubernetes.io/name=grove-operator \
+            -o jsonpath='{range .items[*]}{.status.phase} {.status.containerStatuses[0].ready}{"\n"}{end}' \
+            | awk '$1 == "Running" && $2 == "true" {count++} END {print count+0}')
+
+          if [[ "${READY_GROVE_PODS}" -lt 1 ]]; then
+            echo "::error::grove-operator is not Available and no Ready pod was found"
+            exit 1
+          fi
+
+          echo "grove-operator fallback check passed with ${READY_GROVE_PODS} Ready pod(s)"
+        fi
         echo "::endgroup::"
 
     - name: Debug deployment failure
