@@ -483,8 +483,8 @@ runs:
             break
           fi
 
-          if [[ "${SERVICE_PUBLISH_NOT_READY}" == "true" && "${ENDPOINTSLICE_ADDR_COUNT}" -ge 1 && "${READY_GROVE_PODS}" -ge 1 ]]; then
-            echo "::warning::using publishNotReadyAddresses fallback: service publishes not-ready addresses, endpointslice has ${ENDPOINTSLICE_ADDR_COUNT} address(es), ready grove pod(s)=${READY_GROVE_PODS}"
+          if (( attempt >= 12 )) && [[ "${ENDPOINTSLICE_ADDR_COUNT}" -ge 1 && "${READY_GROVE_PODS}" -ge 1 ]]; then
+            echo "::warning::using delayed webhook readiness fallback: endpointslice has ${ENDPOINTSLICE_ADDR_COUNT} address(es) and ready grove pod(s)=${READY_GROVE_PODS}, but ready flags remain empty"
             WEBHOOK_READY=1
             break
           fi
