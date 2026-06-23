@@ -465,6 +465,63 @@ runs:
 
           echo "grove-operator fallback check passed with ${READY_GROVE_PODS} Ready pod(s)"
         fi
+
+        # Gate test execution on webhook endpoint readiness to avoid transient
+        # "connection refused" errors during early reconcile.
+        echo "::notice::Waiting for grove-operator webhook service endpoints"
+        WEBHOOK_READY=0
+        for attempt in {1..30}; do
+          EP_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpoints grove-operator -n default -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | awk '{print NF}')
+          if [[ "${EP_ADDR_COUNT}" -ge 1 ]]; then
+            echo "::notice::grove-operator webhook endpoints ready on attempt ${attempt} (addresses=${EP_ADDR_COUNT})"
+            WEBHOOK_READY=1
+            break
+          fi
+          if (( attempt % 6 == 0 )); then
+            echo "::warning::grove-operator webhook endpoints still empty (attempt ${attempt}/30)"
+            kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o wide || true
+          fi
+          sleep 5
+        done
+
+        if [[ "${WEBHOOK_READY}" -ne 1 ]]; then
+          echo "::error::grove-operator webhook endpoints not ready after waiting"
+
+          echo "::group::grove-operator service and endpoint objects"
+          kubectl --kubeconfig="${VKUBECONFIG}" get svc,endpoints,endpointslices -n default | grep grove-operator || true
+          kubectl --kubeconfig="${VKUBECONFIG}" describe svc grove-operator -n default || true
+          kubectl --kubeconfig="${VKUBECONFIG}" describe endpoints grove-operator -n default || true
+          kubectl --kubeconfig="${VKUBECONFIG}" get endpointslices -n default -l kubernetes.io/service-name=grove-operator -o yaml || true
+          echo "::endgroup::"
+
+          echo "::group::grove-operator deployment and pods"
+          kubectl --kubeconfig="${VKUBECONFIG}" get deployment grove-operator -n default -o wide || true
+          kubectl --kubeconfig="${VKUBECONFIG}" describe deployment grove-operator -n default || true
+          kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o wide || true
+          echo "::endgroup::"
+
+          echo "::group::grove-operator pod describe and logs"
+          kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator --no-headers 2>/dev/null \
+            | awk '{print $1}' \
+            | while read -r pod; do
+                [[ -z "${pod}" ]] && continue
+                echo "--- describe pod/${pod} ---"
+                kubectl --kubeconfig="${VKUBECONFIG}" describe pod "${pod}" -n default || true
+                echo "--- logs pod/${pod} (current) ---"
+                kubectl --kubeconfig="${VKUBECONFIG}" logs "${pod}" -n default --all-containers --tail=200 || true
+                echo "--- logs pod/${pod} (previous) ---"
+                kubectl --kubeconfig="${VKUBECONFIG}" logs "${pod}" -n default --all-containers --tail=200 --previous || true
+              done
+          echo "::endgroup::"
+
+          echo "::group::recent default namespace events"
+          kubectl --kubeconfig="${VKUBECONFIG}" get events -n default --sort-by='.lastTimestamp' | tail -n 200 || true
+          echo "::endgroup::"
+
+          exit 1
+        fi
+
+        echo "::notice::grove-operator webhook endpoints are ready"
         echo "::endgroup::"
 
     - name: Debug deployment failure
