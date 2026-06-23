@@ -471,9 +471,11 @@ runs:
         echo "::notice::Waiting for grove-operator webhook service endpoints"
         WEBHOOK_READY=0
         for attempt in {1..30}; do
-          EP_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpoints grove-operator -n default -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | awk '{print NF}')
-          if [[ "${EP_ADDR_COUNT}" -ge 1 ]]; then
-            echo "::notice::grove-operator webhook endpoints ready on attempt ${attempt} (addresses=${EP_ADDR_COUNT})"
+          ENDPOINT_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpoints grove-operator -n default -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | awk '{print NF}')
+          ENDPOINTSLICE_READY_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpointslices -n default -l kubernetes.io/service-name=grove-operator -o jsonpath='{.items[*].endpoints[?(@.conditions.ready==true)].addresses[*]}' 2>/dev/null | awk '{print NF}')
+
+          if [[ "${ENDPOINT_ADDR_COUNT}" -ge 1 || "${ENDPOINTSLICE_READY_ADDR_COUNT}" -ge 1 ]]; then
+            echo "::notice::grove-operator webhook endpoints ready on attempt ${attempt} (endpoints.ready=${ENDPOINT_ADDR_COUNT}, endpointslice.ready=${ENDPOINTSLICE_READY_ADDR_COUNT})"
             WEBHOOK_READY=1
             break
           fi
