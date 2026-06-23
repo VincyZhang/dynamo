@@ -472,15 +472,25 @@ runs:
         WEBHOOK_READY=0
         for attempt in {1..30}; do
           ENDPOINT_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpoints grove-operator -n default -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | awk '{print NF}')
+          ENDPOINTSLICE_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpointslices -n default -l kubernetes.io/service-name=grove-operator -o jsonpath='{.items[*].endpoints[*].addresses[*]}' 2>/dev/null | awk '{print NF}')
           ENDPOINTSLICE_READY_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpointslices -n default -l kubernetes.io/service-name=grove-operator -o jsonpath='{.items[*].endpoints[?(@.conditions.ready==true)].addresses[*]}' 2>/dev/null | awk '{print NF}')
+          SERVICE_PUBLISH_NOT_READY=$(kubectl --kubeconfig="${VKUBECONFIG}" get svc grove-operator -n default -o jsonpath='{.spec.publishNotReadyAddresses}' 2>/dev/null)
+          READY_GROVE_PODS=$(kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o jsonpath='{range .items[*]}{.status.phase} {.status.containerStatuses[0].ready}{"\n"}{end}' 2>/dev/null | awk '$1 == "Running" && $2 == "true" {count++} END {print count+0}')
 
           if [[ "${ENDPOINT_ADDR_COUNT}" -ge 1 || "${ENDPOINTSLICE_READY_ADDR_COUNT}" -ge 1 ]]; then
             echo "::notice::grove-operator webhook endpoints ready on attempt ${attempt} (endpoints.ready=${ENDPOINT_ADDR_COUNT}, endpointslice.ready=${ENDPOINTSLICE_READY_ADDR_COUNT})"
             WEBHOOK_READY=1
             break
           fi
+
+          if [[ "${SERVICE_PUBLISH_NOT_READY}" == "true" && "${ENDPOINTSLICE_ADDR_COUNT}" -ge 1 && "${READY_GROVE_PODS}" -ge 1 ]]; then
+            echo "::warning::using publishNotReadyAddresses fallback: service publishes not-ready addresses, endpointslice has ${ENDPOINTSLICE_ADDR_COUNT} address(es), ready grove pod(s)=${READY_GROVE_PODS}"
+            WEBHOOK_READY=1
+            break
+          fi
+
           if (( attempt % 6 == 0 )); then
-            echo "::warning::grove-operator webhook endpoints still empty (attempt ${attempt}/30)"
+            echo "::warning::grove-operator webhook endpoints still empty (attempt ${attempt}/30; endpoints.ready=${ENDPOINT_ADDR_COUNT}, endpointslice.total=${ENDPOINTSLICE_ADDR_COUNT}, endpointslice.ready=${ENDPOINTSLICE_READY_ADDR_COUNT}, readyPods=${READY_GROVE_PODS}, publishNotReady=${SERVICE_PUBLISH_NOT_READY:-false})"
             kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o wide || true
           fi
           sleep 5
