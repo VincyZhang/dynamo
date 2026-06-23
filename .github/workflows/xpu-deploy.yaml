@@ -108,6 +108,7 @@ jobs:
         with:
           registry: nvcr.io/nvidia/ai-dynamo/kubernetes-operator
           operator_tag: 1.2.1
+          vcluster_k8s_version: v1.31.4
           hf_token: ${{ secrets.HF_TOKEN }}
           vcluster_name: ci-${{ github.run_id }}-${{ matrix.name }}-xpu
           vcluster_namespace: gh-id-${{ github.run_id }}-${{ matrix.name }}-xpu
