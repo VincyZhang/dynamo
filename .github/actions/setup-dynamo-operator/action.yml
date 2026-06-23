@@ -468,7 +468,7 @@ runs:
 
         # Gate test execution on webhook endpoint readiness to avoid transient
         # "connection refused" errors during early reconcile.
-        echo "::notice::Waiting for grove-operator webhook service endpoints"
+        echo "::notice::Waiting for grove-operator webhook readiness signals"
         WEBHOOK_READY=0
         for attempt in {1..30}; do
           ENDPOINT_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpoints grove-operator -n default -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | awk '{print NF}')
@@ -483,12 +483,6 @@ runs:
             break
           fi
 
-          if (( attempt >= 12 )) && [[ "${ENDPOINTSLICE_ADDR_COUNT}" -ge 1 && "${READY_GROVE_PODS}" -ge 1 ]]; then
-            echo "::warning::using delayed webhook readiness fallback: endpointslice has ${ENDPOINTSLICE_ADDR_COUNT} address(es) and ready grove pod(s)=${READY_GROVE_PODS}, but ready flags remain empty"
-            WEBHOOK_READY=1
-            break
-          fi
-
           if (( attempt % 6 == 0 )); then
             echo "::warning::grove-operator webhook endpoints still empty (attempt ${attempt}/30; endpoints.ready=${ENDPOINT_ADDR_COUNT}, endpointslice.total=${ENDPOINTSLICE_ADDR_COUNT}, endpointslice.ready=${ENDPOINTSLICE_READY_ADDR_COUNT}, readyPods=${READY_GROVE_PODS}, publishNotReady=${SERVICE_PUBLISH_NOT_READY:-false})"
             kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o wide || true
@@ -497,7 +491,33 @@ runs:
         done
 
         if [[ "${WEBHOOK_READY}" -ne 1 ]]; then
-          echo "::error::grove-operator webhook endpoints not ready after waiting"
+          echo "::warning::webhook readiness flags were not observed; running in-cluster connectivity probe"
+
+          READY_GROVE_PODS=$(kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default -l app.kubernetes.io/name=grove-operator -o jsonpath='{range .items[*]}{.status.phase} {.status.containerStatuses[0].ready}{"\n"}{end}' 2>/dev/null | awk '$1 == "Running" && $2 == "true" {count++} END {print count+0}')
+
+          if [[ "${READY_GROVE_PODS}" -ge 1 ]]; then
+            PROBE_POD="webhook-probe-$(date +%s)"
+            if kubectl --kubeconfig="${VKUBECONFIG}" run "${PROBE_POD}" \
+              -n default \
+              --image=curlimages/curl:8.11.1 \
+              --restart=Never \
+              --rm \
+              --attach \
+              --quiet \
+              --command -- sh -ceu 'for i in 1 2 3; do curl -sk --connect-timeout 2 --max-time 5 https://grove-operator.default.svc:9443/ >/dev/null && exit 0; sleep 2; done; exit 1'; then
+              echo "::warning::proceeding based on successful in-cluster connectivity probe to grove webhook service"
+              WEBHOOK_READY=1
+            else
+              echo "::warning::in-cluster connectivity probe to grove webhook service failed"
+            fi
+            kubectl --kubeconfig="${VKUBECONFIG}" delete pod "${PROBE_POD}" -n default --ignore-not-found=true >/dev/null 2>&1 || true
+          else
+            echo "::warning::no Ready grove-operator pod found for connectivity probe"
+          fi
+        fi
+
+        if [[ "${WEBHOOK_READY}" -ne 1 ]]; then
+          echo "::error::grove-operator webhook service is not reachable after waiting and connectivity probe"
 
           echo "::group::grove-operator service and endpoint objects"
           kubectl --kubeconfig="${VKUBECONFIG}" get svc,endpoints,endpointslices -n default | grep grove-operator || true
@@ -533,7 +553,7 @@ runs:
           exit 1
         fi
 
-        echo "::notice::grove-operator webhook endpoints are ready"
+        echo "::notice::grove-operator webhook gate passed"
         echo "::endgroup::"
 
     - name: Debug deployment failure
