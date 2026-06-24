@@ -102,29 +102,133 @@ jobs:
 
           echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
 
-      - name: Setup vCluster and existing operator
-        id: setup
-        uses: ./.github/actions/setup-dynamo-operator
-        with:
-          registry: nvcr.io/nvidia/ai-dynamo/kubernetes-operator
-          operator_tag: 1.2.1
-          vcluster_k8s_version: v1.31.4
-          hf_token: ${{ secrets.HF_TOKEN }}
-          vcluster_name: ci-${{ github.run_id }}-${{ matrix.name }}-xpu
-          vcluster_namespace: gh-id-${{ github.run_id }}-${{ matrix.name }}-xpu
-      - name: Connect to vCluster
-        id: connect-vcluster
-        uses: ./.github/actions/connect-vcluster
-        with:
-          vcluster_name: ${{ steps.setup.outputs.vcluster_name }}
-          vcluster_namespace: ${{ steps.setup.outputs.namespace }}
+      - name: Provision isolated vCluster and operator
+        id: isolated-cluster
+        shell: bash
+        env:
+          MATRIX_NAME: ${{ matrix.name }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          VCLUSTER_NAME="ci-${GITHUB_RUN_ID}-${MATRIX_NAME}-xpu"
+          NAMESPACE="gh-id-${GITHUB_RUN_ID}-${MATRIX_NAME}-xpu"
+          OPERATOR_TAG="1.2.1"
+
+          echo "vcluster_name=${VCLUSTER_NAME}" >> "$GITHUB_OUTPUT"
+          echo "namespace=${NAMESPACE}" >> "$GITHUB_OUTPUT"
+          echo "operator_tag=${OPERATOR_TAG}" >> "$GITHUB_OUTPUT"
+
+          if ! command -v vcluster >/dev/null 2>&1; then
+            mkdir -p "${HOME}/.local/bin"
+            curl -fsSL "https://github.com/loft-sh/vcluster/releases/download/v0.34.2/vcluster-linux-amd64" -o "${HOME}/.local/bin/vcluster"
+            chmod +x "${HOME}/.local/bin/vcluster"
+          fi
+          echo "${HOME}/.local/bin" >> "$GITHUB_PATH"
+          export PATH="${HOME}/.local/bin:${PATH}"
+
+          if ! command -v helm >/dev/null 2>&1; then
+            echo "::error::helm binary is required on xpu-deploy runner but was not found"
+            exit 1
+          fi
+
+          kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl label namespace "${NAMESPACE}" \
+            nscleanup/enabled=true \
+            nscleanup/ttl=7200 \
+            dynamo.github/run-id="${GITHUB_RUN_ID}" \
+            ngc-api=enabled \
+            nvcr-imagepull=enabled \
+            --overwrite
+
+          vcluster create "${VCLUSTER_NAME}" \
+            --namespace "${NAMESPACE}" \
+            --connect=false \
+            --upgrade \
+            --set controlPlane.distro.k8s.enabled=true \
+            --set controlPlane.distro.k8s.version=v1.31.4
+
+          kubectl wait --for=condition=ready pod \
+            -l "app=vcluster,release=${VCLUSTER_NAME}" \
+            -n "${NAMESPACE}" \
+            --timeout=900s
+
+          PF_LOG="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_NAME}.log"
+          PF_PID_FILE="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_NAME}.pid"
+          KUBECONFIG_PATH="${GITHUB_WORKSPACE}/.kubeconfig-vcluster"
+
+          nohup kubectl port-forward -n "${NAMESPACE}" "svc/${VCLUSTER_NAME}" 8443:443 > "${PF_LOG}" 2>&1 &
+          echo "$!" > "${PF_PID_FILE}"
+
+          for attempt in $(seq 1 30); do
+            if curl -sk --connect-timeout 1 --max-time 2 https://127.0.0.1:8443/healthz >/dev/null; then
+              break
+            fi
+
+            if [[ "${attempt}" -eq 30 ]]; then
+              echo "::error::vCluster API did not become reachable within 60s"
+              tail -n 100 "${PF_LOG}" || true
+              exit 1
+            fi
+            sleep 2
+          done
+
+          for attempt in $(seq 1 5); do
+            if vcluster connect "${VCLUSTER_NAME}" \
+              --namespace "${NAMESPACE}" \
+              --server=https://127.0.0.1:8443 \
+              --print > "${KUBECONFIG_PATH}"; then
+              break
+            fi
+
+            if [[ "${attempt}" -eq 5 ]]; then
+              echo "::error::vcluster connect failed after ${attempt} attempts"
+              exit 1
+            fi
+            sleep $((attempt * 2))
+          done
+
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" get ns
+
+          if [[ -n "${HF_TOKEN}" ]]; then
+            kubectl --kubeconfig="${KUBECONFIG_PATH}" \
+              create secret generic hf-token-secret \
+              --from-literal=HF_TOKEN="${HF_TOKEN}" \
+              -n default --dry-run=client -o yaml | kubectl --kubeconfig="${KUBECONFIG_PATH}" apply -f -
+          fi
+
+          if [[ "nvcr.io/nvidia/ai-dynamo/kubernetes-operator" == *"/"* ]]; then
+            OPERATOR_REPO="nvcr.io/nvidia/ai-dynamo/kubernetes-operator"
+          else
+            OPERATOR_REPO="nvcr.io/nvidia/ai-dynamo/kubernetes-operator/ai-dynamo/dynamo"
+          fi
+
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          pushd deploy/helm/charts/platform >/dev/null
+          helm dep build .
+          KUBECONFIG="${KUBECONFIG_PATH}" helm upgrade --install dynamo-platform . --namespace default \
+            --set dynamo-operator.controllerManager.manager.image.repository="${OPERATOR_REPO}" \
+            --set dynamo-operator.controllerManager.manager.image.tag="${OPERATOR_TAG}" \
+            --set dynamo-operator.gpuDiscovery.enabled=false \
+            --set dynamo-operator.checkpoint.enabled=false \
+            --set global.grove.install=true \
+            --set global.kai-scheduler.install=false \
+            --debug
+          popd >/dev/null
+
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" wait --for=condition=Available deployment/dynamo-platform-dynamo-operator-controller-manager -n default --timeout=900s
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" wait --for=condition=Available deployment/grove-operator -n default --timeout=300s || true
+
+          KUBECONFIG_B64=$(base64 < "${KUBECONFIG_PATH}" | tr -d '\n')
+          echo "kubeconfig_base64=${KUBECONFIG_B64}" >> "$GITHUB_OUTPUT"
+
       - name: Run XPU Deploy Test
         uses: ./.github/actions/dynamo-deploy-test
         with:
-          kubeconfig_base64: ${{ steps.connect-vcluster.outputs.kubeconfig_base64 }}
+          kubeconfig_base64: ${{ steps.isolated-cluster.outputs.kubeconfig_base64 }}
           namespace: default
           registry: ${{ env.LOCAL_REGISTRY }}
-          operator_tag: ${{ steps.setup.outputs.operator_tag }}
+          operator_tag: ${{ steps.isolated-cluster.outputs.operator_tag }}
           hf_token: ${{ secrets.HF_TOKEN }}
           python_version: '3.12'
           framework: ${{ inputs.framework || 'vllm' }}
@@ -133,3 +237,10 @@ jobs:
           platform_arch: amd64
           test_name: ${{ inputs.framework || 'vllm' }}-${{ matrix.name }}-xpu
           extra_pytest_args: -m framework_only
+
+      - name: Cleanup isolated vCluster namespace
+        if: always() && steps.isolated-cluster.outputs.namespace != ''
+        shell: bash
+        run: |
+          set +e
+          kubectl delete namespace "${{ steps.isolated-cluster.outputs.namespace }}" --ignore-not-found=true --timeout=180s
