@@ -550,6 +550,68 @@ runs:
         fi
 
         echo "::notice::grove-operator webhook gate passed"
+
+        # Also wait for dynamo-operator webhook endpoints to be ready.
+        # The test creates DynamoGraphDeployment resources which require the
+        # mutating/validating webhooks to be operational.
+        echo "::notice::Waiting for dynamo-operator webhook readiness signals"
+        DYNAMO_WEBHOOK_READY=0
+        for attempt in {1..30}; do
+          DYNAMO_ENDPOINT_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpoints dynamo-platform-dynamo-operator-webhook-service -n default -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | awk '{print NF}')
+          DYNAMO_ENDPOINTSLICE_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpointslices -n default -l kubernetes.io/service-name=dynamo-platform-dynamo-operator-webhook-service -o jsonpath='{.items[*].endpoints[*].addresses[*]}' 2>/dev/null | awk '{print NF}')
+          DYNAMO_ENDPOINTSLICE_READY_ADDR_COUNT=$(kubectl --kubeconfig="${VKUBECONFIG}" get endpointslices -n default -l kubernetes.io/service-name=dynamo-platform-dynamo-operator-webhook-service -o jsonpath='{.items[*].endpoints[?(@.conditions.ready==true)].addresses[*]}' 2>/dev/null | awk '{print NF}')
+          DYNAMO_READY_CONTROLLER_PODS=$(kubectl --kubeconfig="${VKUBECONFIG}" get pods -n default --no-headers \
+            | awk '$1 ~ /^dynamo-platform-dynamo-operator-controller-manager-/ && $2 ~ /^1\/1$/ && $3 == "Running" {count++} END {print count+0}')
+
+          if [[ "${DYNAMO_ENDPOINT_ADDR_COUNT}" -ge 1 || "${DYNAMO_ENDPOINTSLICE_READY_ADDR_COUNT}" -ge 1 ]]; then
+            echo "::notice::dynamo-operator webhook endpoints ready on attempt ${attempt} (endpoints.ready=${DYNAMO_ENDPOINT_ADDR_COUNT}, endpointslice.ready=${DYNAMO_ENDPOINTSLICE_READY_ADDR_COUNT})"
+            DYNAMO_WEBHOOK_READY=1
+            break
+          fi
+
+          if (( attempt % 6 == 0 )); then
+            echo "::warning::dynamo-operator webhook endpoints still empty (attempt ${attempt}/30; endpoints.ready=${DYNAMO_ENDPOINT_ADDR_COUNT}, endpointslice.total=${DYNAMO_ENDPOINTSLICE_ADDR_COUNT}, endpointslice.ready=${DYNAMO_ENDPOINTSLICE_READY_ADDR_COUNT}, readyControllerPods=${DYNAMO_READY_CONTROLLER_PODS})"
+          fi
+          sleep 5
+        done
+
+        if [[ "${DYNAMO_WEBHOOK_READY}" -ne 1 ]]; then
+          echo "::warning::dynamo-operator webhook endpoints not ready after 30 attempts; running connectivity probe"
+
+          if [[ "${DYNAMO_READY_CONTROLLER_PODS}" -ge 1 ]]; then
+            PROBE_POD="dynamo-webhook-probe-$(date +%s)"
+            if kubectl --kubeconfig="${VKUBECONFIG}" run "${PROBE_POD}" \
+              -n default \
+              --image=curlimages/curl:8.11.1 \
+              --restart=Never \
+              --rm \
+              --attach \
+              --quiet \
+              --command -- sh -ceu 'for i in 1 2 3; do curl -sk --connect-timeout 2 --max-time 5 https://dynamo-platform-dynamo-operator-webhook-service.default.svc:443/healthz >/dev/null && exit 0; sleep 2; done; exit 1'; then
+              echo "::warning::proceeding based on successful in-cluster connectivity probe to dynamo-operator webhook service"
+              DYNAMO_WEBHOOK_READY=1
+            else
+              echo "::warning::in-cluster connectivity probe to dynamo-operator webhook service failed"
+            fi
+            kubectl --kubeconfig="${VKUBECONFIG}" delete pod "${PROBE_POD}" -n default --ignore-not-found=true >/dev/null 2>&1 || true
+          else
+            echo "::warning::no Ready dynamo-operator controller pod found for connectivity probe"
+          fi
+        fi
+
+        if [[ "${DYNAMO_WEBHOOK_READY}" -ne 1 ]]; then
+          echo "::error::dynamo-operator webhook service is not reachable after waiting and connectivity probe"
+
+          echo "::group::dynamo-operator webhook service and endpoint objects"
+          kubectl --kubeconfig="${VKUBECONFIG}" get svc,endpoints,endpointslices -n default | grep -E "(dynamo-operator-webhook|webhook-service)" || true
+          kubectl --kubeconfig="${VKUBECONFIG}" describe svc dynamo-platform-dynamo-operator-webhook-service -n default || true
+          kubectl --kubeconfig="${VKUBECONFIG}" describe endpoints dynamo-platform-dynamo-operator-webhook-service -n default || true
+          echo "::endgroup::"
+
+          exit 1
+        fi
+
+        echo "::notice::dynamo-operator webhook gate passed"
         echo "::endgroup::"
 
     - name: Debug deployment failure
