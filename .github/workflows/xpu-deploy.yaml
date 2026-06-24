@@ -61,6 +61,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - profile: agg_xpu_dra
@@ -119,14 +120,14 @@ jobs:
           KUBECONFIG_PATH="${GITHUB_WORKSPACE}/.kubeconfig-vcluster"
 
           # Tunables for vcluster control plane and DNS to reduce startup flakiness.
-          VC_CP_REQ_CPU="500m"
-          VC_CP_REQ_MEM="1Gi"
-          VC_CP_LIM_CPU="2"
-          VC_CP_LIM_MEM="2Gi"
-          VC_DNS_REQ_CPU="200m"
-          VC_DNS_REQ_MEM="256Mi"
-          VC_DNS_LIM_CPU="1"
-          VC_DNS_LIM_MEM="512Mi"
+          VC_CP_REQ_CPU="250m"
+          VC_CP_REQ_MEM="512Mi"
+          VC_CP_LIM_CPU="1"
+          VC_CP_LIM_MEM="1Gi"
+          VC_DNS_REQ_CPU="100m"
+          VC_DNS_REQ_MEM="128Mi"
+          VC_DNS_LIM_CPU="500m"
+          VC_DNS_LIM_MEM="256Mi"
 
           echo "vcluster_name=${VCLUSTER_NAME}" >> "$GITHUB_OUTPUT"
           echo "namespace=${NAMESPACE}" >> "$GITHUB_OUTPUT"
@@ -191,10 +192,19 @@ jobs:
               --set controlPlane.coredns.deployment.resources.limits.cpu="${VC_DNS_LIM_CPU}" \
               --set controlPlane.coredns.deployment.resources.limits.memory="${VC_DNS_LIM_MEM}"
 
-            kubectl wait --for=condition=ready pod \
+            if ! kubectl wait --for=condition=ready pod \
               -l "app=vcluster,release=${VCLUSTER_NAME}" \
               -n "${NAMESPACE}" \
-              --timeout=900s
+              --timeout=900s; then
+              echo "::warning::vcluster pod did not become Ready in ${NAMESPACE}; collecting scheduling diagnostics"
+              kubectl get pod -n "${NAMESPACE}" -l "app=vcluster,release=${VCLUSTER_NAME}" -o wide || true
+              VC_POD="$(kubectl get pod -n "${NAMESPACE}" -l "app=vcluster,release=${VCLUSTER_NAME}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+              if [[ -n "${VC_POD}" ]]; then
+                kubectl describe pod "${VC_POD}" -n "${NAMESPACE}" || true
+              fi
+              kubectl get events -n "${NAMESPACE}" --sort-by='.lastTimestamp' | tail -n 120 || true
+              return 1
+            fi
 
             cleanup_port_forward
             nohup kubectl port-forward -n "${NAMESPACE}" "svc/${VCLUSTER_NAME}" 8443:443 > "${PF_LOG}" 2>&1 &
