@@ -20,7 +20,7 @@ support the current version plus 1 version back (N and N-1). The pattern:
    enough surface area to cover what Dynamo actually calls.
 4. Each fallback branch in `_compat.py` MUST have a comment noting which SGLang
    version it supports and when it can be removed, e.g.:
-   `# Fallback for sglang <= 0.5.10. Remove when min supported version is 0.5.12+`
+   `# Fallback for sglang <= 0.5.12. Remove when min supported version is 0.5.14+`
 5. When a new SGLang version is released and the old N-1 falls outside the support
    window, delete the corresponding fallback branches and polyfills from `_compat.py`.
    If `_compat.py` becomes trivial re-exports, inline the imports and delete the file.
@@ -309,8 +309,8 @@ text-to-video-diffusion.sh  # 1-2 GPUs - Text-to-video (Wan2.1)
   Always slice with an offset, don't assume per-chunk logprobs.
 - **Zombie GPU processes**: `sgl_diffusion::scheduler` spawns a child process that
   survives parent kill. Always check `nvidia-smi` after teardown.
-- **Trajectory radix cache**: With `--enable-session-radix-cache`, the handler
-  passes `agent_context.trajectory_id` to SGLang as `session_params.id`. Agent KV
+- **Session radix cache**: With `--enable-session-radix-cache`, the handler
+  passes `agent_context.session_id` to SGLang as `session_params.id`. Agent KV
   hints are forwarded as metadata but are not acted on by the SGLang backend.
   This path does not create router affinity.
 
