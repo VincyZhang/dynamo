@@ -2807,3 +2807,29 @@ type = "dpkg"
 name = "sudo"
 allow = ["GPL-2.0-or-later"]
 reason = "Base-image system library: LGPL components are dynamically linked and any GPL components are mere aggregation (separate works, not linked into Dynamo's Apache-2.0 code). Ubuntu source available via the OSRB archive."
+
+# --- Temporary python UNKNOWN exceptions for local XPU PR workflow ---
+
+[[exceptions]]
+type = "python"
+name = "arctic_inference"
+allow = ["UNKNOWN"]
+reason = "Temporary local CI exception for XPU runtime image while upstream package metadata/license override is being finalized"
+
+[[exceptions]]
+type = "python"
+name = "oneccl"
+allow = ["UNKNOWN"]
+reason = "Temporary local CI exception for XPU runtime image while upstream package metadata/license override is being finalized"
+
+[[exceptions]]
+type = "python"
+name = "oneccl-devel"
+allow = ["UNKNOWN"]
+reason = "Temporary local CI exception for XPU runtime image while upstream package metadata/license override is being finalized"
+
+[[exceptions]]
+type = "python"
+name = "vllm_test_utils"
+allow = ["UNKNOWN"]
+reason = "Temporary local CI exception for XPU runtime image while upstream package metadata/license override is being finalized"
