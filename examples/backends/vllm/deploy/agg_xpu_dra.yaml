@@ -29,6 +29,9 @@ spec:
           image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:my-tag
     VllmDecodeWorker:
       envFromSecret: hf-token-secret
+      envs:
+        - name: VLLM_TARGET_DEVICE
+          value: xpu
       componentType: worker
       replicas: 1
       resources:
@@ -45,9 +48,6 @@ spec:
           resources:
             claims:
               - name: gpu
-          env:
-            - name: VLLM_TARGET_DEVICE
-              value: xpu
           workingDir: /workspace/examples/backends/vllm
           command:
             - /bin/bash
@@ -55,7 +55,8 @@ spec:
             - >-
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
               source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
-              exec python3 -m dynamo.vllm --model Qwen/Qwen3-0.6B --block-size 64
+              exec python3 -m dynamo.vllm "$@" --block-size 64
           args:
+            - _
             - --model
             - Qwen/Qwen3-0.6B
