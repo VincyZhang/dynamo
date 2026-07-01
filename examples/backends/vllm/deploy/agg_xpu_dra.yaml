@@ -52,8 +52,10 @@ spec:
           command:
             - /bin/bash
             - -c
-          args:
             - >-
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
               source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
               exec python3 -m dynamo.vllm --model Qwen/Qwen3-0.6B --block-size 64
+          args:
+            - --model
+            - Qwen/Qwen3-0.6B
