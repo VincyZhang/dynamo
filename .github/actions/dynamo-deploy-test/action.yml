@@ -151,15 +151,24 @@ runs:
       run: |
         mkdir -p test-results
 
-        PYTEST_ARGS=""
+        PYTEST_ARGS=()
         if [ -n "${FRAMEWORK}" ]; then
-          PYTEST_ARGS+=" --framework=${FRAMEWORK}"
+          PYTEST_ARGS+=("--framework=${FRAMEWORK}")
         fi
         if [ -n "${PROFILE}" ]; then
-          PYTEST_ARGS+=" --profile=${PROFILE}"
+          PYTEST_ARGS+=("--profile=${PROFILE}")
         fi
         if [ -n "${IMAGE}" ]; then
-          PYTEST_ARGS+=" --image=${IMAGE}"
+          PYTEST_ARGS+=("--image=${IMAGE}")
+        fi
+
+        EXTRA_PYTEST_ARGS_ARRAY=()
+        if [ -n "${EXTRA_PYTEST_ARGS}" ]; then
+          # The workflow passes shell-style arguments here (for example,
+          # -m "framework_only and xpu_1"). Use eval so quoted expressions
+          # remain a single pytest argument.
+          # shellcheck disable=SC2206,SC2294
+          eval "EXTRA_PYTEST_ARGS_ARRAY=(${EXTRA_PYTEST_ARGS})"
         fi
 
         if [ -z "${TEST_NAME}" ]; then
@@ -168,8 +177,8 @@ runs:
 
         python -m pytest "${TEST_FILE}" \
           --namespace="${NAMESPACE}" \
-          ${PYTEST_ARGS} \
-          ${EXTRA_PYTEST_ARGS} \
+          "${PYTEST_ARGS[@]}" \
+          "${EXTRA_PYTEST_ARGS_ARRAY[@]}" \
           -v -s \
           --durations=10 \
           --junitxml=test-results/pytest_deploy_${TEST_NAME}_${{ inputs.platform_arch }}_${{ github.run_id }}_${{ job.check_run_id }}.xml \
