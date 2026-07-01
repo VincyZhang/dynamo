@@ -121,6 +121,9 @@ jobs:
           PF_LOG="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_SLUG}.log"
           PF_PID_FILE="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_SLUG}.pid"
           KUBECONFIG_PATH="${GITHUB_WORKSPACE}/.kubeconfig-vcluster"
+          HOST_KUBECONFIG="${HOST_KUBECONFIG:-${HOME}/.kube/config}"
+
+          echo "Using host kubeconfig: ${HOST_KUBECONFIG}"
 
           # Tunables for vcluster control plane and DNS to reduce startup flakiness.
           VC_CP_REQ_CPU="250m"
