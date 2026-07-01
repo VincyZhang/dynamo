@@ -156,10 +156,10 @@ async def test_deployment(
     # gpu-memory-utilization so vLLM 0.23.0+ flashinfer sampler warmup fits
     # without triggering cudaMalloc -> NVML query, which is restricted on MIG.
     # TODO (ops): remove this if CI transitions to e.g. CUDA MPS
-    # if framework == "vllm":
-    #     deployment_spec.add_arg_to_service(
-    #         "VllmDecodeWorker", "--gpu-memory-utilization", "0.7"
-    #     )
+    if framework == "vllm":
+        deployment_spec.add_arg_to_service(
+            "VllmDecodeWorker", "--gpu-memory-utilization", "0.7"
+        )
 
     # model = next((s.model for s in deployment_spec.services if s.model), None)
     model = GAIE_MODEL_NAME

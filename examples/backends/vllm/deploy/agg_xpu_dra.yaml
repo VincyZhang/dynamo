@@ -29,9 +29,6 @@ spec:
           image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:my-tag
     VllmDecodeWorker:
       envFromSecret: hf-token-secret
-      envs:
-        - name: VLLM_TARGET_DEVICE
-          value: xpu
       componentType: worker
       replicas: 1
       resources:
@@ -40,6 +37,9 @@ spec:
             # Increase this value for larger models
             ephemeral-storage: "2Gi"
       extraPodSpec:
+        securityContext:
+          supplementalGroups:
+            - 991
         resourceClaims:
           - name: gpu
             resourceClaimTemplateName: gpu-template
@@ -48,16 +48,15 @@ spec:
           resources:
             claims:
               - name: gpu
-          workingDir: /workspace/examples/backends/vllm
+          env:
+            - name: VLLM_TARGET_DEVICE
+              value: xpu
           command:
-            - /bin/bash
-            - -c
-            - |
-              set -x;
-              source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
-              source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
-              python3 - <<'PY'
-              import torch
-              print(f"torch={torch.__version__}")
-              print(f"torch.xpu.is_available()={torch.xpu.is_available()}")
-              PY
+            - python3
+            - -m
+            - dynamo.vllm
+          args:
+            - --model
+            - Qwen/Qwen3-0.6B
+            - --block-size
+            - "64"
