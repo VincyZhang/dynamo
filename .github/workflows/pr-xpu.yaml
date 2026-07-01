@@ -53,10 +53,6 @@ jobs:
   #  secrets: inherit
 #
   xpu-ci-vllm:
-    needs: [changed-files]
-    if: >-
-      needs.changed-files.outputs.core == 'true' ||
-      needs.changed-files.outputs.vllm == 'true'
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
