@@ -184,7 +184,8 @@ jobs:
               nvcr-imagepull=enabled \
               --overwrite
 
-            vcluster create "${VCLUSTER_NAME}" \
+            echo "::notice::[$(date -u +%H:%M:%S)] creating vcluster ${VCLUSTER_NAME} in ${NAMESPACE}"
+            timeout 20m vcluster create "${VCLUSTER_NAME}" \
               --namespace "${NAMESPACE}" \
               --connect=false \
               --upgrade \
@@ -197,8 +198,14 @@ jobs:
               --set controlPlane.coredns.deployment.resources.requests.cpu="${VC_DNS_REQ_CPU}" \
               --set controlPlane.coredns.deployment.resources.requests.memory="${VC_DNS_REQ_MEM}" \
               --set controlPlane.coredns.deployment.resources.limits.cpu="${VC_DNS_LIM_CPU}" \
-              --set controlPlane.coredns.deployment.resources.limits.memory="${VC_DNS_LIM_MEM}"
+              --set controlPlane.coredns.deployment.resources.limits.memory="${VC_DNS_LIM_MEM}" || {
+              echo "::error::vcluster create timed out or failed for ${VCLUSTER_NAME}"
+              kubectl get pods -n "${NAMESPACE}" -o wide || true
+              kubectl get events -n "${NAMESPACE}" --sort-by='.lastTimestamp' | tail -n 120 || true
+              return 1
+            }
 
+            echo "::notice::[$(date -u +%H:%M:%S)] waiting for vcluster pod readiness"
             if ! kubectl wait --for=condition=ready pod \
               -l "app=vcluster,release=${VCLUSTER_NAME}" \
               -n "${NAMESPACE}" \
@@ -217,6 +224,7 @@ jobs:
             nohup kubectl port-forward -n "${NAMESPACE}" "svc/${VCLUSTER_NAME}" 8443:443 > "${PF_LOG}" 2>&1 &
             echo "$!" > "${PF_PID_FILE}"
 
+            echo "::notice::[$(date -u +%H:%M:%S)] probing vcluster API /readyz"
             consecutive_ready=0
             for attempt in $(seq 1 90); do
               if curl -sk --connect-timeout 1 --max-time 2 https://127.0.0.1:8443/readyz >/dev/null; then
@@ -237,8 +245,9 @@ jobs:
               sleep 2
             done
 
+            echo "::notice::[$(date -u +%H:%M:%S)] generating vcluster kubeconfig"
             for attempt in $(seq 1 5); do
-              if vcluster connect "${VCLUSTER_NAME}" \
+              if timeout 10m vcluster connect "${VCLUSTER_NAME}" \
                 --namespace "${NAMESPACE}" \
                 --server=https://127.0.0.1:8443 \
                 --print > "${KUBECONFIG_PATH}"; then
@@ -247,11 +256,14 @@ jobs:
 
               if [[ "${attempt}" -eq 5 ]]; then
                 echo "::error::vcluster connect failed after ${attempt} attempts"
+                kubectl --kubeconfig="${HOST_KUBECONFIG}" get pods -n "${NAMESPACE}" -o wide || true
+                kubectl --kubeconfig="${HOST_KUBECONFIG}" get events -n "${NAMESPACE}" --sort-by='.lastTimestamp' | tail -n 120 || true
                 return 1
               fi
               sleep $((attempt * 2))
             done
 
+            echo "::notice::[$(date -u +%H:%M:%S)] waiting for coredns in vcluster"
             kubectl --kubeconfig="${KUBECONFIG_PATH}" get ns
             kubectl --kubeconfig="${KUBECONFIG_PATH}" wait --for=condition=Available deployment/coredns -n kube-system --timeout=300s
 
@@ -262,6 +274,7 @@ jobs:
                 -n default --dry-run=client -o yaml | kubectl --kubeconfig="${KUBECONFIG_PATH}" apply -f -
             fi
 
+            echo "::notice::[$(date -u +%H:%M:%S)] installing operator and grove"
             if [[ "nvcr.io/nvidia/ai-dynamo/kubernetes-operator" == *"/"* ]]; then
               OPERATOR_REPO="nvcr.io/nvidia/ai-dynamo/kubernetes-operator"
             else
@@ -377,8 +390,9 @@ jobs:
           set -euo pipefail
 
           NAMESPACE="${{ steps.isolated-cluster.outputs.namespace }}"
+          HOST_KUBECONFIG="${HOST_KUBECONFIG:-${HOME}/.kube/config}"
 
-          echo "Using host kubeconfig: ${HOST_KUBECONFIG:-<unset>}"
+          echo "Using host kubeconfig: ${HOST_KUBECONFIG}"
           kubectl --kubeconfig="${HOST_KUBECONFIG}" delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout=180s || true
 
           for _ in $(seq 1 60); do
