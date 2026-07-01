@@ -223,6 +223,18 @@ def _find_target(
     return None
 
 
+def _target_marks(target: DeploymentTarget) -> List[pytest.MarkDecorator]:
+    """Attach pytest marks for a discovered deployment target.
+
+    XPU-specific deployment manifests should participate in XPU CI selection
+    without affecting the GPU-backed deploy matrix.
+    """
+    marks: List[pytest.MarkDecorator] = []
+    if "xpu" in target.yaml_path.stem.lower():
+        marks.append(pytest.mark.xpu_1)
+    return marks
+
+
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     """Dynamically parametrize tests based on CLI options or full matrix.
 
@@ -260,7 +272,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     if filtered_targets:
         metafunc.parametrize(
             "deployment_target",
-            filtered_targets,
+            [pytest.param(target, marks=_target_marks(target)) for target in filtered_targets],
             ids=[t.test_id for t in filtered_targets],
         )
 

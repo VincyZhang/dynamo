@@ -65,9 +65,9 @@ jobs:
       matrix:
         include:
           - profile: agg_xpu_dra
-            name: agg
+            name: agg_xpu_dra
           - profile: disagg_xpu_dra
-            name: disagg
+            name: disagg_xpu_dra
     name: ${{ matrix.name }}
     steps:
       - name: Checkout code
@@ -97,7 +97,7 @@ jobs:
           docker build \
             --tag "${IMAGE_URI}" \
             -f ./container/rendered.Dockerfile \
-            . 2>&1 | tee build-xpu.log
+            . 2>&1 | tee "build-${{ matrix.name }}.log"
 
           docker push "${IMAGE_URI}"
 
@@ -164,7 +164,11 @@ jobs:
               fi
               sleep 2
             done
-            return 0
+
+            echo "::error::namespace ${NAMESPACE} was not fully removed after cleanup"
+            kubectl get namespace "${NAMESPACE}" -o wide || true
+            kubectl describe namespace "${NAMESPACE}" || true
+            return 1
           }
 
           provision_once() {
@@ -336,7 +340,7 @@ jobs:
             cleanup_port_forward
             if [[ "${run_attempt}" -lt 2 ]]; then
               echo "::notice::Cleaning up and retrying with a fresh isolated namespace"
-              cleanup_namespace
+              cleanup_namespace || true
               sleep 10
             fi
           done
@@ -359,12 +363,27 @@ jobs:
           profile: ${{ matrix.profile }}
           image: ${{ env.IMAGE_URI }}
           platform_arch: amd64
-          test_name: ${{ inputs.framework || 'vllm' }}-${{ matrix.name }}-xpu
-          extra_pytest_args: -m framework_only
+          test_name: ${{ inputs.framework || 'vllm' }}-${{ matrix.profile }}
+          extra_pytest_args: -m "framework_only and xpu_1"
 
       - name: Cleanup isolated vCluster namespace
         if: always() && steps.isolated-cluster.outputs.namespace != ''
         shell: bash
         run: |
-          set +e
-          kubectl delete namespace "${{ steps.isolated-cluster.outputs.namespace }}" --ignore-not-found=true --timeout=180s
+          set -euo pipefail
+
+          NAMESPACE="${{ steps.isolated-cluster.outputs.namespace }}"
+
+          kubectl delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout=180s || true
+
+          for _ in $(seq 1 60); do
+            if ! kubectl get namespace "${NAMESPACE}" >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "::error::namespace ${NAMESPACE} was not fully removed after final cleanup"
+          kubectl get namespace "${NAMESPACE}" -o wide || true
+          kubectl describe namespace "${NAMESPACE}" || true
+          exit 1

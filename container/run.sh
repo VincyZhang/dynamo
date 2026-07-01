@@ -341,11 +341,12 @@ get_options() {
             GPUS="none"
             GPU_STRING=""
             RUNTIME=""
-            DEVICE_FLAGS="--device /dev/dri"
+            DEVICE_FLAGS="--device /dev/dri:/dev/dri -v /dev/dri/by-path:/dev/dri/by-path"
             RENDER_GID="$(getent group render 2>/dev/null | awk -F: '{print $3}')"
             if [ -n "${RENDER_GID}" ]; then
                 DEVICE_FLAGS+=" --group-add ${RENDER_GID}"
             fi
+            PRIVILEGED_STRING="--privileged"
             ;;
         *)
             error 'ERROR: Unknown --device value (expected cuda|xpu): ' "$DEVICE"

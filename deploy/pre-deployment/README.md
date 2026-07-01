@@ -33,7 +33,7 @@ Run the pre-deployment check before deploying Dynamo:
 
 ## What it checks
 
-The script performs few checks and provides a detailed summary:
+The script performs four checks and provides a detailed summary:
 
 ### 1. kubectl Connectivity
 - Verifies that `kubectl` is installed and kubectl can connect to your Kubernetes cluster
@@ -47,6 +47,9 @@ The script performs few checks and provides a detailed summary:
 
 ### 3. Cluster GPU Resources
 - Checks for GPU-enabled nodes in the cluster using label `nvidia.com/gpu.present=true`
+
+### 4. GPU Operator
+- Verifies that the GPU operator is installed and running in the cluster
 
 ## Sample Output
 
@@ -83,6 +86,10 @@ https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class
 ✅ Found 17 gpu node(s) in the cluster
 Node information:
 
+--- Checking GPU operator ---
+✅ GPU operator is running (3/3 pods)
+GPU operator pod information:
+
 --- Pre-Deployment Check Summary ---
 ✅ kubectl Connectivity: PASSED
 ❌ Default StorageClass: FAILED
@@ -117,8 +124,9 @@ Node information:
 ✅ kubectl Connectivity: PASSED
 ✅ Default StorageClass: PASSED
 ✅ Cluster Resources: PASSED
+✅ GPU Operator: PASSED
 
-Summary: 3 passed, 0 failed
+Summary: 4 passed, 0 failed
 🎉 All pre-deployment checks passed!
 Your cluster is ready for Dynamo deployment.
 ```
@@ -132,6 +140,7 @@ The script provides a comprehensive summary showing the status of each check:
 | **kubectl Connectivity** | Verifies kubectl installation and cluster access | ✅ PASSED / ❌ FAILED |
 | **Default StorageClass** | Checks for default StorageClass annotation | ✅ PASSED / ❌ FAILED |
 | **Cluster Resources** | Validates GPU nodes availability | ✅ PASSED / ❌ FAILED |
+| **GPU Operator** | Checks that the GPU operator is installed and running | ✅ PASSED / ❌ FAILED |
 
 ## Setting a Default StorageClass
 
