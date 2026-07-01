@@ -274,6 +274,7 @@ jobs:
             KUBECONFIG="${KUBECONFIG_PATH}" helm upgrade --install dynamo-platform . --namespace default \
               --set dynamo-operator.controllerManager.manager.image.repository="${OPERATOR_REPO}" \
               --set dynamo-operator.controllerManager.manager.image.tag="${OPERATOR_TAG}" \
+              --set dynamo-operator.upgradeCRD=false \
               --set dynamo-operator.gpuDiscovery.enabled=false \
               --set dynamo-operator.checkpoint.enabled=false \
               --set global.grove.install=true \
