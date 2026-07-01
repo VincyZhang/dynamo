@@ -52,7 +52,7 @@ spec:
           workingDir: /workspace/examples/backends/vllm
           command:
             - /bin/bash
-            - -lc
+            - -c
           args:
             - |
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 || source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true
@@ -85,7 +85,7 @@ spec:
           workingDir: /workspace/examples/backends/vllm
           command:
             - /bin/bash
-            - -lc
+            - -c
           args:
             - |
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 || source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true
