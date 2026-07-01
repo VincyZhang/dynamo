@@ -66,8 +66,10 @@ jobs:
         include:
           - profile: agg_xpu_dra
             name: agg_xpu_dra
+            slug: agg-xpu-dra
           - profile: disagg_xpu_dra
             name: disagg_xpu_dra
+            slug: disagg-xpu-dra
     name: ${{ matrix.name }}
     steps:
       - name: Checkout code
@@ -108,15 +110,16 @@ jobs:
         shell: bash
         env:
           MATRIX_NAME: ${{ matrix.name }}
+          MATRIX_SLUG: ${{ matrix.slug }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           set -euo pipefail
 
-          VCLUSTER_NAME="ci-${GITHUB_RUN_ID}-${MATRIX_NAME}-xpu"
-          NAMESPACE="gh-id-${GITHUB_RUN_ID}-${MATRIX_NAME}-xpu"
+          VCLUSTER_NAME="ci-${GITHUB_RUN_ID}-${MATRIX_SLUG}-xpu"
+          NAMESPACE="gh-id-${GITHUB_RUN_ID}-${MATRIX_SLUG}-xpu"
           OPERATOR_TAG="1.2.1"
-          PF_LOG="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_NAME}.log"
-          PF_PID_FILE="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_NAME}.pid"
+          PF_LOG="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_SLUG}.log"
+          PF_PID_FILE="${GITHUB_WORKSPACE}/.vcluster-port-forward-${MATRIX_SLUG}.pid"
           KUBECONFIG_PATH="${GITHUB_WORKSPACE}/.kubeconfig-vcluster"
 
           # Tunables for vcluster control plane and DNS to reduce startup flakiness.
