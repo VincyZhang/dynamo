@@ -54,6 +54,7 @@ spec:
             - /bin/bash
             - -c
             - >-
+              set -x;
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
               source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
               exec python3 -m dynamo.vllm "$@" --disaggregation-mode decode --block-size 64
@@ -88,6 +89,7 @@ spec:
             - /bin/bash
             - -c
             - >-
+              set -x;
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
               source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
               exec python3 -m dynamo.vllm "$@" --disaggregation-mode prefill --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_both","kv_buffer_device":"xpu"}' --block-size 64

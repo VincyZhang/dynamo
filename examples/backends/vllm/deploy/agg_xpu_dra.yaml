@@ -53,6 +53,7 @@ spec:
             - /bin/bash
             - -c
             - >-
+              set -x;
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
               source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
               exec python3 -m dynamo.vllm "$@" --block-size 64
