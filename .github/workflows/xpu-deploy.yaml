@@ -160,17 +160,17 @@ jobs:
           }
 
           cleanup_namespace() {
-            kubectl delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout=180s >/dev/null 2>&1 || true
+            kubectl --kubeconfig="${HOST_KUBECONFIG}" delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout=180s >/dev/null 2>&1 || true
             for _ in $(seq 1 60); do
-              if ! kubectl get namespace "${NAMESPACE}" >/dev/null 2>&1; then
+              if ! kubectl --kubeconfig="${HOST_KUBECONFIG}" get namespace "${NAMESPACE}" >/dev/null 2>&1; then
                 return 0
               fi
               sleep 2
             done
 
             echo "::error::namespace ${NAMESPACE} was not fully removed after cleanup"
-            kubectl get namespace "${NAMESPACE}" -o wide || true
-            kubectl describe namespace "${NAMESPACE}" || true
+            kubectl --kubeconfig="${HOST_KUBECONFIG}" get namespace "${NAMESPACE}" -o wide || true
+            kubectl --kubeconfig="${HOST_KUBECONFIG}" describe namespace "${NAMESPACE}" || true
             return 1
           }
 
@@ -378,16 +378,17 @@ jobs:
 
           NAMESPACE="${{ steps.isolated-cluster.outputs.namespace }}"
 
-          kubectl delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout=180s || true
+          echo "Using host kubeconfig: ${HOST_KUBECONFIG:-<unset>}"
+          kubectl --kubeconfig="${HOST_KUBECONFIG}" delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout=180s || true
 
           for _ in $(seq 1 60); do
-            if ! kubectl get namespace "${NAMESPACE}" >/dev/null 2>&1; then
+            if ! kubectl --kubeconfig="${HOST_KUBECONFIG}" get namespace "${NAMESPACE}" >/dev/null 2>&1; then
               exit 0
             fi
             sleep 2
           done
 
           echo "::error::namespace ${NAMESPACE} was not fully removed after final cleanup"
-          kubectl get namespace "${NAMESPACE}" -o wide || true
-          kubectl describe namespace "${NAMESPACE}" || true
+          kubectl --kubeconfig="${HOST_KUBECONFIG}" get namespace "${NAMESPACE}" -o wide || true
+          kubectl --kubeconfig="${HOST_KUBECONFIG}" describe namespace "${NAMESPACE}" || true
           exit 1
