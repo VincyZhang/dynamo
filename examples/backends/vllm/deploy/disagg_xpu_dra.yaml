@@ -44,6 +44,13 @@ spec:
         resourceClaims:
           - name: gpu
             resourceClaimTemplateName: gpu-template
+        volumes:
+          - name: dev-dri
+            hostPath:
+              path: /dev/dri
+          - name: dev-dri-by-path
+            hostPath:
+              path: /dev/dri/by-path
         mainContainer:
           image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:my-tag
           resources:
@@ -52,6 +59,11 @@ spec:
           env:
             - name: VLLM_TARGET_DEVICE
               value: xpu
+          volumeMounts:
+            - name: dev-dri
+              mountPath: /dev/dri
+            - name: dev-dri-by-path
+              mountPath: /dev/dri/by-path
           command:
             - python3
             - -m
@@ -80,6 +92,13 @@ spec:
         resourceClaims:
           - name: gpu
             resourceClaimTemplateName: gpu-template
+        volumes:
+          - name: dev-dri
+            hostPath:
+              path: /dev/dri
+          - name: dev-dri-by-path
+            hostPath:
+              path: /dev/dri/by-path
         mainContainer:
           image: nvcr.io/nvidia/ai-dynamo/vllm-runtime:my-tag
           resources:
@@ -88,6 +107,11 @@ spec:
           env:
             - name: VLLM_TARGET_DEVICE
               value: xpu
+          volumeMounts:
+            - name: dev-dri
+              mountPath: /dev/dri
+            - name: dev-dri-by-path
+              mountPath: /dev/dri/by-path
           command:
             - python3
             - -m
