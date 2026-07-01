@@ -56,8 +56,8 @@ spec:
               set -x;
               source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1 ||
               source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true;
-              exec python3 -m dynamo.vllm "$@" --block-size 64
-          args:
-            - _
-            - --model
-            - Qwen/Qwen3-0.6B
+              python3 - <<'PY'
+              import torch
+              print(f"torch={torch.__version__}")
+              print(f"torch.xpu.is_available()={torch.xpu.is_available()}")
+              PY
