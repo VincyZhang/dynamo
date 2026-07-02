@@ -119,11 +119,11 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          for bin_dir in "${HOME}/.local/bin" /usr/local/bin /usr/bin /opt/homebrew/bin; do
-            if [[ -x "${bin_dir}/helm" ]]; then
-              export PATH="${bin_dir}:${PATH}"
-            fi
-          done
+          HELM_BIN="${HOME}/.local/bin/helm"
+          if [[ ! -x "${HELM_BIN}" ]]; then
+            echo "::error::helm binary is required on xpu-deploy runner but was not found at ${HELM_BIN}"
+            exit 1
+          fi
 
           NAMESPACE="gh-id-${GITHUB_RUN_ID}-${MATRIX_SLUG}-xpu"
           OPERATOR_TAG="1.2.1"
@@ -143,11 +143,6 @@ jobs:
 
           echo "namespace=${NAMESPACE}" >> "$GITHUB_OUTPUT"
           echo "operator_tag=${OPERATOR_TAG}" >> "$GITHUB_OUTPUT"
-
-          if ! command -v helm >/dev/null 2>&1; then
-            echo "::error::helm binary is required on xpu-deploy runner but was not found"
-            exit 1
-          fi
 
           echo "::notice::[$(date -u +%H:%M:%S)] creating namespace ${NAMESPACE}"
           kubectl --kubeconfig="${KUBECONFIG_PATH}" create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl --kubeconfig="${KUBECONFIG_PATH}" apply -f -
@@ -187,10 +182,10 @@ jobs:
             OPERATOR_REPO="nvcr.io/nvidia/ai-dynamo/kubernetes-operator/ai-dynamo/dynamo"
           fi
 
-          helm repo add bitnami https://charts.bitnami.com/bitnami
+          "${HELM_BIN}" repo add bitnami https://charts.bitnami.com/bitnami
           pushd deploy/helm/charts/platform >/dev/null
-          helm dep build .
-          KUBECONFIG="${KUBECONFIG_PATH}" helm upgrade --install dynamo-platform . --namespace "${NAMESPACE}" \
+          "${HELM_BIN}" dep build .
+          KUBECONFIG="${KUBECONFIG_PATH}" "${HELM_BIN}" upgrade --install dynamo-platform . --namespace "${NAMESPACE}" \
             --set dynamo-operator.controllerManager.manager.image.repository="${OPERATOR_REPO}" \
             --set dynamo-operator.controllerManager.manager.image.tag="${OPERATOR_TAG}" \
             --set dynamo-operator.upgradeCRD=false \
@@ -198,6 +193,7 @@ jobs:
             --set dynamo-operator.checkpoint.enabled=false \
             --set global.grove.install=true \
             --set global.kai-scheduler.install=false \
+            --take-ownership \
             --atomic \
             --wait \
             --timeout 10m \
@@ -264,7 +260,6 @@ jobs:
           registry: ${{ env.LOCAL_REGISTRY }}
           operator_tag: ${{ steps.k8s-setup.outputs.operator_tag }}
           hf_token: ${{ secrets.HF_TOKEN }}
-          python_version: '3.12'
           framework: ${{ inputs.framework || 'vllm' }}
           profile: ${{ matrix.profile }}
           image: ${{ env.IMAGE_URI }}
