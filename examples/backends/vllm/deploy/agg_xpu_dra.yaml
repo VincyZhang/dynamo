@@ -58,6 +58,8 @@ spec:
           env:
             - name: VLLM_TARGET_DEVICE
               value: xpu
+            - name: VLLM_LOGGING_LEVEL
+              value: DEBUG
           volumeMounts:
             - name: dev-dri
               mountPath: /dev/dri

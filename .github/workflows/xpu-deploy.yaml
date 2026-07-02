@@ -267,6 +267,49 @@ jobs:
           test_name: ${{ inputs.framework || 'vllm' }}-${{ matrix.profile }}
           extra_pytest_args: -m "framework_only and xpu_1"
 
+      - name: Dump Kubernetes pod logs
+        if: always() && steps.k8s-setup.outputs.namespace != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NAMESPACE="${{ steps.k8s-setup.outputs.namespace }}"
+          KUBECONFIG_PATH="${HOME}/.kube/config"
+
+          echo "::group::Pod inventory for ${NAMESPACE}"
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" get pods -n "${NAMESPACE}" -o wide || true
+          echo "::endgroup::"
+
+          PODS=$(kubectl --kubeconfig="${KUBECONFIG_PATH}" get pods -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
+          if [[ -z "${PODS}" ]]; then
+            echo "::warning::No pods found in ${NAMESPACE} when attempting to dump logs"
+            exit 0
+          fi
+
+          for POD in ${PODS}; do
+            echo "::group::kubectl describe pod/${POD}"
+            kubectl --kubeconfig="${KUBECONFIG_PATH}" describe pod "${POD}" -n "${NAMESPACE}" || true
+            echo "::endgroup::"
+
+            CONTAINERS=$(kubectl --kubeconfig="${KUBECONFIG_PATH}" get pod "${POD}" -n "${NAMESPACE}" -o jsonpath='{range .spec.containers[*]}{.name}{"\n"}{end}' 2>/dev/null || true)
+            if [[ -z "${CONTAINERS}" ]]; then
+              echo "::warning::No containers found for pod ${POD}"
+              continue
+            fi
+
+            for CONTAINER in ${CONTAINERS}; do
+              echo "::group::kubectl logs pod/${POD} container/${CONTAINER}"
+              kubectl --kubeconfig="${KUBECONFIG_PATH}" logs "${POD}" -n "${NAMESPACE}" -c "${CONTAINER}" --all-containers=false --tail=300 --timestamps=true --prefix=true || true
+              echo "::endgroup::"
+
+              if kubectl --kubeconfig="${KUBECONFIG_PATH}" get pod "${POD}" -n "${NAMESPACE}" -o jsonpath="{.status.containerStatuses[?(@.name=='${CONTAINER}')].restartCount}" 2>/dev/null | grep -Eq '^[1-9]'; then
+                echo "::group::kubectl logs --previous pod/${POD} container/${CONTAINER}"
+                kubectl --kubeconfig="${KUBECONFIG_PATH}" logs "${POD}" -n "${NAMESPACE}" -c "${CONTAINER}" --previous --tail=300 --timestamps=true --prefix=true || true
+                echo "::endgroup::"
+              fi
+            done
+          done
+
       - name: Cleanup Kubernetes namespace
         if: always() && steps.k8s-setup.outputs.namespace != ''
         shell: bash
@@ -277,6 +320,25 @@ jobs:
           KUBECONFIG_PATH="${HOME}/.kube/config"
           CLEANUP_TIMEOUT=180s
           FINAL_WAIT_SECONDS=120
+
+          strip_finalizers() {
+            local resource_name
+            local resource_kind
+
+            resource_name="$1"
+            resource_kind="$2"
+
+            kubectl --kubeconfig="${KUBECONFIG_PATH}" get "${resource_name}" -n "${NAMESPACE}" -o name 2>/dev/null \
+              | while read -r obj; do
+                  if [[ -n "${obj}" ]]; then
+                    echo "Stripping finalizers from ${resource_kind}/${obj##*/}"
+                    kubectl --kubeconfig="${KUBECONFIG_PATH}" patch "${obj}" -n "${NAMESPACE}" --type merge -p '{"metadata":{"finalizers":[]}}' || true
+                  fi
+                done
+          }
+
+          strip_finalizers "podcliquesets.grove.io" "podcliqueset"
+          strip_finalizers "podcliques.grove.io" "podclique"
 
           echo "Deleting namespace ${NAMESPACE}"
           kubectl --kubeconfig="${KUBECONFIG_PATH}" delete namespace "${NAMESPACE}" --ignore-not-found=true --timeout="${CLEANUP_TIMEOUT}" || true

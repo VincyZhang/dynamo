@@ -84,9 +84,9 @@ def apply_pre_deployment_resources(yaml_path: str, namespace: str) -> None:
     logger.info("Pre-deployment apply stdout: %s", result.stdout)
     if result.stderr:
         logger.warning("Pre-deployment apply stderr: %s", result.stderr)
-    assert result.returncode == 0, (
-        f"Failed to apply pre-deployment resources from {yaml_path}: {result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"Failed to apply pre-deployment resources from {yaml_path}: {result.stderr}"
 
 
 def validate_chat_response(
@@ -154,6 +154,9 @@ def validate_chat_response(
 @pytest.mark.deploy
 @pytest.mark.post_merge
 @pytest.mark.e2e
+@pytest.mark.filterwarnings(
+    r"ignore:Kubernetes version .* is not supported\. Supported versions for kr8s .* are .*:UserWarning"
+)
 @pytest.mark.timeout(1200)
 async def test_deployment(
     deployment_target: DeploymentTarget,
@@ -285,6 +288,9 @@ async def test_deployment(
 @pytest.mark.deploy
 @pytest.mark.post_merge
 @pytest.mark.e2e
+@pytest.mark.filterwarnings(
+    r"ignore:Kubernetes version .* is not supported\. Supported versions for kr8s .* are .*:UserWarning"
+)
 @pytest.mark.timeout(900)
 async def test_gaie_deployment(
     image: str,
