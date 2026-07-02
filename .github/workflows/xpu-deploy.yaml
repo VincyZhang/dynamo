@@ -119,7 +119,7 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          for bin_dir in /usr/local/bin /usr/bin /opt/homebrew/bin; do
+          for bin_dir in "${HOME}/.local/bin" /usr/local/bin /usr/bin /opt/homebrew/bin; do
             if [[ -x "${bin_dir}/helm" ]]; then
               export PATH="${bin_dir}:${PATH}"
             fi
