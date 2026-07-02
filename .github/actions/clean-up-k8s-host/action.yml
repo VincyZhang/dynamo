@@ -8,7 +8,7 @@ inputs:
   kubeconfig_path:
     description: 'Path to host kubeconfig'
     required: false
-    default: '${HOME}/.kube/config'
+    default: ''
   cleanup_timeout:
     description: 'kubectl namespace delete timeout'
     required: false
@@ -30,6 +30,12 @@ runs:
         FINAL_WAIT_SECONDS: ${{ inputs.final_wait_seconds }}
       run: |
         set -euo pipefail
+
+        if [[ -z "${KUBECONFIG_PATH}" ]]; then
+          KUBECONFIG_PATH="${HOME}/.kube/config"
+        fi
+        KUBECONFIG_PATH="${KUBECONFIG_PATH//\$\{HOME\}/${HOME}}"
+        KUBECONFIG_PATH="${KUBECONFIG_PATH//\$HOME/${HOME}}"
 
         strip_finalizers() {
           local resource_name

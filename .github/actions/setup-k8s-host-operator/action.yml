@@ -16,7 +16,7 @@ inputs:
   kubeconfig_path:
     description: 'Path to host kubeconfig'
     required: false
-    default: '${HOME}/.kube/config'
+    default: ''
 
 outputs:
   namespace:
@@ -42,6 +42,12 @@ runs:
         KUBECONFIG_PATH: ${{ inputs.kubeconfig_path }}
       run: |
         set -Eeuo pipefail
+
+        if [[ -z "${KUBECONFIG_PATH}" ]]; then
+          KUBECONFIG_PATH="${HOME}/.kube/config"
+        fi
+        KUBECONFIG_PATH="${KUBECONFIG_PATH//\$\{HOME\}/${HOME}}"
+        KUBECONFIG_PATH="${KUBECONFIG_PATH//\$HOME/${HOME}}"
 
         HELM_BIN="${HOME}/.local/bin/helm"
         if [[ ! -x "${HELM_BIN}" ]]; then
