@@ -50,6 +50,39 @@ MIN_RESPONSE_CONTENT_LENGTH = 100
 GAIE_MODEL_NAME = "Qwen/Qwen3-0.6B"
 
 
+def apply_pre_deployment_resources(yaml_path: str, namespace: str) -> None:
+    """Apply non-DynamoGraphDeployment docs from a deployment manifest.
+
+    XPU manifests carry a top-level ResourceClaimTemplate that must exist
+    before the operator creates pods with pod-level resourceClaims.
+    """
+    with open(yaml_path, "r") as f:
+        docs = [doc for doc in yaml.safe_load_all(f) if doc is not None]
+
+    pre_deploy_docs = [doc for doc in docs if doc.get("kind") != "DynamoGraphDeployment"]
+    if not pre_deploy_docs:
+        return
+
+    pre_deploy_yaml = yaml.safe_dump_all(pre_deploy_docs, default_flow_style=False)
+    logger.info(
+        "Applying pre-deployment resources from %s to namespace %s",
+        yaml_path,
+        namespace,
+    )
+    result = subprocess.run(
+        ["kubectl", "apply", "-n", namespace, "-f", "-"],
+        input=pre_deploy_yaml,
+        capture_output=True,
+        text=True,
+    )
+    logger.info("Pre-deployment apply stdout: %s", result.stdout)
+    if result.stderr:
+        logger.warning("Pre-deployment apply stderr: %s", result.stderr)
+    assert result.returncode == 0, (
+        f"Failed to apply pre-deployment resources from {yaml_path}: {result.stderr}"
+    )
+
+
 def validate_chat_response(
     response: requests.Response,
     expected_model: str,
@@ -169,6 +202,8 @@ async def test_deployment(
         f"(source: {deployment_target.source}, model: {model}, namespace: {namespace})"
     )
     logger.info(f"Log directory: {request.node.name}")
+
+    apply_pre_deployment_resources(str(deployment_target.yaml_path), namespace)
 
     # Deploy and test
     async with ManagedDeployment(
