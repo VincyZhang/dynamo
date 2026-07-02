@@ -13,30 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Temporary PR-XPU shape:
-  # - Keep the file on pull_request so the workflow can be validated on PRs.
-  # - Temporarily disable the old label gate and xpu-ci fan-out.
-  # - Run the deploy test directly through the reusable xpu-deploy workflow.
-  #
-  # guard:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     has_xpu_label: ${{ steps.pr-info.outputs.has_xpu_label }}
-  #   steps:
-  #     - name: Get PR info and check xpu label
-  #       id: pr-info
-  #       env:
-  #         GH_TOKEN: ${{ github.token }}
-  #       run: |
-  #         PR_NUMBER="${GITHUB_REF_NAME##*/}"
-  #         HAS_XPU=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
-  #           --jq '[.labels[].name] | any(. == "xpu")')
-  #         echo "has_xpu_label=${HAS_XPU}" >> "$GITHUB_OUTPUT"
-  #         if [[ "${HAS_XPU}" == "true" ]]; then
-  #           echo "✅ PR #${PR_NUMBER} has 'xpu' label – running XPU CI"
-  #         else
-  #           echo "⏭️ PR #${PR_NUMBER} does not have 'xpu' label – skipping XPU CI"
-  #         fi
 
   # ============================================================================
   # GATE – only run XPU CI when the PR has the "xpu" label.
@@ -44,19 +20,68 @@ jobs:
   # users / copy-pr-bot can reach this workflow.
   # ============================================================================
 
-  vllm-deploy-xpu:
-    name: vllm-xpu-deploy
-    uses: ./.github/workflows/xpu-deploy.yaml
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      has_xpu_label: ${{ steps.pr-info.outputs.has_xpu_label }}
+    steps:
+      - name: Get PR info and check xpu label
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${GITHUB_REF_NAME##*/}"
+
+          # Check for xpu label
+          HAS_XPU=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            --jq '[.labels[].name] | any(. == "xpu")')
+          echo "has_xpu_label=${HAS_XPU}" >> "$GITHUB_OUTPUT"
+          if [[ "${HAS_XPU}" == "true" ]]; then
+            echo "✅ PR #${PR_NUMBER} has 'xpu' label – running XPU CI"
+          else
+            echo "⏭️ PR #${PR_NUMBER} does not have 'xpu' label – skipping XPU CI"
+          fi
+
+  # ============================================================================
+  # CHANGE DETECTION
+  # ============================================================================
+
+  changed-files:
+    needs: [guard]
+    if: needs.guard.outputs.has_xpu_label == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.changes.outputs.core }}
+      vllm: ${{ steps.changes.outputs.vllm }}
+      sglang: ${{ steps.changes.outputs.sglang }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
+        with:
+          fetch-depth: 0
+      - name: Check for changes
+        id: changes
+        uses: ./.github/actions/changed-files
+        with:
+          gh_token: ${{ github.token }}
+
+  # ============================================================================
+  # XPU CI – VLLM
+  # ============================================================================
+
+  xpu-ci-vllm:
+    needs: [changed-files]
+    if: >-
+      needs.changed-files.outputs.core == 'true' ||
+      needs.changed-files.outputs.vllm == 'true'
+    uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      source_ref: ${{ github.sha }}
-    secrets: inherit
-#
-  #xpu-ci-vllm:
-  #  uses: ./.github/workflows/xpu-ci.yaml
-  #  with:
-  #    framework: vllm
-  #    pytest_markers: 'vllm and xpu_1 and pre_merge'
+      pytest_markers: 'vllm and xpu_1 and pre_merge'
+
+  # ============================================================================
+  # STATUS CHECK
+  # ============================================================================
 
   xpu-status-check:
     runs-on: ubuntu-latest
