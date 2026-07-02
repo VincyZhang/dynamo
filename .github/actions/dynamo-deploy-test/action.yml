@@ -115,17 +115,19 @@ runs:
         ln -sf "$(command -v "${PY_CMD}")" "${HOME}/.local/bin/python"
         echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
 
+        PYTHON_BIN="${HOME}/.local/bin/python"
+
         "${PY_CMD}" --version
 
         VENV_DIR="${{ github.workspace }}/.venv-deploy-test"
         if [[ ! -d "${VENV_DIR}" ]]; then
-          python -m venv "${VENV_DIR}"
+          "${PYTHON_BIN}" -m venv "${VENV_DIR}"
         fi
 
         echo "${VENV_DIR}/bin" >> "${GITHUB_PATH}"
         echo "VIRTUAL_ENV=${VENV_DIR}" >> "${GITHUB_ENV}"
 
-        "${VENV_DIR}/bin/python" -m pip --version
+        "${PYTHON_BIN}" -m pip --version
 
     - name: Install test dependencies
       shell: bash
