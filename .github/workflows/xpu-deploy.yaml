@@ -38,13 +38,6 @@ on:
         required: false
         type: string
         default: 'localhost:5000'
-    secrets:
-      HF_TOKEN:
-        required: true
-      DOCKERHUB_LOGIN_USER:
-        required: true
-      DOCKERHUB_ACCESS_TOKEN:
-        required: true
 
 concurrency:
   group: xpu-deploy-host-k8s
