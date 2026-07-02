@@ -118,9 +118,6 @@ dynamo-operator:
         # -- Image pull policy - when to pull the image
         pullPolicy: IfNotPresent
 
-      # -- Deployment progress deadline for the operator controller manager, in seconds.
-      progressDeadlineSeconds: 1800
-
       # Command line arguments for the operator manager
       args:
         # -- Health probe endpoint for Kubernetes health checks
@@ -543,11 +540,7 @@ nats:
 
     # Advanced container configuration merging and patching
     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core
-    merge:
-      resources:
-        requests:
-          cpu: 10m
-          memory: 32Mi
+    merge: {}
     patch: []
 
   ############################################################
@@ -578,11 +571,7 @@ nats:
 
     # Advanced reloader container configuration
     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core
-    merge:
-      resources:
-        requests:
-          cpu: 10m
-          memory: 32Mi
+    merge: {}
     patch: []
 
   ############################################################

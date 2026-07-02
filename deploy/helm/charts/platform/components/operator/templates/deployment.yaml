@@ -31,7 +31,6 @@ metadata:
   {{- include "dynamo-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.controllerManager.replicas }}
-  progressDeadlineSeconds: {{ .Values.controllerManager.progressDeadlineSeconds }}
   strategy:
     type: Recreate
   selector:
