@@ -203,8 +203,12 @@ async def test_deployment(
             "VllmDecodeWorker", "--gpu-memory-utilization", "0.7"
         )
 
-    # model = next((s.model for s in deployment_spec.services if s.model), None)
-    model = GAIE_MODEL_NAME
+    model = next((s.model for s in deployment_spec.services if s.model), None)
+    if not model:
+        pytest.fail(
+            f"Could not determine model name from deployment spec for "
+            f"{framework}/{profile}"
+        )
 
     logger.info(
         f"Starting deployment test for {deployment_target.test_id} "

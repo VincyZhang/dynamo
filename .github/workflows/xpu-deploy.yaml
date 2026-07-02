@@ -117,20 +117,71 @@ jobs:
           hf_token: ${{ secrets.HF_TOKEN }}
           operator_tag: 1.2.1
 
+      - name: Setup XPU Deploy Test Environment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NAMESPACE="${{ steps.k8s-setup.outputs.namespace }}"
+
+          echo "${{ steps.k8s-setup.outputs.kubeconfig_base64 }}" | base64 -d > "${{ github.workspace }}/.kubeconfig"
+          chmod 600 "${{ github.workspace }}/.kubeconfig"
+          echo "KUBECONFIG=${{ github.workspace }}/.kubeconfig" >> "$GITHUB_ENV"
+
+          kubectl --kubeconfig="${{ github.workspace }}/.kubeconfig" config set-context --current --namespace="${NAMESPACE}"
+          kubectl --kubeconfig="${{ github.workspace }}/.kubeconfig" config get-contexts
+
+          VENV_DIR="${{ github.workspace }}/.venv-deploy-test"
+          python3 -m venv "${VENV_DIR}"
+          echo "${VENV_DIR}/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=${VENV_DIR}" >> "$GITHUB_ENV"
+
+          "${VENV_DIR}/bin/python" -m pip install --upgrade pip
+          "${VENV_DIR}/bin/python" -m pip install -r container/deps/requirements.test.txt
+
       - name: Run XPU Deploy Test
-        uses: ./.github/actions/dynamo-deploy-test
-        with:
-          kubeconfig_base64: ${{ steps.k8s-setup.outputs.kubeconfig_base64 }}
-          namespace: ${{ steps.k8s-setup.outputs.namespace }}
-          registry: ${{ env.LOCAL_REGISTRY }}
-          operator_tag: ${{ steps.k8s-setup.outputs.operator_tag }}
-          hf_token: ${{ secrets.HF_TOKEN }}
-          framework: ${{ inputs.framework || 'vllm' }}
-          profile: ${{ matrix.profile }}
-          image: ${{ env.IMAGE_URI }}
-          platform_arch: amd64
-          test_name: ${{ inputs.framework || 'vllm' }}-${{ matrix.profile }}
-          extra_pytest_args: -m "framework_only and xpu_1"
+        shell: bash
+        env:
+          KUBECONFIG: ${{ github.workspace }}/.kubeconfig
+          NAMESPACE: ${{ steps.k8s-setup.outputs.namespace }}
+          FRAMEWORK: ${{ inputs.framework || 'vllm' }}
+          PROFILE: ${{ matrix.profile }}
+          IMAGE: ${{ env.IMAGE_URI }}
+          DYN_TEST_OUTPUT_PATH: ${{ github.workspace }}/test-output
+          TEST_FILE: tests/deploy/test_deploy.py
+          EXTRA_PYTEST_ARGS: -m "framework_only and xpu_1"
+          DYNAMO_TEST_FRAMEWORK: ${{ inputs.framework || 'vllm' }}
+          DYNAMO_TEST_PLATFORM: amd64
+          DYNAMO_TEST_TYPE: deploy_${{ matrix.profile }}
+          DYNAMO_TEST_WORKFLOW: ${{ github.workflow }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p test-results
+
+          PYTEST_ARGS=(
+            "--framework=${FRAMEWORK}"
+            "--profile=${PROFILE}"
+            "--image=${IMAGE}"
+          )
+
+          EXTRA_PYTEST_ARGS_ARRAY=()
+          if [ -n "${EXTRA_PYTEST_ARGS}" ]; then
+            # shellcheck disable=SC2206,SC2294
+            eval "EXTRA_PYTEST_ARGS_ARRAY=(${EXTRA_PYTEST_ARGS})"
+          fi
+
+          TEST_NAME="${FRAMEWORK:-unknown}_${PROFILE:-unknown}"
+
+          "${{ github.workspace }}/.venv-deploy-test/bin/python" -m pytest "${TEST_FILE}" \
+            --namespace="${NAMESPACE}" \
+            "${PYTEST_ARGS[@]}" \
+            "${EXTRA_PYTEST_ARGS_ARRAY[@]}" \
+            -v -s \
+            --durations=10 \
+            --junitxml="test-results/pytest_deploy_${TEST_NAME}_amd64_${{ github.run_id }}_${{ job.check_run_id }}.xml" \
+            --alluredir=test-results/allure-results \
+            --log-cli-level=INFO
 
       - name: Dump Kubernetes pod logs
         if: always() && steps.k8s-setup.outputs.namespace != ''
