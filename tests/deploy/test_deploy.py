@@ -51,15 +51,21 @@ GAIE_MODEL_NAME = "Qwen/Qwen3-0.6B"
 
 
 def apply_pre_deployment_resources(yaml_path: str, namespace: str) -> None:
-    """Apply non-DynamoGraphDeployment docs from a deployment manifest.
+    """Apply XPU-only pre-deployment resources from a deployment manifest.
 
     XPU manifests carry a top-level ResourceClaimTemplate that must exist
-    before the operator creates pods with pod-level resourceClaims.
+    before the operator creates pods with pod-level resourceClaims. Non-XPU
+    manifests do not need any extra objects applied up front.
     """
+    if "xpu" not in os.path.basename(yaml_path).lower():
+        return
+
     with open(yaml_path, "r") as f:
         docs = [doc for doc in yaml.safe_load_all(f) if doc is not None]
 
-    pre_deploy_docs = [doc for doc in docs if doc.get("kind") != "DynamoGraphDeployment"]
+    pre_deploy_docs = [
+        doc for doc in docs if doc.get("kind") == "ResourceClaimTemplate"
+    ]
     if not pre_deploy_docs:
         return
 
