@@ -87,7 +87,7 @@ def discover_example_targets(
     """Discover deployment targets from examples/backends/{framework}/deploy/*.yaml.
 
     This function scans the examples directory for deployment YAML files.
-    Files in subdirectories (e.g., lora/) are excluded.
+    Files in subdirectories are excluded.
 
     Args:
         workspace: Workspace root directory. If None, auto-detected.
@@ -132,15 +132,51 @@ def discover_example_targets(
     return targets
 
 
+def discover_xpu_example_targets(
+    workspace: Optional[Path] = None,
+) -> List[DeploymentTarget]:
+    """Discover XPU deployment targets from examples/backends/{framework}/deploy/xpu/*.yaml."""
+    if workspace is None:
+        workspace = Path(_get_workspace_dir())
+
+    backends_dir = workspace / "examples" / "backends"
+    targets: List[DeploymentTarget] = []
+
+    if not backends_dir.exists():
+        return targets
+
+    for framework_dir in backends_dir.iterdir():
+        if not framework_dir.is_dir():
+            continue
+
+        xpu_dir = framework_dir / "deploy" / "xpu"
+        if not xpu_dir.exists():
+            continue
+
+        framework_name = framework_dir.name
+
+        for yaml_file in xpu_dir.glob("*.yaml"):
+            targets.append(
+                DeploymentTarget(
+                    yaml_path=yaml_file,
+                    framework=framework_name,
+                    profile=yaml_file.stem,
+                    source="examples-xpu",
+                )
+            )
+
+    return targets
+
+
 def _collect_all_targets() -> List[DeploymentTarget]:
-    """Collect deployment targets from all sources.
+    """Collect non-XPU deployment targets from all sources.
 
     Returns:
         List of all deployment targets, sorted for consistent test ordering.
     """
     targets: List[DeploymentTarget] = []
 
-    # Discover from examples
+    # Discover non-XPU examples only; XPU deploy targets are selected on demand.
     targets.extend(discover_example_targets())
 
     # Sort for consistent test ordering
@@ -176,6 +212,23 @@ def _build_test_matrix(targets: List[DeploymentTarget]) -> Dict[str, List[str]]:
 # Discover all targets and build matrix at module load time for test collection
 ALL_DEPLOYMENT_TARGETS = _collect_all_targets()
 DEPLOY_TEST_MATRIX = _build_test_matrix(ALL_DEPLOYMENT_TARGETS)
+NON_XPU_DEPLOY_TEST_MATRIX = DEPLOY_TEST_MATRIX
+XPU_DEPLOY_TEST_MATRIX = _build_test_matrix(discover_xpu_example_targets())
+
+
+def _is_xpu_profile(profile: Optional[str]) -> bool:
+    return bool(profile and "xpu" in profile.lower())
+
+
+def _targets_for_request(
+    metafunc: pytest.Metafunc,
+) -> tuple[List[DeploymentTarget], Dict[str, List[str]]]:
+    """Select the appropriate discovery set for the current test request."""
+    profile_opt = metafunc.config.getoption("--profile")
+
+    if _is_xpu_profile(profile_opt):
+        return discover_xpu_example_targets(), XPU_DEPLOY_TEST_MATRIX
+    return ALL_DEPLOYMENT_TARGETS, NON_XPU_DEPLOY_TEST_MATRIX
 
 
 def _filter_targets(
@@ -251,18 +304,20 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     profile_opt = metafunc.config.getoption("--profile")
 
     # Filter targets based on CLI options
+    selected_targets, selected_matrix = _targets_for_request(metafunc)
+
     filtered_targets = _filter_targets(
-        ALL_DEPLOYMENT_TARGETS,
+        selected_targets,
         framework=framework_opt,
         profile=profile_opt,
     )
 
     # Validate that requested combination exists
     if framework_opt and profile_opt and not filtered_targets:
-        if framework_opt not in DEPLOY_TEST_MATRIX:
+        if framework_opt not in selected_matrix:
             pytest.skip(f"Framework '{framework_opt}' not found in discovered profiles")
             return
-        if profile_opt not in DEPLOY_TEST_MATRIX.get(framework_opt, []):
+        if profile_opt not in selected_matrix.get(framework_opt, []):
             pytest.skip(
                 f"Profile '{profile_opt}' not found for framework '{framework_opt}'"
             )
