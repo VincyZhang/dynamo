@@ -37,7 +37,7 @@ runs:
       shell: bash
       env:
         MATRIX_SLUG: ${{ inputs.matrix_slug }}
-        HF_TOKEN: ${{ inputs.hf_token }}
+        INPUT_HF_TOKEN: ${{ inputs.hf_token }}
         OPERATOR_TAG: ${{ inputs.operator_tag }}
         KUBECONFIG_PATH: ${{ inputs.kubeconfig_path }}
       run: |
@@ -94,6 +94,7 @@ runs:
         echo "::notice::[$(date -u +%H:%M:%S)] waiting for namespace to be ready"
         kubectl --kubeconfig="${KUBECONFIG_PATH}" wait --for=jsonpath='{.status.phase}'=Active namespace/"${NAMESPACE}" --timeout=60s
 
+        HF_TOKEN="${INPUT_HF_TOKEN:-${HF_TOKEN:-}}"
         if [[ -n "${HF_TOKEN}" ]]; then
           kubectl --kubeconfig="${KUBECONFIG_PATH}" \
             create secret generic hf-token-secret \
