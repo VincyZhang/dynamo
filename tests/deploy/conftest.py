@@ -87,7 +87,7 @@ def discover_example_targets(
     """Discover deployment targets from examples/backends/{framework}/deploy/*.yaml.
 
     This function scans the examples directory for deployment YAML files.
-    Files in subdirectories are excluded.
+    Files in subdirectories (e.g., lora/) are excluded.
 
     Args:
         workspace: Workspace root directory. If None, auto-detected.
@@ -149,12 +149,12 @@ def discover_xpu_example_targets(
         if not framework_dir.is_dir():
             continue
 
-        xpu_dir = framework_dir / "deploy" / "xpu"
+        deploy_dir = framework_dir / "deploy"
+        xpu_dir = deploy_dir / "xpu"
         if not xpu_dir.exists():
             continue
 
         framework_name = framework_dir.name
-
         for yaml_file in xpu_dir.glob("*.yaml"):
             targets.append(
                 DeploymentTarget(
@@ -169,14 +169,14 @@ def discover_xpu_example_targets(
 
 
 def _collect_all_targets() -> List[DeploymentTarget]:
-    """Collect non-XPU deployment targets from all sources.
+    """Collect deployment targets from all sources.
 
     Returns:
         List of all deployment targets, sorted for consistent test ordering.
     """
     targets: List[DeploymentTarget] = []
 
-    # Discover non-XPU examples only; XPU deploy targets are selected on demand.
+    # Discover from examples
     targets.extend(discover_example_targets())
 
     # Sort for consistent test ordering
@@ -212,23 +212,6 @@ def _build_test_matrix(targets: List[DeploymentTarget]) -> Dict[str, List[str]]:
 # Discover all targets and build matrix at module load time for test collection
 ALL_DEPLOYMENT_TARGETS = _collect_all_targets()
 DEPLOY_TEST_MATRIX = _build_test_matrix(ALL_DEPLOYMENT_TARGETS)
-NON_XPU_DEPLOY_TEST_MATRIX = DEPLOY_TEST_MATRIX
-XPU_DEPLOY_TEST_MATRIX = _build_test_matrix(discover_xpu_example_targets())
-
-
-def _is_xpu_profile(profile: Optional[str]) -> bool:
-    return bool(profile and "xpu" in profile.lower())
-
-
-def _targets_for_request(
-    metafunc: pytest.Metafunc,
-) -> tuple[List[DeploymentTarget], Dict[str, List[str]]]:
-    """Select the appropriate discovery set for the current test request."""
-    profile_opt = metafunc.config.getoption("--profile")
-
-    if _is_xpu_profile(profile_opt):
-        return discover_xpu_example_targets(), XPU_DEPLOY_TEST_MATRIX
-    return ALL_DEPLOYMENT_TARGETS, NON_XPU_DEPLOY_TEST_MATRIX
 
 
 def _filter_targets(
@@ -304,7 +287,12 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     profile_opt = metafunc.config.getoption("--profile")
 
     # Filter targets based on CLI options
-    selected_targets, selected_matrix = _targets_for_request(metafunc)
+    markexpr = getattr(metafunc.config.option, "markexpr", "") or ""
+    if ("xpu_1" in markexpr) or ("xpu_2" in markexpr):
+        selected_targets = discover_xpu_example_targets()
+    else:
+        selected_targets = ALL_DEPLOYMENT_TARGETS
+    selected_matrix = _build_test_matrix(selected_targets)
 
     filtered_targets = _filter_targets(
         selected_targets,
