@@ -12,7 +12,7 @@ inputs:
   operator_tag:
     description: 'Operator image tag'
     required: false
-    default: '1.2.1'
+    default: ''
   kubeconfig_path:
     description: 'Path to host kubeconfig'
     required: false
@@ -46,8 +46,8 @@ runs:
         KUBECONFIG_PATH="${KUBECONFIG_PATH:-${HOME}/.kube/config}"
         KUBECONFIG_PATH="${KUBECONFIG_PATH//\$\{HOME\}/${HOME}}"
         KUBECONFIG_PATH="${KUBECONFIG_PATH//\$HOME/${HOME}}"
+        HELM_BIN="${HELM_BIN:-${HOME}/.local/bin/helm}"
 
-        HELM_BIN="${HOME}/.local/bin/helm"
         if [[ ! -x "${HELM_BIN}" ]]; then
           echo "::error::helm binary is required on xpu-deploy runner but was not found at ${HELM_BIN}"
           exit 1
@@ -108,14 +108,28 @@ runs:
         "${HELM_BIN}" repo add bitnami https://charts.bitnami.com/bitnami
         pushd deploy/helm/charts/platform >/dev/null
         "${HELM_BIN}" dep build .
+        IMAGE_ARGS=(
+          --set dynamo-operator.controllerManager.manager.image.pullPolicy=Always
+          --set dynamo-operator.upgradeCRD=true
+          --set dynamo-operator.gpuDiscovery.enabled=false
+          --set dynamo-operator.checkpoint.enabled=false
+          --set global.grove.install=true
+          --set global.kai-scheduler.install=false
+        )
+        if [[ -n "${OPERATOR_TAG}" ]]; then
+          IMAGE_ARGS=(
+            --set dynamo-operator.controllerManager.manager.image.repository="${OPERATOR_REPO}"
+            --set dynamo-operator.controllerManager.manager.image.tag="${OPERATOR_TAG}"
+            --set dynamo-operator.controllerManager.manager.image.pullPolicy=Always
+            --set dynamo-operator.upgradeCRD=true
+            --set dynamo-operator.gpuDiscovery.enabled=false
+            --set dynamo-operator.checkpoint.enabled=false
+            --set global.grove.install=true
+            --set global.kai-scheduler.install=false
+          )
+        fi
         KUBECONFIG="${KUBECONFIG_PATH}" "${HELM_BIN}" upgrade --install dynamo-platform . --namespace "${NAMESPACE}" \
-          --set dynamo-operator.controllerManager.manager.image.repository="${OPERATOR_REPO}" \
-          --set dynamo-operator.controllerManager.manager.image.tag="${OPERATOR_TAG}" \
-          --set dynamo-operator.upgradeCRD=false \
-          --set dynamo-operator.gpuDiscovery.enabled=false \
-          --set dynamo-operator.checkpoint.enabled=false \
-          --set global.grove.install=true \
-          --set global.kai-scheduler.install=false \
+          "${IMAGE_ARGS[@]}" \
           --take-ownership \
           --atomic \
           --wait \

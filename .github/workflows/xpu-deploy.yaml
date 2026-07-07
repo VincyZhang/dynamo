@@ -93,7 +93,7 @@ jobs:
           set -euo pipefail
           IMAGE_URI="${LOCAL_REGISTRY}/ai-dynamo/dynamo:${SOURCE_REF}-${FRAMEWORK}-${TARGET}-xpu"
 
-           # Check if image already exists to avoid redundant builds
+          # Check if image already exists to avoid redundant builds
           if docker image inspect "${IMAGE_URI}" >/dev/null 2>&1; then
             echo "::notice::Image ${IMAGE_URI} already exists, skipping build"
           else
@@ -104,7 +104,7 @@ jobs:
 
             docker push "${IMAGE_URI}"
           fi
-          
+
           echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
 
       - name: Setup Kubernetes namespace and operator
@@ -112,7 +112,6 @@ jobs:
         uses: ./.github/actions/setup-k8s-host-operator
         with:
           matrix_slug: ${{ matrix.slug }}
-          operator_tag: 1.2.1
 
       - name: Setup XPU Deploy Test Environment
         shell: bash
