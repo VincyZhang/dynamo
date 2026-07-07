@@ -117,7 +117,6 @@ jobs:
             echo "::notice::Image ${OPERATOR_IMAGE_URI} already exists, skipping build"
           else
             docker build \
-              --build-arg DOCKER_PROXY=${LOCAL_REGISTRY}/dockerhub/ \
               --build-context snapshot=./deploy/snapshot \
               --tag "${OPERATOR_IMAGE_URI}" \
               -f ./deploy/operator/Dockerfile \
