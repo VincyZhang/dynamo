@@ -13,6 +13,10 @@ inputs:
     description: 'Operator image tag'
     required: false
     default: ''
+  operator_repository:
+    description: 'Operator image repository'
+    required: false
+    default: ''
   kubeconfig_path:
     description: 'Path to host kubeconfig'
     required: false
@@ -39,6 +43,7 @@ runs:
         MATRIX_SLUG: ${{ inputs.matrix_slug }}
         INPUT_HF_TOKEN: ${{ inputs.hf_token }}
         OPERATOR_TAG: ${{ inputs.operator_tag }}
+        OPERATOR_REPOSITORY: ${{ inputs.operator_repository }}
         KUBECONFIG_PATH: ${{ inputs.kubeconfig_path }}
       run: |
         set -Eeuo pipefail
@@ -47,6 +52,7 @@ runs:
         KUBECONFIG_PATH="${KUBECONFIG_PATH//\$\{HOME\}/${HOME}}"
         KUBECONFIG_PATH="${KUBECONFIG_PATH//\$HOME/${HOME}}"
         HELM_BIN="${HELM_BIN:-${HOME}/.local/bin/helm}"
+        HELM_TIMEOUT="${HELM_TIMEOUT:-20m}"
 
         if [[ ! -x "${HELM_BIN}" ]]; then
           echo "::error::helm binary is required on xpu-deploy runner but was not found at ${HELM_BIN}"
@@ -103,7 +109,16 @@ runs:
         fi
 
         echo "::notice::[$(date -u +%H:%M:%S)] installing operator and grove"
-        OPERATOR_REPO="nvcr.io/nvidia/ai-dynamo/kubernetes-operator"
+        OPERATOR_REPO="${OPERATOR_REPOSITORY:-nvcr.io/nvidia/ai-dynamo/kubernetes-operator}"
+
+        dump_install_diagnostics() {
+          echo "::group::Operator install diagnostics"
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" get pods,events -n "${NAMESPACE}" -o wide || true
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" describe deployment dynamo-platform-dynamo-operator-controller-manager -n "${NAMESPACE}" || true
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" describe deployment grove-operator -n "${NAMESPACE}" || true
+          kubectl --kubeconfig="${KUBECONFIG_PATH}" get pods -n "${NAMESPACE}" -o yaml || true
+          echo "::endgroup::"
+        }
 
         "${HELM_BIN}" repo add bitnami https://charts.bitnami.com/bitnami
         pushd deploy/helm/charts/platform >/dev/null
@@ -128,13 +143,16 @@ runs:
             --set global.kai-scheduler.install=false
           )
         fi
-        KUBECONFIG="${KUBECONFIG_PATH}" "${HELM_BIN}" upgrade --install dynamo-platform . --namespace "${NAMESPACE}" \
+        if ! KUBECONFIG="${KUBECONFIG_PATH}" "${HELM_BIN}" upgrade --install dynamo-platform . --namespace "${NAMESPACE}" \
           "${IMAGE_ARGS[@]}" \
           --take-ownership \
           --atomic \
           --wait \
-          --timeout 10m \
-          --debug
+          --timeout "${HELM_TIMEOUT}" \
+          --debug; then
+          dump_install_diagnostics
+          exit 1
+        fi
         popd >/dev/null
 
         echo "::notice::[$(date -u +%H:%M:%S)] waiting for dynamo-operator to be ready"

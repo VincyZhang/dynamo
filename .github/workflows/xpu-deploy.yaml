@@ -107,11 +107,34 @@ jobs:
 
           echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
 
+      - name: Build local operator image
+        shell: bash
+        run: |
+          set -euo pipefail
+          OPERATOR_IMAGE_URI="${LOCAL_REGISTRY}/ai-dynamo/dynamo:${SOURCE_REF}-operator"
+
+          if docker image inspect "${OPERATOR_IMAGE_URI}" >/dev/null 2>&1; then
+            echo "::notice::Image ${OPERATOR_IMAGE_URI} already exists, skipping build"
+          else
+            docker build \
+              --build-arg DOCKER_PROXY=${LOCAL_REGISTRY}/dockerhub/ \
+              --build-context snapshot=./deploy/snapshot \
+              --tag "${OPERATOR_IMAGE_URI}" \
+              -f ./deploy/operator/Dockerfile \
+              ./deploy/operator 2>&1 | tee "build-operator-${{ matrix.name }}.log"
+
+            docker push "${OPERATOR_IMAGE_URI}"
+          fi
+
+          echo "OPERATOR_IMAGE_URI=${OPERATOR_IMAGE_URI}" >> "$GITHUB_ENV"
+
       - name: Setup Kubernetes namespace and operator
         id: k8s-setup
         uses: ./.github/actions/setup-k8s-host-operator
         with:
           matrix_slug: ${{ matrix.slug }}
+          operator_repository: ${{ env.LOCAL_REGISTRY }}/ai-dynamo/dynamo
+          operator_tag: ${{ env.SOURCE_REF }}-operator
 
       - name: Setup XPU Deploy Test Environment
         shell: bash
