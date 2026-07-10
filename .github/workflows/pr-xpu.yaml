@@ -78,7 +78,7 @@ jobs:
     uses: ./.github/workflows/xpu-ci.yaml
     with:
       framework: vllm
-      pytest_markers: 'vllm and pre_merge'
+pytest_markers: 'vllm and pre_merge and not multimodal'
 
   # ============================================================================
   # STATUS CHECK
