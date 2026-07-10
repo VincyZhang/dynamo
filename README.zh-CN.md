@@ -24,7 +24,7 @@ limitations under the License.
 [![Discord](https://dcbadge.limes.pink/api/server/D92uqZRjCZ?style=flat)](https://discord.gg/D92uqZRjCZ)
 ![Community Contributors](https://img.shields.io/badge/community_contributors-70%2B-brightgreen)
 
-| **[文档](https://docs.nvidia.com/dynamo/)** | **[路线图](https://github.com/ai-dynamo/dynamo/issues/5506)** | **[配方](https://github.com/ai-dynamo/dynamo/tree/main/recipes)** | **[示例](https://github.com/ai-dynamo/dynamo/tree/main/examples)** | **[预构建容器](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/ai-dynamo/collections/ai-dynamo)** | **[摘要](docs/digest/index.mdx)** | **[设计提案](https://github.com/ai-dynamo/enhancements)** | **[如何贡献](#社区与贡献)** |
+| **[文档](https://docs.nvidia.com/dynamo/)** | **[路线图](https://github.com/ai-dynamo/dynamo/issues/5506)** | **[配方](https://github.com/ai-dynamo/dynamo/tree/main/recipes)** | **[示例](https://github.com/ai-dynamo/dynamo/tree/main/examples)** | **[预构建容器](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/ai-dynamo/collections/ai-dynamo)** | **[摘要](docs/digest/index.mdx)** | **[设计提案](https://github.com/ai-dynamo/dynamo/issues?q=is%3Aissue+label%3A%22dep%3Adraft%22%2C%22dep%3Aproposed%22%2C%22dep%3Aapproved%22%2C%22dep%3Aimplementing%22%2C%22dep%3Acompleted%22%2C%22dep%3Adeferred%22%2C%22dep%3Asuperseeded%22)** | **[如何贡献](#社区与贡献)** |
 
 <!-- GitHub does not support browser-language negotiation for repository README rendering; keep explicit alternate-language links in sync. -->
 <p align="right">
@@ -55,12 +55,12 @@ limitations under the License.
 
 | | [SGLang](https://docs.nvidia.com/dynamo/backends/sg-lang) | [TensorRT-LLM](https://docs.nvidia.com/dynamo/backends/tensor-rt-llm) | [vLLM](https://docs.nvidia.com/dynamo/backends/v-llm) |
 |---|:----:|:----------:|:--:|
-| [**分离式服务**](docs/design-docs/disagg-serving.zh-CN.md) | ✅ | ✅ | ✅ |
-| [**KV 感知路由**](docs/components/router/README.zh-CN.md) | ✅ | ✅ | ✅ |
-| [**基于 SLA 的 Planner**](docs/components/planner/planner-guide.zh-CN.md) | ✅ | ✅ | ✅ |
-| [**KVBM**](docs/components/kvbm/README.zh-CN.md) | 🚧 | ✅ | ✅ |
+| [**分离式服务**](fern/translations/zh-CN/pages-dev/design-docs/disagg-serving.md) | ✅ | ✅ | ✅ |
+| [**KV 感知路由**](fern/translations/zh-CN/pages-dev/components/router/README.md) | ✅ | ✅ | ✅ |
+| [**基于 SLA 的 Planner**](fern/translations/zh-CN/pages-dev/components/planner/planner-guide.md) | ✅ | ✅ | ✅ |
+| [**KVBM**](fern/translations/zh-CN/pages-dev/components/kvbm/README.md) | 🚧 | ✅ | ✅ |
 | [**多模态**](https://docs.nvidia.com/dynamo/user-guides/multimodal) | ✅ | ✅ | ✅ |
-| [**工具调用**](docs/tool-calling/README.zh-CN.md) | ✅ | ✅ | ✅ |
+| [**工具调用**](fern/translations/zh-CN/pages-dev/tool-calling/README.md) | ✅ | ✅ | ✅ |
 
 > **[完整功能矩阵 →](https://docs.nvidia.com/dynamo/resources/feature-matrix)** — LoRA、请求迁移、推测解码以及功能之间的交互。
 
@@ -83,20 +83,20 @@ limitations under the License.
   <img src="./docs/assets/img/dynamo-readme-overview.svg" alt="Dynamo 架构概览" width="600" />
 </p>
 
-**[架构深入解析 →](docs/design-docs/architecture.zh-CN.md)**
+**[架构深入解析 →](fern/translations/zh-CN/pages-dev/design-docs/architecture.md)**
 
 ### 核心能力
 
 | 能力 | 作用 | 价值 |
 |------|------|------|
-| [**分离式预填充/解码**](docs/design-docs/disagg-serving.zh-CN.md) | 将预填充和解码拆分为可独立扩缩容的 GPU 池 | 最大化 GPU 利用率；每个阶段都运行在针对其工作负载调优的硬件上 |
-| [**KV 感知路由**](docs/components/router/README.zh-CN.md) | 根据 worker 负载和 KV 缓存重叠度路由请求 | 消除冗余预填充计算，TTFT 快 2x |
-| [**KV Block Manager (KVBM)**](docs/components/kvbm/README.zh-CN.md) | 在 GPU → CPU → SSD → 远程存储之间卸载 KV 缓存 | 将有效上下文长度扩展到 GPU 显存之外 |
+| [**分离式预填充/解码**](fern/translations/zh-CN/pages-dev/design-docs/disagg-serving.md) | 将预填充和解码拆分为可独立扩缩容的 GPU 池 | 最大化 GPU 利用率；每个阶段都运行在针对其工作负载调优的硬件上 |
+| [**KV 感知路由**](fern/translations/zh-CN/pages-dev/components/router/README.md) | 根据 worker 负载和 KV 缓存重叠度路由请求 | 消除冗余预填充计算，TTFT 快 2x |
+| [**KV Block Manager (KVBM)**](fern/translations/zh-CN/pages-dev/components/kvbm/README.md) | 在 GPU → CPU → SSD → 远程存储之间卸载 KV 缓存 | 将有效上下文长度扩展到 GPU 显存之外 |
 | [**ModelExpress**](https://github.com/ai-dynamo/modelexpress) | 通过 NIXL/NVLink 在 GPU 之间流式传输模型权重 | 新副本冷启动快 7x |
-| [**Planner**](docs/components/planner/planner-guide.zh-CN.md) | 由 SLA 驱动的自动扩缩容器，可分析工作负载并调整资源池规模 | 以最低总体拥有成本（TCO）满足延迟目标 |
+| [**Planner**](fern/translations/zh-CN/pages-dev/components/planner/planner-guide.md) | 由 SLA 驱动的自动扩缩容器，可分析工作负载并调整资源池规模 | 以最低总体拥有成本（TCO）满足延迟目标 |
 | [**Grove**](https://github.com/ai-dynamo/grove) | 面向拓扑感知 gang scheduling 的 K8s operator（NVL72） | 在机架、主机和 NUMA 节点之间优化放置工作负载 |
 | [**AIConfigurator**](https://github.com/ai-dynamo/aiconfigurator) | 在数秒内模拟 10K+ 部署配置 | 无需消耗 GPU 小时即可找到最优服务配置 |
-| [**容错**](docs/fault-tolerance/request-migration.zh-CN.md) | 金丝雀健康检查 + 运行中请求迁移 | worker 可以失败，但用户请求不应失败 |
+| [**容错**](fern/translations/zh-CN/pages-dev/fault-tolerance/request-migration.md) | 金丝雀健康检查 + 运行中请求迁移 | worker 可以失败，但用户请求不应失败 |
 
 ### 1.0 新功能
 
@@ -113,7 +113,7 @@ limitations under the License.
 
 ```bash
 # 拉取预构建容器（SGLang 示例）
-docker run --gpus all --network host --rm -it nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.1.1
+docker run --gpus all --network host --rm -it nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.2.1
 
 # 在容器内启动 frontend 和 worker
 python3 -m dynamo.frontend --http-port 8000 --discovery-backend file > /dev/null 2>&1 &
@@ -127,7 +127,7 @@ curl -s localhost:8000/v1/chat/completions -H "Content-Type: application/json" -
 }' | jq
 ```
 
-另有 [`tensorrtllm-runtime:1.1.1`](https://docs.nvidia.com/dynamo/resources/release-artifacts) 和 [`vllm-runtime:1.1.1`](https://docs.nvidia.com/dynamo/resources/release-artifacts) 可用。
+另有 [`tensorrtllm-runtime:1.2.1`](https://docs.nvidia.com/dynamo/resources/release-artifacts) 和 [`vllm-runtime:1.2.1`](https://docs.nvidia.com/dynamo/resources/release-artifacts) 可用。
 
 ### 选项 B：从 PyPI 安装
 
@@ -137,9 +137,9 @@ curl -s localhost:8000/v1/chat/completions -H "Content-Type: application/json" -
 uv pip install --prerelease=allow "ai-dynamo[sglang]"   # 或 [vllm]
 ```
 
-> **注意：** TensorRT-LLM 需要配合 `--extra-index-url https://pypi.nvidia.com` 使用 `pip`。TRT-LLM 专用说明请参阅[安装指南](docs/getting-started/local-installation.zh-CN.md)。
+> **注意：** TensorRT-LLM 需要配合 `--extra-index-url https://pypi.nvidia.com` 使用 `pip`。TRT-LLM 专用说明请参阅[安装指南](fern/translations/zh-CN/pages-dev/getting-started/local-installation.md)。
 
-然后按上面的方式启动 frontend 和一个 worker。系统依赖和后端专用说明请参阅[完整安装指南](docs/getting-started/local-installation.zh-CN.md)。
+然后按上面的方式启动 frontend 和一个 worker。系统依赖和后端专用说明请参阅[完整安装指南](fern/translations/zh-CN/pages-dev/getting-started/local-installation.md)。
 
 ### 选项 C：Kubernetes（推荐）
 
@@ -172,7 +172,7 @@ spec:
 
 ## 从源码构建
 
-适用于希望在本地构建和开发的贡献者。详情请参阅[完整构建指南](docs/getting-started/building-from-source.zh-CN.md)。
+适用于希望在本地构建和开发的贡献者。详情请参阅[完整构建指南](fern/translations/zh-CN/pages-dev/getting-started/building-from-source.md)。
 
 ```bash
 # 安装系统依赖（Ubuntu 24.04）
@@ -183,7 +183,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source $HOME/.
 
 # 创建虚拟环境并构建
 uv venv dynamo && source dynamo/bin/activate
-uv pip install pip maturin
+uv pip install pip 'maturin[patchelf]'
 cd lib/bindings/python && maturin develop --uv && cd $PROJECT_ROOT
 uv pip install -e lib/gpu_memory_service
 uv pip install -e .
@@ -195,10 +195,10 @@ uv pip install -e .
 
 Dynamo 采用 OSS 优先的开放开发模式。我们欢迎各种形式的贡献。
 
-- **[贡献指南](docs/contribution-guide.zh-CN.md)** — 如何贡献代码、文档和配方
-- **[设计提案](https://github.com/ai-dynamo/enhancements)** — 重大功能的 RFC
+- **[贡献指南](fern/translations/zh-CN/pages-dev/contribution-guide.md)** — 如何贡献代码、文档和配方
+- **[设计提案](https://github.com/ai-dynamo/dynamo/issues?q=is%3Aissue+label%3A%22dep%3Adraft%22%2C%22dep%3Aproposed%22%2C%22dep%3Aapproved%22%2C%22dep%3Aimplementing%22%2C%22dep%3Acompleted%22%2C%22dep%3Adeferred%22%2C%22dep%3Asuperseeded%22)** — 重大功能的 RFC，以带 `dep:*` 标签的 GitHub issue 形式跟踪
 - **[Office Hours](https://www.youtube.com/playlist?list=PL5B692fm6--tgryKu94h2Zb7jTFM3Go4X)** — 双周会议
-- **[社区会议](https://docs.google.com/document/d/1uR8xD_hlYGwV6QspvSc36k1H-wo1BUcVmFbHH9xlXd8/view)** – 每周开发者社区会议（周三 10:30 AM PT）
+- **[社区会议](https://docs.google.com/document/d/1uR8xD_hlYGwV6QspvSc36k1H-wo1BUcVmFbHH9xlXd8/view)** ([Youtube](https://www.youtube.com/@ai-dynamo-community)) – 每周（Wed 10:30 AM PT）开发者社区会议
 - **[Discord](https://discord.gg/D92uqZRjCZ)** — 与团队和社区交流
 - **[Dynamo Day 录像](https://nvevents.nvidia.com/dynamoday)** — 来自生产用户的深入分享
 
@@ -217,7 +217,7 @@ Dynamo 采用 OSS 优先的开放开发模式。我们欢迎各种形式的贡�
 Dynamo 提供完整的基准测试工具：
 
 - **[基准测试指南](docs/benchmarks/benchmarking.md)** – 使用 AIPerf 比较部署拓扑
-- **[SLA 驱动部署](docs/components/planner/planner-guide.zh-CN.md)** – 优化部署以满足 SLA 要求
+- **[SLA 驱动部署](fern/translations/zh-CN/pages-dev/components/planner/planner-guide.md)** – 优化部署以满足 SLA 要求
 
 ## Frontend OpenAPI 规范
 
@@ -264,12 +264,3 @@ Dynamo 使用 TCP 进行组件间通信。在 Kubernetes 上，原生资源（[C
 - **[发布产物](https://docs.nvidia.com/dynamo/resources/release-artifacts)** — 容器、wheel、Helm chart
 - **[服务发现](https://docs.nvidia.com/dynamo/kubernetes-deployment/advanced-platform/service-discovery)** — K8s 原生、etcd 与基于文件的服务发现对比
 - **[基准测试指南](https://docs.nvidia.com/dynamo/user-guides/benchmarking)** — 使用 AIPerf 比较部署拓扑
-
-<!-- Reference links for Feature Compatibility Matrix -->
-[disagg]: docs/design-docs/disagg-serving.zh-CN.md
-[kv-routing]: docs/components/router/README.zh-CN.md
-[planner]: docs/components/planner/planner-guide.zh-CN.md
-[kvbm]: docs/components/kvbm/README.zh-CN.md
-[migration]: docs/fault-tolerance/request-migration.zh-CN.md
-[lora]: examples/backends/vllm/deploy/lora/README.md
-[tools]: docs/tool-calling/README.zh-CN.md
