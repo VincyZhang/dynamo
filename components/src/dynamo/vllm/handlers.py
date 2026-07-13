@@ -1910,11 +1910,22 @@ class BaseWorkerHandler(ABC, Generic[RequestT, ResponseT]):
         finally:
             # Clean up the abort monitoring task
             if not task.done():
-                task.cancel()
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
+                current_task = asyncio.current_task()
+                if current_task is not None and current_task.cancelling():
+                    # If the surrounding request task is being cancelled, do
+                    # not cancel the monitor task too early. Let it observe the
+                    # request cancellation and finish the abort path so the
+                    # canonical worker log is still emitted.
+                    try:
+                        await asyncio.shield(task)
+                    except asyncio.CancelledError:
+                        pass
+                else:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
             else:
                 # If the task completed, check if it raised EngineShutdown
                 task.result()

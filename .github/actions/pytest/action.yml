@@ -5,6 +5,10 @@ inputs:
     description: 'Pytest marks'
     required: true
     default: 'e2e and vllm and gpu_1 and not slow'
+  pytest_targets:
+    description: 'Optional explicit pytest nodeids or paths to run'
+    required: false
+    default: ''
   image_tag:
     description: 'Image Tag to run tests on'
     required: true
@@ -131,7 +135,7 @@ runs:
         if [[ "${{ inputs.dry_run }}" == "true" ]]; then
           echo "🔍 Running pytest in dry-run mode (collect-only, no GPU required)"
           GPU_FLAGS=""
-          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\" ${{ inputs.pytest_targets }}"
         else
           echo "🚀 Running pytest in normal mode"
 
@@ -144,7 +148,7 @@ runs:
             COVERAGE_ENV="--env COVERAGE_FILE=/workspace/test-results/.coverage --env PYTHONPATH=/workspace/components/src:/workspace/lib/bindings/python/src"
           fi
 
-          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=20 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\" ${{ inputs.pytest_targets }}"
 
           # Detect GPU availability and conditionally add GPU flags
           GPU_FLAGS=""
@@ -223,7 +227,7 @@ runs:
         if [[ "${{ inputs.dry_run }}" == "true" ]]; then
           echo "🔍 Running pytest in dry-run mode (collect-only, no GPU required)"
           GPU_FLAGS=""
-          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest -v --collect-only -m \"${{ inputs.pytest_marks }}\" ${{ inputs.pytest_targets }}"
         else
           echo "🚀 Running pytest in normal mode"
           # Set device-specific docker flags
@@ -281,7 +285,7 @@ runs:
             DIST_OPTS="--dist=loadscope"
           fi
 
-          PYTEST_CMD="pytest ${PARALLEL_OPTS} ${VRAM_OPTS} ${DIST_OPTS} --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=10 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\""
+          PYTEST_CMD="pytest ${PARALLEL_OPTS} ${VRAM_OPTS} ${DIST_OPTS} --continue-on-collection-errors -v --tb=short --basetemp=/tmp/pytest_temp -o cache_dir=/tmp/.pytest_cache --junitxml=/workspace/test-results/${{ env.PYTEST_XML_FILE }} --alluredir=/workspace/test-results/allure-results --durations=10 ${COVERAGE_FLAGS} -m \"${{ inputs.pytest_marks }}\" ${{ inputs.pytest_targets }}"
 
         fi
 

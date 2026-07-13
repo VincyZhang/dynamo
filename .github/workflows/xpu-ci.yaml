@@ -26,6 +26,16 @@ on:
         required: false
         type: string
         default: ''
+      pytest_targets:
+        description: 'Optional explicit pytest nodeids or paths to run'
+        required: false
+        type: string
+        default: ''
+      run_xpu_2card_tests:
+        description: 'Run the XPU 2-card test job'
+        required: false
+        type: string
+        default: 'true'
   workflow_call:
     inputs:
       framework:
@@ -48,6 +58,16 @@ on:
         required: false
         type: string
         default: ''
+      pytest_targets:
+        description: 'Optional explicit pytest nodeids or paths to run'
+        required: false
+        type: string
+        default: ''
+      run_xpu_2card_tests:
+        description: 'Run the XPU 2-card test job'
+        required: false
+        type: string
+        default: 'true'
 
 env:
   FRAMEWORK: ${{ inputs.framework || 'vllm' }}
@@ -179,6 +199,7 @@ jobs:
         uses: ./.github/actions/pytest
         with:
           pytest_marks: '${{ inputs.pytest_markers }} and xpu_1'
+          pytest_targets: ${{ inputs.pytest_targets }}
           image_tag: ${{ env.TEST_IMAGE_TAG }}
           test_suite_name: 'xpu-${{ env.FRAMEWORK }}'
           test_type: 'e2e'
@@ -203,7 +224,7 @@ jobs:
 
   test-xpu-2card:
     needs: [build-xpu]
-    if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
+    if: ${{ inputs.run_xpu_2card_tests == 'true' && !cancelled() && needs.build-xpu.result == 'success' }}
     runs-on: xpu-2
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
@@ -227,6 +248,7 @@ jobs:
         uses: ./.github/actions/pytest
         with:
           pytest_marks: '${{ inputs.pytest_markers }} and xpu_2'
+          pytest_targets: ${{ inputs.pytest_targets }}
           image_tag: ${{ env.TEST_IMAGE_TAG }}
           test_suite_name: 'xpu-2card-${{ env.FRAMEWORK }}'
           test_type: 'e2e'
