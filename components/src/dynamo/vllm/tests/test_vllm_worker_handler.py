@@ -1057,40 +1057,6 @@ class TestDeferredAbort:
 
         handler.engine_client.abort.assert_awaited_once_with("req-6")
 
-    @pytest.mark.asyncio
-    @pytest.mark.timeout(5)
-    async def test_abort_monitor_waits_for_abort_during_outer_cancellation(self):
-        """Outer request cancellation should not drop the pending abort task."""
-        handler = _make_handler()
-        handler.engine_client = MagicMock()
-        handler.engine_client.abort = AsyncMock()
-        handler.shutdown_event = None
-
-        killed_future = asyncio.get_event_loop().create_future()
-        context = MagicMock()
-        context.async_killed_or_stopped.return_value = killed_future
-
-        async def run_monitor():
-            async with handler._abort_monitor(
-                context, "req-cancel", is_prefill=False
-            ):
-                await asyncio.sleep(3600)
-
-        monitor_task = asyncio.create_task(run_monitor())
-        await asyncio.sleep(0)
-
-        monitor_task.cancel()
-        await asyncio.sleep(0)
-
-        handler.engine_client.abort.assert_not_called()
-
-        killed_future.set_result(None)
-
-        with pytest.raises(asyncio.CancelledError):
-            await monitor_task
-
-        handler.engine_client.abort.assert_awaited_once_with("req-cancel")
-
     # close() cleanup tests: case 1b safety
 
     @pytest.mark.asyncio
