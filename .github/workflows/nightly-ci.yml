@@ -34,6 +34,11 @@ concurrency:
 
 permissions:
   contents: read
+  # Lets the build jobs' compliance-extract query the Actions API for the
+  # previous successful cron-triggered nightly run (manual runs are excluded)
+  # and download its baseline compliance artifact to diff the OSRB CSV against.
+  # A reusable workflow's token can't exceed the caller's.
+  actions: read
 
 
 env:
@@ -269,6 +274,10 @@ jobs:
       # context includes deploy/inference-gateway/ext-proc (a cargo vendor
       # workspace member).
       archive_sources: false
+      # OSRB CSV diff baseline: nightly context -> diff against the previous
+      # successful scheduled nightly run's compliance artifacts; manual runs
+      # are excluded (see resolve_diff_base.py).
+      diff_event_context: nightly
       source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
       image_tag_suffix: '-nightly'
     secrets: inherit
@@ -287,6 +296,10 @@ jobs:
       inline_compliance: true
       build_timeout_minutes: 120
       archive_sources: false
+      # OSRB CSV diff baseline: nightly context -> diff against the previous
+      # successful scheduled nightly run's compliance artifacts; manual runs
+      # are excluded (see resolve_diff_base.py).
+      diff_event_context: nightly
       source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
       image_tag_suffix: '-nightly'
     secrets: inherit
@@ -305,6 +318,10 @@ jobs:
       inline_compliance: true
       build_timeout_minutes: 120
       archive_sources: false
+      # OSRB CSV diff baseline: nightly context -> diff against the previous
+      # successful scheduled nightly run's compliance artifacts; manual runs
+      # are excluded (see resolve_diff_base.py).
+      diff_event_context: nightly
       source_ref: ${{ needs.resolve-source-sha.outputs.source_sha }}
       image_tag_suffix: '-nightly'
     secrets: inherit
