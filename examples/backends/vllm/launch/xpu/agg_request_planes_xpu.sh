@@ -68,7 +68,6 @@ ZE_AFFINITY_MASK=$ZE_AFFINITY_MASK \
     python -m dynamo.vllm --model "$MODEL" --enforce-eager \
     --max-model-len "$MAX_MODEL_LEN" \
     --max-num-seqs "$MAX_CONCURRENT_SEQS" \
-    --block-size "${BLOCK_SIZE:-64}" \
     $GPU_MEM_ARGS &
 
 # Exit on first worker failure; kill 0 in the EXIT trap tears down the rest
