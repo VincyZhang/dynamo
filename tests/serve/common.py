@@ -7,7 +7,7 @@ import dataclasses
 import logging
 import os
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from copy import deepcopy
 from typing import Any, Dict, Optional
 
@@ -374,6 +374,9 @@ def run_serve_deployment(
                 # Call final_validation if the payload has one (e.g., CachedTokensChatPayload)
                 if hasattr(payload, "final_validation"):
                     payload.final_validation()
+
+            if post_validation is not None:
+                post_validation()
     finally:
         if disagg_bootstrap_port is not None:
             deallocate_port(disagg_bootstrap_port)
