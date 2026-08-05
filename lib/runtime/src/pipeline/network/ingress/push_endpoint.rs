@@ -43,6 +43,7 @@ impl PushEndpoint {
         system_health: Arc<Mutex<SystemHealth>>,
     ) -> Result<()> {
         let mut endpoint = endpoint;
+        let mut shutdown_requested = false;
 
         let inflight = Arc::new(AtomicU64::new(0));
         let notify = Arc::new(Notify::new());
@@ -66,9 +67,7 @@ impl PushEndpoint {
                 // process shutdown
                 _ = self.cancellation_token.cancelled() => {
                     tracing::info!("PushEndpoint received cancellation signal, shutting down service");
-                    if let Err(e) = endpoint.stop().await {
-                        tracing::warn!("Failed to stop NATS service: {:?}", e);
-                    }
+                    shutdown_requested = true;
                     break;
                 }
             };
@@ -160,6 +159,32 @@ impl PushEndpoint {
                 endpoint_name = endpoint_name_local.as_str(),
                 "Skipping graceful shutdown, not waiting for inflight requests"
             );
+        }
+
+        if shutdown_requested {
+            let stop_timeout = crate::runtime::graceful_shutdown_timeout();
+            match tokio::time::timeout(stop_timeout, endpoint.stop()).await {
+                Ok(Ok(())) => {
+                    tracing::info!(
+                        endpoint_name = endpoint_name_local.as_str(),
+                        "NATS endpoint stop completed"
+                    );
+                }
+                Ok(Err(e)) => {
+                    tracing::warn!(
+                        endpoint_name = endpoint_name_local.as_str(),
+                        error = ?e,
+                        "Failed to stop NATS service"
+                    );
+                }
+                Err(_) => {
+                    tracing::warn!(
+                        endpoint_name = endpoint_name_local.as_str(),
+                        timeout_secs = stop_timeout.as_secs(),
+                        "Timed out waiting for NATS endpoint stop; continuing shutdown"
+                    );
+                }
+            }
         }
 
         Ok(())
