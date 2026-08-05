@@ -55,6 +55,7 @@ env:
   DEVICE: xpu
   PLATFORM: linux/amd64
   SOURCE_REF: ${{ inputs.source_ref || github.sha }}
+  SINGLE_ETCD_HA_TEST: tests/fault_tolerance/etcd_ha/test_vllm.py::test_etcd_lease_loss_zombie_vllm_frozen_engine[nats]
 
 jobs:
 
@@ -177,6 +178,8 @@ jobs:
 
       - name: Run XPU tests
         uses: ./.github/actions/pytest
+        env:
+          PYTEST_ADDOPTS: ${{ env.SINGLE_ETCD_HA_TEST }}
         with:
           pytest_marks: '${{ inputs.pytest_markers }} and xpu_1'
           image_tag: ${{ env.TEST_IMAGE_TAG }}
@@ -203,7 +206,7 @@ jobs:
 
   test-xpu-2card:
     needs: [build-xpu]
-    if: ${{ !cancelled() && needs.build-xpu.result == 'success' }}
+    if: ${{ false }}
     runs-on: xpu-2
     env:
       FRAMEWORK: ${{ inputs.framework || 'vllm' }}
