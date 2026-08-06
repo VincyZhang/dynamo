@@ -16,7 +16,11 @@ from tests.serve.common import (
     params_with_model_mark,
     run_serve_deployment,
 )
-from tests.serve.conftest import MULTIMODAL_IMG_URL, get_multimodal_test_image_bytes
+from tests.serve.conftest import (
+    MULTIMODAL_IMG_URL,
+    MULTIMODAL_VIDEO_EXPECTED,
+    get_multimodal_test_image_bytes,
+)
 from tests.serve.lora_utils import MinioLoraConfig
 from tests.utils.constants import DefaultPort
 from tests.utils.engine_process import EngineConfig
@@ -472,7 +476,7 @@ vllm_configs = {
                     },
                 ],
                 repeat_count=1,
-                expected_response=["red", "static", "still"],
+                expected_response=MULTIMODAL_VIDEO_EXPECTED,
                 temperature=0.0,
                 max_tokens=100,
             )
