@@ -37,6 +37,15 @@ GPU_WORKER2="${_GPU_IDS[1]:-1}"
 NIXL_PORT1="${DYN_VLLM_NIXL_SIDE_CHANNEL_PORT1:-20097}"
 NIXL_PORT2="${DYN_VLLM_NIXL_SIDE_CHANNEL_PORT2:-20098}"
 
+# Parse ZE_AFFINITY_MASK (comma-separated) into per-worker device indices
+IFS=',' read -ra _GPU_IDS <<< "${ZE_AFFINITY_MASK:-0,1}"
+GPU_WORKER1="${_GPU_IDS[0]:-0}"
+GPU_WORKER2="${_GPU_IDS[1]:-1}"
+
+# NIXL side channel ports (per-worker, avoids collisions in parallel test runs)
+NIXL_PORT1="${DYN_VLLM_NIXL_SIDE_CHANNEL_PORT1:-20097}"
+NIXL_PORT2="${DYN_VLLM_NIXL_SIDE_CHANNEL_PORT2:-20098}"
+
 HTTP_PORT="${DYN_HTTP_PORT:-8000}"
 print_launch_banner "Launching Aggregated + Approximate KV Routing (2 GPUs: $GPU_WORKER1, $GPU_WORKER2)" "$MODEL" "$HTTP_PORT"
 

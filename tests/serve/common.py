@@ -6,13 +6,10 @@
 import dataclasses
 import logging
 import os
-import subprocess
-import sys
 import time
 from collections.abc import Callable, Mapping
-from contextlib import contextmanager
 from copy import deepcopy
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Dict, Optional
 
 import pytest
 
@@ -28,15 +25,13 @@ from tests.utils.engine_process import (
 from tests.utils.payload_builder import (
     make_chat_health_check,
     make_completions_health_check,
-    make_images_health_check,
 )
-from tests.utils.payloads import ChatPayload, CompletionPayload, ImagesPayload
+from tests.utils.payloads import ChatPayload, CompletionPayload
 from tests.utils.port_utils import allocate_port, deallocate_port
 
 DEFAULT_TIMEOUT = 10
 
 SERVE_TEST_DIR = os.path.join(WORKSPACE_DIR, "tests/serve")
-logger = logging.getLogger(__name__)
 
 
 def _tail_logs(content: str, *, lines: int = 80) -> str:
@@ -51,7 +46,6 @@ def _tail_logs(content: str, *, lines: int = 80) -> str:
 _ENDPOINT_HEALTH_CHECK_FACTORIES = (
     (CompletionPayload, make_completions_health_check),
     (ChatPayload, make_chat_health_check),
-    (ImagesPayload, make_images_health_check),
 )
 
 
@@ -119,25 +113,30 @@ def _format_request_failure(
     )
 
 
-@dataclasses.dataclass
-class _PreparedDeployment:
-    config: EngineConfig
-    merged_env: dict
-    frontend_port: int
-    system_ports: list
-    disagg_bootstrap_port: Optional[int]
-    extra_allocated_ports: list[int]
-
-
-def _prepare_deployment(
+def run_serve_deployment(
     config: EngineConfig,
     request: Any,
     *,
-    ports: ServicePorts | None,
-    extra_env: Optional[Dict[str, str]],
-) -> _PreparedDeployment:
-    """Build the launch env (profile/KV overrides, dynamic ports, bootstrap
-    port) and the port-adjusted config shared by all deployment runners."""
+    ports: ServicePorts | None = None,  # pass `dynamo_dynamic_ports` here
+    extra_env: Optional[Dict[str, str]] = None,
+) -> None:
+    """Run a standard serve deployment test for any EngineConfig.
+
+    - Launches the engine via EngineProcess.from_script
+    - Builds a payload (with optional override/mutator)
+    - Iterates configured endpoints and validates responses and logs
+    """
+
+    logger = logging.getLogger(request.node.name)
+    logger.info("Starting %s test_deployment", config.name)
+
+    assert (
+        config.request_payloads is not None and len(config.request_payloads) > 0
+    ), "request_payloads must be provided on EngineConfig"
+
+    logger.info("Using model: %s", config.model)
+    logger.info("Script: %s", config.script_name)
+
     merged_env: dict[str, str] = {}
     if extra_env:
         merged_env.update(extra_env)
@@ -188,7 +187,7 @@ def _prepare_deployment(
             time.sleep(stagger_s)
 
     # Track additional ports allocated for multi-GPU tests (for cleanup in finally)
-    extra_allocated_ports: list[int] = []
+    _extra_allocated_ports: list[int] = []
 
     if ports is not None:
         dynamic_frontend_port = int(ports.frontend_port)
@@ -229,7 +228,7 @@ def _prepare_deployment(
             if len(dynamic_system_ports) >= 2:
                 kv_port1 = ports.kv_event_port
                 kv_port2 = allocate_port(ports.kv_event_port + 1)
-                extra_allocated_ports.append(kv_port2)
+                _extra_allocated_ports.append(kv_port2)
                 merged_env["DYN_VLLM_KV_EVENT_PORT1"] = str(kv_port1)
                 merged_env["DYN_VLLM_KV_EVENT_PORT2"] = str(kv_port2)
 
@@ -262,114 +261,6 @@ def _prepare_deployment(
     if config.script_name and "disagg" in config.script_name:
         disagg_bootstrap_port = allocate_port(DynamoPortRange.BOOTSTRAP.value)
         merged_env["DYN_DISAGG_BOOTSTRAP_PORT"] = str(disagg_bootstrap_port)
-
-    return _PreparedDeployment(
-        config=config,
-        merged_env=merged_env,
-        frontend_port=dynamic_frontend_port,
-        system_ports=dynamic_system_ports,
-        disagg_bootstrap_port=disagg_bootstrap_port,
-        extra_allocated_ports=extra_allocated_ports,
-    )
-
-
-def _cleanup_prepared_deployment(prep: _PreparedDeployment) -> None:
-    if prep.disagg_bootstrap_port is not None:
-        deallocate_port(prep.disagg_bootstrap_port)
-    for port in prep.extra_allocated_ports:
-        deallocate_port(port)
-
-
-@contextmanager
-def managed_serve_deployment(
-    config: EngineConfig,
-    request: Any,
-    *,
-    ports: ServicePorts | None = None,
-    extra_env: Optional[Dict[str, str]] = None,
-) -> Iterator[EngineProcess]:
-    """Launch a port-isolated Dynamo deployment and guarantee port cleanup."""
-    prep = _prepare_deployment(config, request, ports=ports, extra_env=extra_env)
-
-    try:
-        with EngineProcess.from_config(
-            prep.config, request, extra_env=prep.merged_env
-        ) as server_process:
-            yield server_process
-    finally:
-        _cleanup_prepared_deployment(prep)
-
-
-# EngineConfig.env key naming a whitespace-separated list of pip packages to
-# install into the runtime container before the server launches. Some runtime
-# images intentionally omit certain media-decoder libraries; the few serve tests
-# that exercise a decode path install the decoder here at test time so coverage
-# is retained without the shipped image carrying it. No-op when the key is unset.
-TEST_ONLY_PIP_ENV_KEY = "DYN_TEST_ONLY_PIP_INSTALL"
-
-# Session-level guard so the same package set is installed at most once even
-# though every parametrized deployment (and each retry) calls the installer.
-_test_only_pip_done: set[str] = set()
-
-
-def _install_test_only_packages(config: EngineConfig) -> None:
-    """Install any test-only pip packages a config requested via its env.
-
-    Runs inside the same runtime container/interpreter the server subprocess
-    inherits, so the worker can import the freshly installed module.
-    """
-    spec = config.env.get(TEST_ONLY_PIP_ENV_KEY, "").strip()
-    if not spec or spec in _test_only_pip_done:
-        return
-    packages = spec.split()
-    logging.getLogger(__name__).info(
-        "Installing test-only package(s) into runtime container: %s",
-        " ".join(packages),
-    )
-    # --break-system-packages: runtime images use an externally-managed system
-    # python (PEP 668); this is the ephemeral test container, not a shipped image.
-    subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--break-system-packages", *packages],
-        check=True,
-    )
-    _test_only_pip_done.add(spec)
-
-
-def run_serve_deployment(
-    config: EngineConfig,
-    request: Any,
-    *,
-    ports: ServicePorts | None = None,  # pass `dynamo_dynamic_ports` here
-    extra_env: Optional[Dict[str, str]] = None,
-    post_validation: Optional[Callable[[], None]] = None,
-) -> None:
-    """Run a standard serve deployment test for any EngineConfig.
-
-    - Launches the engine via EngineProcess.from_script
-    - Builds a payload (with optional override/mutator)
-    - Iterates configured endpoints and validates responses and logs
-    - Optionally runs a final assertion while the deployment is still alive
-    """
-
-    logger = logging.getLogger(request.node.name)
-    logger.info("Starting %s test_deployment", config.name)
-
-    assert (
-        config.request_payloads is not None and len(config.request_payloads) > 0
-    ), "request_payloads must be provided on EngineConfig"
-
-    logger.info("Using model: %s", config.model)
-    logger.info("Script: %s", config.script_name)
-
-    # Install any decoder a codec-stripped image needs for this test, before the
-    # server launches, so the worker can import it. No-op unless the config opts in.
-    _install_test_only_packages(config)
-
-    prep = _prepare_deployment(config, request, ports=ports, extra_env=extra_env)
-    config = prep.config
-    merged_env = prep.merged_env
-    dynamic_frontend_port = prep.frontend_port
-    dynamic_system_ports = prep.system_ports
 
     try:
         with EngineProcess.from_script(
@@ -493,7 +384,10 @@ def run_serve_deployment(
             if post_validation is not None:
                 post_validation()
     finally:
-        _cleanup_prepared_deployment(prep)
+        if disagg_bootstrap_port is not None:
+            deallocate_port(disagg_bootstrap_port)
+        for p in _extra_allocated_ports:
+            deallocate_port(p)
 
 
 def params_with_model_mark(configs: Mapping[str, EngineConfig]):
